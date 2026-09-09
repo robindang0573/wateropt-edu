@@ -207,13 +207,43 @@
                     </tbody>
                 </table>
             </div>
-            <p class="note">
+<p class="note">
                 {% if result.mode == 'static' %}
-                🟢 Đang chọn <b>phương pháp tĩnh</b> (khấu hao = {{ '{:,.2f}'.format(result.dep_static) }}). Nếu chuyển sang động với i = {{ '{:,.0f}%'.format(result.disc_rate) }}: khấu hao là {{ '{:,.2f}'.format(result.dep_dynamic) }} (cao hơn vì chưa kể phần lãi của vốn), kéo C → {{ '{:,.2f}'.format(result.comp_dynamic.C) }}, R → {{ '{:,.2f}'.format(result.comp_dynamic.R) }}, P → <b>{{ '{:,.4f}'.format(result.comp_dynamic.price) if result.comp_dynamic.price is not none else '—' }} CNY/m³</b>.
+                🟢 Đang chọn <b>phương pháp tĩnh</b> (khấu hao = {{ '{:,.2f}'.format(result.dep_static) }}). Nếu chuyển sang động với i = {{ '{:,.0f}%'.format(result.disc_rate) }}: khấu hao là {{ '{:,.2f}'.format(result.dep_dynamic) }} (cao hơn vì chưa kếm phần lãi của vốn), kéo C → {{ '{:,.2f}'.format(result.comp_dynamic.C) }}, R → {{ '{:,.2f}'.format(result.comp_dynamic.R) }}, P → <b>{{ '{:,.4f}'.format(result.comp_dynamic.price) if result.comp_dynamic.price is not none else '—' }} CNY/m³</b>.
                 {% else %}
                 🟢 Đang chọn <b>phương pháp động</b> (khấu hao = {{ '{:,.2f}'.format(result.dep_dynamic) }}). Nếu chuyển sang tĩnh: khấu hao chỉ còn {{ '{:,.2f}'.format(result.dep_static) }}, R → {{ '{:,.2f}'.format(result.comp_static.R) }}, P → <b>{{ '{:,.4f}'.format(result.comp_static.price) if result.comp_static.price is not none else '—' }} CNY/m³</b>.
                 {% endif %}
             </p>
+        </div>
+
+        <div class="card">
+            <h3>📊 Bảng điều khiển qu hoạch động hồ chứa</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tháng</th>
+                            {% for v in [10, 20, 30, 40, 50] %}
+                            <th>{{ 'V={{ v }}'.format(v=v) }}</th>
+                            {% endfor %}
+                            <th>R<sub>t</sub></th>
+                            <th>f<sub>t</sub>(V)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in range(1, 13) %}
+                        <tr>
+                            <td>{{ 'Tháng {{ t }}'.format(t=t) }}</td>
+                            {% for v in [10, 20, 30, 40, 50] %}
+                            <td>{{ '{{ f_{{ t }}_{{ v }}'|safe }}</td>
+                            {% endfor %}
+                            <td>{{ '{{ R_{{ t }}'|safe }}</td>
+                            <td>{{ '{{ f_{{ t }}_{{ v }}'|safe }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <div class="card">
