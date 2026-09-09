@@ -339,6 +339,26 @@
             warn.classList.add('hidden');
             st.innerHTML = '✅ Hội tụ về (' + fmt(res.xf) + ', ' + fmt(res.yf) + ') sau <b>' + res.traj.length + '</b> bước với α = ' + fmt(f.alpha);
         }
+        drawGdConvergence(res.traj, target);
+    }
+
+    function drawGdConvergence(traj, target) {
+        const fvals = traj.map(function (p) { return GD_K * (Math.pow(p[0] - target[0], 2) + Math.pow(p[1] - target[1], 2)); });
+        const trace = {
+            x: traj.map(function (_, i) { return i; }),
+            y: fvals,
+            type: 'scatter', mode: 'lines+markers',
+            line: { color: '#0a9396', width: 3 }, marker: { size: 5 },
+            name: 'f(x,y)'
+        };
+        Plotly.newPlot('gdConvChart', [trace], {
+            margin: { t: 12, b: 40, l: 55, r: 15 },
+            xaxis: { title: 'Bước lặp', zeroline: false },
+            yaxis: { title: 'f(x,y)' },
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            legend: { orientation: 'h', y: 1.12 },
+            showlegend: true
+        }, CNF);
     }
 
     function gdNewton() {
@@ -362,6 +382,10 @@
             '🚁 Newton dùng <b>xấp xỉ bậc 2 (Hessian)</b>: chỉ cần <b>1 bước</b> để về đáy ' +
             '(' + fmt(from[0]) + ', ' + fmt(from[1]) + ') → (' + fmt(t[0]) + ', ' + fmt(t[1]) + '). Đây chính là "cái bát giả định" hoàn hảo vì f(x,y) là hàm toàn phương.';
         document.getElementById('gdWarn').classList.add('hidden');
+        drawGdConvergence([from], target);
+        const fv = GD_K * (Math.pow(from[0] - 40, 2) + Math.pow(from[1] - 60, 2));
+        const st = document.getElementById('gdStatus');
+        st.innerHTML += '<br>📉 f(x₀,y₀) = ' + fmt(fv) + ' → f(40,60) = 0 sau 1 Newton step.';
     }
 
     function gdInit() {
@@ -372,6 +396,7 @@
         const f = getGDForm();
         const res = gdTrajectory(f.x0, f.y0, f.alpha, [40, 60], 200, GD_K);
         plotGDSurface(res.traj.slice(0, 12), null);
+        drawGdConvergence(res.traj, [40, 60]);
     }
 
     /* ============================= DP ============================= */
