@@ -25,8 +25,10 @@ def calculate_irr(cash_flows):
     """IRR bằng Newton–Raphson (kèm nhật ký lặp để giảng dạy)."""
     rate = 0.1
     iterations = []
+    rows = []
     for k in range(100):
         npv = sum(cf / ((1 + rate) ** i) for i, cf in enumerate(cash_flows))
+        rows.append({"iter": k + 1, "r": round(rate * 100, 6), "npv": npv})
         if k < 4:
             iterations.append(f"Lần lặp {k + 1}: r = {rate * 100:.2f}% → NPV = {npv:.4f}")
         elif k == 4:
@@ -34,14 +36,14 @@ def calculate_irr(cash_flows):
         if abs(npv) < 0.0001:
             iterations.append("⇒ |NPV| < 0.0001 — hội tụ.")
             iterations.append(f"⇒ IRR = {rate * 100:.2f}% (làm ΔNPV ≈ 0)")
-            return rate, iterations
+            return rate, iterations, rows
         d_npv = sum(-i * cf / ((1 + rate) ** (i + 1)) for i, cf in enumerate(cash_flows) if i > 0)
         if d_npv == 0:
             break
         rate = rate - npv / d_npv
     if abs(rate) > 1000:
-        return None, iterations
-    return rate, iterations
+        return None, iterations, rows
+    return rate, iterations, rows
 
 
 def compute_economic(form):
@@ -133,12 +135,23 @@ def compute_economic(form):
     aw = npv * crf
 
     try:
-        irr, irr_iterations = calculate_irr(cash_flows)
+        irr, irr_iterations, irr_rows = calculate_irr(cash_flows)
         irr_null = irr is None
     except (OverflowError, ValueError):
-        irr, irr_iterations, irr_null = None, [], True
+        irr, irr_iterations, irr_rows, irr_null = None, [], [], True
     if not irr_null and irr is not None and (abs(irr) > 10 or not np.isfinite(irr)):
         irr = None
+        irr_null = True
+
+    # ---- Đường NPV(r): chiết khấu cùng dòng ΔCF theo mức lãi suất ----
+    sweep_max = max(40.0, (irr if irr is not None else 20.0) * 160)
+    npv_sweep = []
+    sr = 0.0
+    while sr <= sweep_max and len(npv_sweep) < 130:
+        r_ = sr / 100.0
+        val = sum(cf / (1 + r_) ** t for t, cf in enumerate(cash_flows))
+        npv_sweep.append({"r": round(sr, 2), "npv": round(val, 3)})
+        sr += 1.0
 
     # ---- Bảng "phép chiếu chiết khấu" (P = F/(1+r)^t) ----
     discount_table = []
@@ -160,6 +173,9 @@ def compute_economic(form):
             payback = t
 
     status = "feasible" if npv > 0 and (bc is None or bc > 1) else "not"
+
+    aw_ben = pw_b_inc * crf
+    aw_cost = pw_c_inc * crf
 
     detail_val = {
         "npv": npv, "bc": bc, "irr": irr, "crf": crf, "aw": aw,
@@ -189,6 +205,9 @@ def compute_economic(form):
         "cf_without": [round(x, 2) for x in cf_without_list],
         "table": table,
         "discount_table": discount_table,
+        "irr_rows": [] if irr_null else irr_rows,
+        "npv_sweep": npv_sweep,
+        "aw_ben": round(aw_ben, 2), "aw_cost": round(aw_cost, 2),
         "details": details,
     }
 

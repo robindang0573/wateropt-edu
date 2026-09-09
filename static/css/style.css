@@ -208,9 +208,50 @@ tfoot td { font-weight: 700; background: var(--subtle); }
 /* ===================== PLOTS ===================== */
 .plot { width: 100%; height: 420px; }
 .plot.small { height: 360px; }
-.chart-grid { display: grid; grid-template-columns: 1fr; gap: 22px; }
+.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .chart-grid .chart-card.full { grid-column: 1 / -1; }
 .lp-plot { height: 480px; }
+
+/* ===== Bố cục từng chỉ số kinh tế (hàng ngang full-width) ===== */
+.kpi-section {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    box-shadow: var(--shadow); overflow: hidden; margin-bottom: 22px;
+}
+.kpi-section h2 { margin: 0; font-size: 1.15em; color: var(--primary); }
+.kpi-section .kpi-head {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 14px 18px; border-bottom: 1px solid var(--border); background: var(--subtle);
+}
+.kpi-section .kpi-head p { margin: 4px 0 0; font-size: 0.9em; color: var(--muted); flex: 1 1 260px; }
+.kpi-section .num {
+    width: 34px; height: 34px; border-radius: 50%; flex: 0 0 auto;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--primary); color: var(--on-primary); font-weight: 700;
+}
+.kpi-section .hero {
+    font-size: 1.35em; font-weight: 800; padding: 6px 14px; border-radius: 10px;
+    margin-left: auto; white-space: nowrap;
+}
+.hero.pos { background: rgba(10, 163, 150, 0.15); color: var(--primary); }
+.hero.neg { background: rgba(231, 111, 81, 0.15); color: var(--danger); }
+.kpi-body { display: grid; grid-template-columns: minmax(300px, 2.1fr) 3fr; gap: 0; align-items: start; }
+.formula-col { padding: 18px; border-right: 1px dashed var(--border); }
+.big-formula {
+    font-size: 1.12em; line-height: 1.55; padding: 12px 14px; margin-bottom: 12px;
+    background: var(--subtle); border: 1px solid var(--border); border-left: 4px solid var(--primary);
+    border-radius: 10px; font-family: 'Cambria Math', 'Times New Roman', serif; color: var(--text);
+}
+.formula-col p { color: var(--muted); font-size: 0.94em; }
+.data-col { display: flex; flex-direction: column; gap: 18px; padding: 18px; min-width: 0; }
+.chart-wrap h3, .table-wrap h3 { color: var(--primary); font-size: 0.98em; margin: 0 0 8px; }
+.chart-wrap { min-width: 0; }
+.table-wrap { box-shadow: none; }
+.table-wrap table { width: 100%; border-collapse: collapse; font-size: 0.92em; }
+.table-wrap th, .table-wrap td { padding: 7px 10px; border-bottom: 1px solid var(--border); text-align: right; }
+.table-wrap th:first-child, .table-wrap td:first-child { text-align: left; }
+.table-wrap thead th { background: var(--subtle); color: var(--primary); }
+.table-wrap tfoot th { background: var(--subtle); color: var(--primary); border-top: 2px solid var(--primary); }
+.placeholder h3 { color: var(--primary); }
 .gd-plot { height: 500px; }
 .dp-plot { height: 440px; }
 .chart-card h3 { color: var(--primary); margin: 0 0 10px; font-size: 1.02em; }
@@ -288,9 +329,10 @@ tfoot td { font-weight: 700; background: var(--subtle); }
 @media (max-width: 1000px) {
     .psplit { grid-template-columns: 1fr; }
     .chart-grid { grid-template-columns: 1fr; }
+    .kpi-body { grid-template-columns: 1fr; }
+    .formula-col { border-right: none; border-bottom: 1px dashed var(--border); }
     .plot { height: 380px; }
     .plot.small { height: 340px; }
-    .lp-plot, .gd-plot, .dp-plot { height: 420px; }
 }
 @media (max-width: 768px) {
     .layout { flex-direction: column; }
