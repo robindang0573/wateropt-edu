@@ -7,9 +7,8 @@
     Chuỗi tính giá: <b>Chi phí cho phép (准许成本)</b> → <b>Doanh thu cho phép</b> → <b>Quy tắc 60%</b> → <b>Giá nước hai thành phần</b> → <b>Giá lũy tiến</b>.
 </p>
 
-<div class="psplit">
-    <div>
-        <form method="post" id="priceForm" class="card">
+<div class="stack">
+        <form method="post" id="priceForm" class="card wide-card">
             <h2 class="card-title">Nhập liệu <span class="unit">đơn vị: triệu CNY / triệu m³</span></h2>
 
             <div class="form-group">
@@ -67,9 +66,7 @@
                 <button type="submit" class="btn primary">Tính giá</button>
             </div>
         </form>
-    </div>
 
-    <div>
         {% if result %}
         {% if result.rule60 %}
         <div class="alert warning">
@@ -120,12 +117,11 @@
             <p>Ông dùng {{ '{:,.0f}'.format(result.use) }} m³/năm, định mức {{ '{:,.0f}'.format(result.quota) }} m³ → tổng <b>{{ '{:,.0f}'.format(result.bill) }} CNY/năm</b>.</p>
         </div>
 
-        <div class="psplit">
-            <div class="card chart-card">
-                <h3>🥧 Cơ cấu chi phí cho phép</h3>
-                <div id="costChart" class="plot"></div>
-            </div>
-            <div class="card">
+        <div class="card chart-card">
+            <h3>🥧 Cơ cấu chi phí cho phép</h3>
+            <div id="costChart" class="plot"></div>
+        </div>
+        <div class="card">
                 <h3>🧾 Bảng cơ cấu chi phí (准许成本) — cách tính ra tiền từng mục</h3>
                 <div class="table-responsive">
                     <table>
@@ -169,7 +165,6 @@
                     <div class="chain-step final">{{ '{:.4f}'.format(result.price_cny) if result.price_cny is not none else '—' }} CNY/m³</div>
                 </div>
                 <p class="note">💡 Lợi nhuận và thuế đều tính theo phần trăm của C. Tổng R (triệu CNY/năm) chia cho lượng nước định giá Q_pricing (triệu m³/năm) cho ra giá tổng hợp P (CNY/m³).</p>
-            </div>
         </div>
 
         <div class="card">
@@ -204,7 +199,6 @@
             <p>Điền chi phí, lượng nước và bậc lũy tiến rồi bấm <b>Tính giá</b>.</p>
         </div>
         {% endif %}
-    </div>
 </div>
 {% endblock %}
 
