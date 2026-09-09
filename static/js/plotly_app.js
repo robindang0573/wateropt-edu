@@ -176,18 +176,39 @@
             const st = document.getElementById('ipmStatus');
             st.textContent = '✅ Interior Point: x₁ = ' + fmt(o[0]) + ', x₂ = ' + fmt(o[1]) +
                 '  ·  Z* = ' + fmt(data.z_star) + '  (sau ' + ipm.iterations + ' bước barrier)';
-            // Hiển thị các bước lặp
+            // Hiển thị các bước lặp với lý thuyết
             const stepsDiv = document.getElementById('ipmSteps');
             stepsDiv.classList.remove('hidden');
+            const theory = [
+                'Khởi tạo: chọn điểm khả thi trong (x₁,x₂ > 0, s_i > 0). Tính ∇f_μ và H(f_μ).',
+                'μ lớn: hàm rào cản −μ·Σln(s_i) −μ·Σln(x_j) chi phối → nghiệm gần tâm Chebyshev của miền.',
+                'μ giảm (×0.3): đường trung tâm (central path) dịch chuyển về phía đỉnh tối ưu.',
+                'Lặp Newton: giải H·p = −∇f_μ, duyệt bước, kiểm tra hội tụ.',
+                'Giai đoạn cuối: μ → 0, nghiệm xấp xỉ đỉnh tối ưu (50, 50), Z = 4000.'
+            ];
             let html = '<h4 style="color:var(--primary);margin:0 0 8px">📋 Các bước lặp Barrier Interior Point</h4>';
-            html += '<table class="dp-table" style="font-size:0.82em"><thead><tr>' +
-                '<th>Bước</th><th>μ</th><th>x₁</th><th>x₂</th><th>Z</th><th>inner</th><th>||∇||</th></tr></thead><tbody>';
-            (ipm.hist || []).forEach(function (h) {
-                html += '<tr><td>' + h.outer + '</td><td>' + h.mu + '</td><td>' + fmt(h.x1) + '</td>' +
+            html += '<table class="dp-table" style="font-size:0.80em"><thead><tr>' +
+                '<th>Bước</th><th>Lý thuyết</th><th>μ</th><th>x₁</th><th>x₂</th><th>Z</th><th>inner</th><th>||∇||</th></tr></thead><tbody>';
+            (ipm.hist || []).forEach(function (h, idx) {
+                const t = theory[idx % theory.length];
+                html += '<tr><td>' + h.outer + '</td><td style="font-size:0.75em;color:var(--muted);max-width:260px">' + t + '</td>' +
+                    '<td>' + h.mu + '</td><td>' + fmt(h.x1) + '</td>' +
                     '<td>' + fmt(h.x2) + '</td><td>' + fmt(h.z) + '</td><td>' + h.inner + '</td><td>' + h.grad + '</td></tr>';
             });
             html += '</tbody></table>';
             stepsDiv.innerHTML = html;
+            // Thêm phần lý thuyết tổng quan
+            const theoryDiv = document.createElement('div');
+            theoryDiv.className = 'steps';
+            theoryDiv.style.marginTop = '12px';
+            theoryDiv.innerHTML =
+                '<h4 style="color:var(--primary);margin:0 0 8px">📖 Phương pháp Interior Point (Barrier)</h4>' +
+                '<p>① <b>Hàm rào cản:</b> f_μ(x) = −Z − μ·[Σ ln(s_i) + Σ ln(x_j)], với s_i = b_i − a_i·x. Khi μ → 0, nghiệm của f_μ tiến tới nghiệm tối ưu của bài toán gốc.</p>' +
+                '<p>② <b>Đường trung tâm (Central Path):</b> Tập hợp các điểm x(μ) tối ưu hóa f_μ với μ > 0. Khi μ giảm dần, đường trung tâm đi từ tâm miền khả thi về đỉnh tối ưu.</p>' +
+                '<p>③ <b>Newton cho mỗi μ:</b> Giải H(f_μ)·p = −∇f_μ để tìm hướng Newton, duyệt bước với line search đảm bảo x > 0, s > 0.</p>' +
+                '<p>④ <b>Giảm μ:</b> Sau khi hội tụ Newton, giảm μ × 0.3 và lặp lại. Chuỗi μ = 2000, 600, 180, 54, 16.2, ... hội tụ về 0.</p>' +
+                '<p>⑤ <b>Kết quả:</b> x* = (50, 50), Z* = 4000 (nghìn CNY). Tối đa lợi ích từ phân bổ nước tưới lúa và rau màu.</p>';
+            stepsDiv.appendChild(theoryDiv);
             // Animation: animate IPM path on LP plot
             if (ipm.path && ipm.path.length > 1) {
                 await animateLP(ipm.path, 'Interior Point', '#9d4edd');
