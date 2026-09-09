@@ -60,6 +60,14 @@
             <div id="ipmStatus" class="sim-readout hidden">…</div>
             <div id="ipmSteps" class="steps hidden"></div>
             <div id="ipmConvChart" class="plot small" style="height:220px;"></div>
+            <div id="ipmTheory" class="steps" style="margin-top:14px">
+                <h4 style="color:var(--primary);margin:0 0 8px">📖 Lý thuyết Interior Point (Barrier Method)</h4>
+                <p><b>① Bài toán:</b> Max Z=50x₁+30x₂, ràng buộc 140x₁+60x₂≤10.000, x₁+x₂≤100, x₁,x₂≥0. Nghiệm tối ưu: x₁=50, x₂=50, Z*=4.000.</p>
+                <p><b>② Hàm rào cản (Barrier Function):</b> f_μ(x) = 50x₁+30x₂+μ[ln(x₁)+ln(x₂)+ln(100−x₁−x₂)+ln(10.000−140x₁−60x₂)]. Các hàm ln(...) tạo 4 bức tường vô hình bọc miền khả thi — khi điểm chạm biên, ln→−∞, kéo Z_μ→−∞ nên thuật toán tự động né.</p>
+                <p><b>③ Đường trung tâm (Central Path):</b> Tập các điểm tối ưu của f_μ khi μ thay đổi. Khi μ→0, đường trung tâm tiến sát biên và hội tụ về đỉnh (50,50).</p>
+                <p><b>④ Ba giai đoạn:</b> (a) μ rất lớn (μ=2000) → bức tường cao, nghiệm ở tâm miền (~x₁=20,x₂=20); (b) Giảm μ dần (×0.3) → thuật toán dám tiến gần biên hơn, Z tăng dần; (c) μ→0 → bức tường biến mất, nghiệm hội tụ (50,50).</p>
+                <p><b>⑤ Thuật toán Newton:</b> Với mỗi μ cố định, giải H(f_μ)·p=−∇f_μ để tìm bước Newton, duyệt line search đảm bảo x₁,x₂,s_i>0. Chuỗi μ=2000→600→180→54→16.2→...→0.</p>
+            </div>
         </div>
 
         <div>
