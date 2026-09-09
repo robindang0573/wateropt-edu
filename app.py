@@ -282,7 +282,14 @@ def build_economic_details(v, cf_with_list, cf_without_list, cash_flows, npv_ter
 def compute_pricing(form):
     invest = float(form.get("invest", 100))            # triệu CNY — vốn đầu tư ban đầu
     dep_life = float(form.get("dep_life", 5))          # năm — thời gian khấu hao
-    dep = invest / dep_life if dep_life > 0 else 0.0   # khấu hao hàng năm = I ÷ số năm
+    mode = form.get("mode", "static")                  # static | dynamic
+    disc_rate = float(form.get("disc_rate", 6)) / 100.0  # tỉ suất chiết khấu xã hội (6–8%)
+    n_years = max(float(dep_life), 1.0)
+    dep_static = invest / n_years                      # đường thẳng I ÷ n
+    crf = (disc_rate * (1 + disc_rate) ** n_years) / ((1 + disc_rate) ** n_years - 1) \
+        if disc_rate > 1e-12 else 1.0 / n_years        # (A/P, i, n) — niên kim hóa
+    dep_dynamic = invest * crf
+    dep = dep_dynamic if mode == "dynamic" else dep_static
     om_lab = float(form.get("om_labor", 0))
     om_en = float(form.get("om_energy", 0))
     om_rep = float(form.get("om_repair", 0))
@@ -297,6 +304,10 @@ def compute_pricing(form):
     r2 = float(form.get("tier2", 20)) / 100.0       # vượt ≤10% → +20%
     r3 = float(form.get("tier3", 50)) / 100.0       # vượt >10% → +50%
 
+    oms = om_lab + om_en + om_rep + om_mg
+    dep_calc = (f"Khấu hao (tĩnh) = Vốn đầu tư ÷ Số năm KH = {invest:,.0f} ÷ {n_years:,.0f} = {dep_static:,.2f}") \
+        if mode == "static" else \
+        (f"Khấu hao (động) = Vốn đầu tư × (A/P, {disc_rate*100:.1f}%, {n_years:,.0f}) = {invest:,.0f} × {crf:.6f} = {dep_dynamic:,.2f}")
     breakdown = {
         "Khấu hao": dep,
         "Nhân công": om_lab,
@@ -305,13 +316,13 @@ def compute_pricing(form):
         "Quản lý": om_mg,
     }
     calc_map = {
-        "Khấu hao": f"Khấu hao = Vốn đầu tư ÷ Số năm KH = {invest:,.0f} ÷ {dep_life:,.0f} = {dep:,.2f}",
+        "Khấu hao": dep_calc,
         "Nhân công": "Chi phí nhân công vận hành (lương + phụ cấp) quy ra 1 năm",
         "Điện năng": "Chi phí điện bơm/sai kênh thực tế trong 1 năm vận hành",
         "Sửa chữa": "Trích chi phí sửa chữa, bảo trì định kỳ trong 1 năm",
         "Quản lý": "Chi phí quản lý hành chính, giám sát công trình trong 1 năm",
     }
-    C = dep + om_lab + om_en + om_rep + om_mg
+    C = dep + oms
     profit_amt = C * profit
     tax_amt = C * tax
     R = C + profit_amt + tax_amt
@@ -324,6 +335,21 @@ def compute_pricing(form):
     if q_pricing > 0:
         price = R / q_pricing          # CNY/m³
     price_vnd = price * VND_PER_CNY if price is not None else None
+
+    # So sánh hai phương pháp khấu hao (Tĩnh ↔ Động)
+    def _rev_for(d):
+        c_ = d + oms
+        p_ = c_ * profit
+        t_ = c_ * tax
+        r_ = c_ + p_ + t_
+        pr_ = r_ / q_pricing if q_pricing > 0 else None
+        return {
+            "C": round(c_, 2), "profit": round(p_, 2), "tax": round(t_, 2),
+            "R": round(r_, 2),
+            "price": round(pr_, 6) if pr_ is not None else None,
+        }
+    comp_static = _rev_for(dep_static)
+    comp_dynamic = _rev_for(dep_dynamic)
 
     # Bảng tính tiền 3 bậc (hộ mẫu)
     floor10 = 1.1 * quota
@@ -372,6 +398,9 @@ def compute_pricing(form):
         "breakdown": breakdown,
         "cost_rows": cost_rows,
         "invest": invest, "dep_life": dep_life,
+        "mode": mode, "disc_rate": disc_rate * 100,
+        "dep_static": round(dep_static, 2), "dep_dynamic": round(dep_dynamic, 2),
+        "crf": crf, "comp_static": comp_static, "comp_dynamic": comp_dynamic,
         "C": C, "profit_amt": profit_amt, "tax_amt": tax_amt,
         "profit_pct": profit * 100, "tax_pct": tax * 100, "R": R,
         "design_q": dq, "actual_q": aq, "q_pricing": q_pricing,

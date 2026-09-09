@@ -280,6 +280,10 @@ tfoot td { font-weight: 700; background: var(--subtle); }
     background: var(--primary); color: var(--on-primary); font-weight: 700; border-color: var(--primary);
 }
 .chain-arrow { display: flex; align-items: center; color: var(--muted); font-weight: 700; }
+
+/* Hàng đang chọn trong bảng so sánh Tĩnh/Động */
+.active-row td { background: var(--subtle); font-weight: 600; }
+.active-row td:first-child { border-left: 4px solid var(--primary); }
 .gd-plot { height: 500px; }
 .dp-plot { height: 440px; }
 .chart-card h3 { color: var(--primary); margin: 0 0 10px; font-size: 1.02em; }

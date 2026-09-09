@@ -14,10 +14,26 @@
             <div class="form-group">
                 <div class="group-label">🏗️ Nhóm Vốn đầu tư <span class="unit">đơn vị: Vốn (triệu CNY), thời gian (năm)</span></div>
                 <div class="form-row">
-                    <div><label>Vốn đầu tư ban đầu (I)</label><input type="number" step="any" name="invest" value="100"></div>
-                    <div><label>Số năm khấu hao (n)</label><input type="number" step="any" name="dep_life" value="5"></div>
+                    <div><label>Vốn đầu tư ban đầu (I)</label><input type="number" step="any" name="invest" id="f_invest" value="100"></div>
+                    <div><label>Số năm khấu hao (n)</label><input type="number" step="any" name="dep_life" id="f_dep_life" value="5"></div>
                 </div>
-                <p class="note" style="margin-top:6px">⚙️ <b>Khấu hao hàng năm</b> = Vốn đầu tư ÷ Số năm khấu hao = 100 ÷ 5 = <b>20,0 triệu CNY/năm</b> (tự tính, không nhập tay).</p>
+                <div class="form-row">
+                    <div>
+                        <label>Phương pháp tính khấu hao</label>
+                        <select name="mode" id="f_mode">
+                            <option value="static">Tĩnh — đường thẳng I ÷ n (theo quy định giá)</option>
+                            <option value="dynamic">Động — niên kim hóa I × (A/P, i, n)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Tỉ suất chiết khấu xã hội <span class="unit">%</span></label>
+                        <input type="number" step="any" name="disc_rate" id="f_disc" value="6">
+                    </div>
+                </div>
+                <p class="note" style="margin-top:6px">⚙️ <b>Khấu hao hàng năm</b> =
+                    <span id="depPreview">Vốn đầu tư ÷ Số năm khấu hao = 100 ÷ 5 = <b>20,0 triệu CNY/năm</b></span>
+                    (<span id="modeLabel">phương pháp tĩnh</span>, tự tính, không nhập tay).</p>
+                <p class="note" style="margin-top:4px">📖 <b>Tĩnh vs Động:</b> Tĩnh (theo 《水利工程供水价格管理办法》) dùng đường thẳng I÷n — không chiết khấu, đúng khi <u>ấn định giá</u>. Động niên kim hóa vốn đầu tư bằng hệ số (A/P, i, n) với tỉ suất chiết khấu xã hội (nông nghiệp thường <b>6%</b>, dự án thường <b>8%</b>) — dùng khi <u>so sánh phương án đầu tư</u>. Đổi phương pháp để xem khấu hao và giá P thay đổi.</p>
             </div>
 
             <div class="form-group">
@@ -168,6 +184,39 @@
         </div>
 
         <div class="card">
+            <h3>⚖️ So sánh hai phương pháp khấu hao (Tĩnh ↔ Động)</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Phương pháp</th><th>Khấu hao/năm</th><th>C</th><th>R</th><th>Giá P (CNY/m³)</th></tr></thead>
+                    <tbody>
+                        <tr class="{{ 'active-row' if result.mode == 'static' else '' }}">
+                            <td>Tĩnh — đường thẳng I ÷ n</td>
+                            <td>{{ '{:,.2f}'.format(result.dep_static) }}</td>
+                            <td>{{ '{:,.2f}'.format(result.comp_static.C) }}</td>
+                            <td>{{ '{:,.2f}'.format(result.comp_static.R) }}</td>
+                            <td>{{ '{:,.6f}'.format(result.comp_static.price) if result.comp_static.price is not none else '—' }}</td>
+                        </tr>
+                        <tr class="{{ 'active-row' if result.mode == 'dynamic' else '' }}">
+                            <td>Động — I × (A/P, {{ '{:.1f}%'.format(result.disc_rate) }}, {{ '{:,.0f}'.format(result.dep_life) }})
+                                <span class="unit">(CRF = {{ '{:.6f}'.format(result.crf) }})</span></td>
+                            <td>{{ '{:,.2f}'.format(result.dep_dynamic) }}</td>
+                            <td>{{ '{:,.2f}'.format(result.comp_dynamic.C) }}</td>
+                            <td>{{ '{:,.2f}'.format(result.comp_dynamic.R) }}</td>
+                            <td>{{ '{:,.6f}'.format(result.comp_dynamic.price) if result.comp_dynamic.price is not none else '—' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="note">
+                {% if result.mode == 'static' %}
+                🟢 Đang chọn <b>phương pháp tĩnh</b> (khấu hao = {{ '{:,.2f}'.format(result.dep_static) }}). Nếu chuyển sang động với i = {{ '{:,.0f}%'.format(result.disc_rate) }}: khấu hao là {{ '{:,.2f}'.format(result.dep_dynamic) }} (cao hơn vì chưa kể phần lãi của vốn), kéo C → {{ '{:,.2f}'.format(result.comp_dynamic.C) }}, R → {{ '{:,.2f}'.format(result.comp_dynamic.R) }}, P → <b>{{ '{:,.4f}'.format(result.comp_dynamic.price) if result.comp_dynamic.price is not none else '—' }} CNY/m³</b>.
+                {% else %}
+                🟢 Đang chọn <b>phương pháp động</b> (khấu hao = {{ '{:,.2f}'.format(result.dep_dynamic) }}). Nếu chuyển sang tĩnh: khấu hao chỉ còn {{ '{:,.2f}'.format(result.dep_static) }}, R → {{ '{:,.2f}'.format(result.comp_static.R) }}, P → <b>{{ '{:,.4f}'.format(result.comp_static.price) if result.comp_static.price is not none else '—' }} CNY/m³</b>.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="card">
             <h3>🧾 Bảng tính tiền lũy tiến</h3>
             <div class="table-responsive">
                 <table>
@@ -203,6 +252,35 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const mode = document.getElementById('f_mode');
+    const invest = document.getElementById('f_invest');
+    const life = document.getElementById('f_dep_life');
+    const disc = document.getElementById('f_disc');
+    const prev = document.getElementById('depPreview');
+    const lab = document.getElementById('modeLabel');
+    if (!mode || !prev || !lab) return;
+    function fmt(v) { return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' triệu CNY/năm'; }
+    function update() {
+        const I = parseFloat(invest.value) || 0;
+        const n = Math.max(parseFloat(life.value) || 1, 1);
+        const i = (parseFloat(disc.value) || 0) / 100;
+        const crf = i > 1e-12 ? i * Math.pow(1 + i, n) / (Math.pow(1 + i, n) - 1) : 1 / n;
+        const dep = mode.value === 'dynamic' ? I * crf : I / n;
+        const formula = mode.value === 'dynamic'
+            ? 'Vốn đầu tư × (A/P, ' + (i * 100).toFixed(1) + '%, ' + n + ') = ' + I.toFixed(0) + ' × ' + crf.toFixed(6) + ' = <b>' + fmt(dep) + '</b>'
+            : 'Vốn đầu tư ÷ Số năm khấu hao = ' + I.toFixed(0) + ' ÷ ' + n.toFixed(0) + ' = <b>' + fmt(dep) + '</b>';
+        prev.innerHTML = formula;
+        lab.textContent = mode.value === 'dynamic' ? 'phương pháp động (niên kim hóa)' : 'phương pháp tĩnh';
+    }
+    mode.addEventListener('change', update);
+    invest.addEventListener('input', update);
+    life.addEventListener('input', update);
+    disc.addEventListener('input', update);
+    update();
+});
+</script>
 {% if result %}
 <script>
     const breakdown = {{ result.breakdown | tojson }};
