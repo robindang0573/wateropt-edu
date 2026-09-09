@@ -134,7 +134,7 @@ body {
 .card-title .unit { font-size: 0.7em; font-weight: 400; color: var(--muted); }
 .placeholder { text-align: center; color: var(--muted); padding: 60px 20px; }
 
-.psplit { display: grid; grid-template-columns: minmax(320px, 5fr) 6fr; gap: 22px; align-items: start; }
+.psplit { display: grid; grid-template-columns: minmax(300px, 4fr) 8fr; gap: 22px; align-items: start; }
 .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 10px; }
 .form-row.small { margin-bottom: 8px; }
 .form-row .none { display: none; }
@@ -207,8 +207,9 @@ tfoot td { font-weight: 700; background: var(--subtle); }
 
 /* ===================== PLOTS ===================== */
 .plot { width: 100%; height: 420px; }
-.plot.small { height: 330px; }
+.plot.small { height: 360px; }
 .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.chart-grid .chart-card.full { grid-column: 1 / -1; }
 .lp-plot { height: 480px; }
 .gd-plot { height: 500px; }
 .dp-plot { height: 440px; }
@@ -288,6 +289,7 @@ tfoot td { font-weight: 700; background: var(--subtle); }
     .psplit { grid-template-columns: 1fr; }
     .chart-grid { grid-template-columns: 1fr; }
     .plot { height: 380px; }
+    .plot.small { height: 340px; }
     .lp-plot, .gd-plot, .dp-plot { height: 420px; }
 }
 @media (max-width: 768px) {

@@ -140,20 +140,20 @@
 
         {# Biểu đồ #}
         <div class="chart-grid">
-            <div class="card chart-card">
+            <div class="card chart-card full">
                 <h3>🔄 Hai kịch bản (With–Without)</h3>
                 <div id="scenarioChart" class="plot small"></div>
             </div>
-            <div class="card chart-card">
+            <div class="card chart-card full">
                 <h3>📉 Dòng tiền chênh lệch ΔCF</h3>
                 <div id="cfChart" class="plot small"></div>
             </div>
-            <div class="card chart-card">
+            <div class="card chart-card full">
                 <h3>📈 Dòng tiền chiết khấu lũy tích</h3>
                 <p class="note" style="margin-top:0">Điểm cắt trục hoành = <b>thời gian hoàn vốn</b>.</p>
                 <div id="cumChart" class="plot small"></div>
             </div>
-            <div class="card chart-card">
+            <div class="card chart-card full">
                 <h3>🔭 Phép chiếu chiết khấu (r co dãn tương lai)</h3>
                 <p class="note" style="margin-top:0">F nhìn từ Năm 0 với toán tử co $1/(1+r)^t$.</p>
                 <div id="projChart" class="plot small"></div>
@@ -232,12 +232,12 @@ document.addEventListener('DOMContentLoaded', function () {
     Plotly.newPlot('scenarioChart', [
         { x: years, y: cfWith, type: 'scatter', mode: 'lines+markers', name: 'Có dự án', line: { color: '#005f73', width: 3 }, fill: 'tozeroy', fillcolor: 'rgba(0,95,115,0.08)' },
         { x: years, y: cfWithout, type: 'scatter', mode: 'lines+markers', name: 'Không dự án (cơ sở)', line: { color: '#e9c46a', width: 3, dash: 'dot' }, fill: 'tozeroy', fillcolor: 'rgba(233,196,106,0.18)' }
-    ], { margin: { t: 12, b: 45, l: 55, r: 15 }, xaxis: { title: 'Năm' }, yaxis: { title: 'Triệu USD' }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)' });
+    ], { margin: { t: 16, b: 50, l: 60, r: 20 }, font: { size: 14, family: 'inherit' }, xaxis: { title: { text: 'Năm', font: { size: 14 } } }, yaxis: { title: { text: 'Triệu USD', font: { size: 14 } } }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)' });
 
     Plotly.newPlot('cfChart', [{
         x: years, y: cf, type: 'bar',
         marker: { color: cf.map(v => v < 0 ? '#e76f51' : '#0a9396') }, name: 'ΔCF'
-    }], { margin: { t: 12, b: 45, l: 55, r: 15 }, xaxis: { title: 'Năm' }, yaxis: { title: 'Triệu USD' }, bargap: 0.15, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)' });
+    }], { margin: { t: 16, b: 50, l: 60, r: 20 }, font: { size: 14, family: 'inherit' }, xaxis: { title: { text: 'Năm', font: { size: 14 } } }, yaxis: { title: { text: 'Triệu USD', font: { size: 14 } } }, bargap: 0.15, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)' });
 
     const traces = [
         { x: years, y: cum, type: 'scatter', mode: 'lines+markers', line: { color: '#005f73', width: 3 }, name: 'NPV lũy tích' },
@@ -246,12 +246,12 @@ document.addEventListener('DOMContentLoaded', function () {
     {% if result.payback is not none %}
     traces.push({ x: [years[payback]], y: [cum[payback]], type: 'scatter', mode: 'markers+text', marker: { size: 14, color: '#e76f51' }, text: ['Payback: ' + payback + ' năm'], textposition: 'top center', name: 'Payback' });
     {% endif %}
-    Plotly.newPlot('cumChart', traces, { margin: { t: 12, b: 45, l: 55, r: 15 }, xaxis: { title: 'Năm' }, yaxis: { title: 'Triệu USD' }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)' });
+    Plotly.newPlot('cumChart', traces, { margin: { t: 16, b: 50, l: 60, r: 20 }, font: { size: 14, family: 'inherit' }, xaxis: { title: { text: 'Năm', font: { size: 14 } } }, yaxis: { title: { text: 'Triệu USD', font: { size: 14 } } }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)' });
 
     Plotly.newPlot('projChart', [
         { x: years, y: face, type: 'scatter', mode: 'lines+markers', name: 'F (mệnh giá)', line: { color: '#8d99ae', width: 2, dash: 'dot' } },
         { x: years, y: pv, type: 'scatter', mode: 'lines+markers', name: 'P (hiện giá)', line: { color: '#0a9396', width: 3, shape: 'spline' } }
-    ], { margin: { t: 12, b: 45, l: 55, r: 15 }, xaxis: { title: 'Năm' }, yaxis: { title: 'Triệu USD' }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)' });
+    ], { margin: { t: 16, b: 50, l: 60, r: 20 }, font: { size: 14, family: 'inherit' }, xaxis: { title: { text: 'Năm', font: { size: 14 } } }, yaxis: { title: { text: 'Triệu USD', font: { size: 14 } } }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)' });
 
 window.addEventListener('resize', function () {
         ['scenarioChart', 'cfChart', 'cumChart', 'projChart'].forEach(id => { const el = document.getElementById(id); if (el) Plotly.Plots.resize(el); });
