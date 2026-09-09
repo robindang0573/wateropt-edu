@@ -9,9 +9,8 @@
     NPV &gt; 0, B/C &gt; 1 → dự án khả thi.
 </p>
 
-<div class="psplit">
-    <div>
-        <form method="post" id="ecoForm" class="card">
+<div class="stack">
+    <form method="post" id="ecoForm" class="card wide-card">
             <h2 class="card-title">Nhập liệu <span class="unit">đơn vị: triệu USD</span></h2>
 
             <div class="form-group">
@@ -88,9 +87,7 @@
         {% if result and result.error %}
         <div class="alert error">⚠️ {{ result.error }}</div>
         {% endif %}
-    </div>
 
-    <div>
         {% if result %}
         <div class="kpi-grid">
             <div class="kpi-box {{ 'positive' if result.npv > 0 else 'negative' }}">
@@ -289,7 +286,6 @@
             <p>Nhập số liệu rồi bấm <b>Tính toán</b>, hoặc bấm <b>Load Example</b> (I=120, B=24, OM=6, r=8%, n=20). Nhập thêm <b>Kịch bản cơ sở</b> để so sánh với nguyên tắc With–Without.</p>
         </div>
         {% endif %}
-    </div>
 </div>
 {% endblock %}
 

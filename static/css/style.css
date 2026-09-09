@@ -135,6 +135,8 @@ body {
 .placeholder { text-align: center; color: var(--muted); padding: 60px 20px; }
 
 .psplit { display: grid; grid-template-columns: minmax(300px, 4fr) 8fr; gap: 22px; align-items: start; }
+.stack { display: flex; flex-direction: column; gap: 22px; }
+.stack .wide-card { width: 100%; }
 .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 10px; }
 .form-row.small { margin-bottom: 8px; }
 .form-row .none { display: none; }
