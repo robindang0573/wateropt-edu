@@ -207,7 +207,8 @@
                 '<p><b>② Hàm rào cản (Barrier Function):</b> f_μ(x) = 50x₁+30x₂+μ[ln(x₁)+ln(x₂)+ln(100−x₁−x₂)+ln(10.000−140x₁−60x₂)]. Các hàm ln(...) tạo 4 bức tường vô hình bọc miền khả thi — khi điểm chạm biên, ln→−∞, kéo Z_μ→−∞ nên thuật toán tự động né.</p>' +
                 '<p><b>③ Đường trung tâm (Central Path):</b> Tập các điểm tối ưu của f_μ khi μ thay đổi. Khi μ→0, đường trung tâm tiến sát biên và hội tụ về đỉnh (50,50).</p>' +
                 '<p><b>④ Ba giai đoạn:</b> (a) μ rất lớn (μ=2000) → bức tường cao, nghiệm ở tâm miền (~x₁=20,x₂=20); (b) Giảm μ dần (×0.3) → thuật toán dám tiến gần biên hơn, Z tăng dần; (c) μ→0 → bức tường biến mất, nghiệm hội tụ (50,50).</p>' +
-                '<p><b>⑤ Thuật toán Newton:</b> Với mỗi μ cố định, giải H(f_μ)·p=−∇f_μ để tìm bước Newton, duyệt line search đảm bảo x₁,x₂,s_i>0. Chuỗi μ=2000→600→180→54→16.2→...→0.</p>';
+                '<p><b>⑤ Thuật toán Newton:</b> Với mỗi μ cố định, giải H(f_μ)·p=−∇f_μ để tìm bước Newton, duyệt line search đảm bảo x₁,x₂,s_i>0. Chuỗi μ=2000→600→180→54→16.2→...→0.</p>' +
+                '<p><b>⑥ Ma trận Hessian:</b> H(f_μ) = μ·Aᵀ·diag(1/sᵢ²)·A + μ·diag(1/xⱼ²). A là ma trận hệ số ràng buộc, sᵢ=bᵢ−aᵢ·x là khoảng cách đến biên. H cho biết độ cong của mặt rào cản — xác định hướng Newton tối ưu. Trong code, H được giải trực tiếp bằng np.linalg.solve thay vì tính nghịch đảo.</p>';
             stepsDiv.appendChild(theoryDiv);
             // Animation: animate IPM path on LP plot
             if (ipm.path && ipm.path.length > 1) {
