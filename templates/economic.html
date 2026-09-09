@@ -212,9 +212,11 @@
 
 {% block scripts %}
 <script>
-    document.getElementById('loadExample').addEventListener('click', function () {
+document.addEventListener('DOMContentLoaded', function () {
+    const ex = document.getElementById('loadExample');
+    if (ex) ex.addEventListener('click', function () {
         const map = { f_invest: 120, f_salvage: 8, f_benefit: 24, f_om: 6, f_rep_cost: 10, f_rep_year: 10, f_rate: 8, f_nper: 20 };
-        Object.keys(map).forEach(id => document.getElementById(id).value = map[id]);
+        Object.keys(map).forEach(id => { const el = document.getElementById(id); if (el) el.value = map[id]; });
     });
 {% if result %}
     const years = {{ result.years | tojson }};
@@ -227,12 +229,12 @@
     const face = dcf.map(d => d.face);
     const pv = dcf.map(d => d.pv);
 
-    Plotly.plot('scenarioChart', [
+    Plotly.newPlot('scenarioChart', [
         { x: years, y: cfWith, type: 'scatter', mode: 'lines+markers', name: 'Có dự án', line: { color: '#005f73', width: 3 }, fill: 'tozeroy', fillcolor: 'rgba(0,95,115,0.08)' },
         { x: years, y: cfWithout, type: 'scatter', mode: 'lines+markers', name: 'Không dự án (cơ sở)', line: { color: '#e9c46a', width: 3, dash: 'dot' }, fill: 'tozeroy', fillcolor: 'rgba(233,196,106,0.18)' }
     ], { margin: { t: 12, b: 45, l: 55, r: 15 }, xaxis: { title: 'Năm' }, yaxis: { title: 'Triệu USD' }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)' });
 
-    Plotly.plot('cfChart', [{
+    Plotly.newPlot('cfChart', [{
         x: years, y: cf, type: 'bar',
         marker: { color: cf.map(v => v < 0 ? '#e76f51' : '#0a9396') }, name: 'ΔCF'
     }], { margin: { t: 12, b: 45, l: 55, r: 15 }, xaxis: { title: 'Năm' }, yaxis: { title: 'Triệu USD' }, bargap: 0.15, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)' });
@@ -244,16 +246,17 @@
     {% if result.payback is not none %}
     traces.push({ x: [years[payback]], y: [cum[payback]], type: 'scatter', mode: 'markers+text', marker: { size: 14, color: '#e76f51' }, text: ['Payback: ' + payback + ' năm'], textposition: 'top center', name: 'Payback' });
     {% endif %}
-    Plotly.plot('cumChart', traces, { margin: { t: 12, b: 45, l: 55, r: 15 }, xaxis: { title: 'Năm' }, yaxis: { title: 'Triệu USD' }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)' });
+    Plotly.newPlot('cumChart', traces, { margin: { t: 12, b: 45, l: 55, r: 15 }, xaxis: { title: 'Năm' }, yaxis: { title: 'Triệu USD' }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)' });
 
-    Plotly.plot('projChart', [
+    Plotly.newPlot('projChart', [
         { x: years, y: face, type: 'scatter', mode: 'lines+markers', name: 'F (mệnh giá)', line: { color: '#8d99ae', width: 2, dash: 'dot' } },
         { x: years, y: pv, type: 'scatter', mode: 'lines+markers', name: 'P (hiện giá)', line: { color: '#0a9396', width: 3, shape: 'spline' } }
     ], { margin: { t: 12, b: 45, l: 55, r: 15 }, xaxis: { title: 'Năm' }, yaxis: { title: 'Triệu USD' }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)' });
 
-    window.addEventListener('resize', function () {
-        ['scenarioChart', 'cfChart', 'cumChart', 'projChart'].forEach(id => Plotly.Plots.resize(document.getElementById(id)));
+window.addEventListener('resize', function () {
+        ['scenarioChart', 'cfChart', 'cumChart', 'projChart'].forEach(id => { const el = document.getElementById(id); if (el) Plotly.Plots.resize(el); });
     });
+});
 {% endif %}
 </script>
 {% endblock %}
