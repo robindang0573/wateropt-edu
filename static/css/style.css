@@ -262,6 +262,24 @@ tfoot td { font-weight: 700; background: var(--subtle); }
     background: var(--subtle); border: 1px solid var(--border); min-width: 90px;
 }
 .sharebar-fill { position: absolute; inset: 0 auto 0 0; background: var(--primary); border-radius: 999px; }
+
+/* Cột "cách tính tiền" */
+.calc { color: var(--muted); font-size: 0.86em; min-width: 260px; }
+
+/* Chuỗi tính tiền (bước → bước) */
+.chain {
+    display: flex; align-items: stretch; flex-wrap: wrap; gap: 8px;
+    margin: 14px 0; padding: 12px;
+    background: var(--subtle); border: 1px solid var(--border); border-radius: 10px;
+}
+.chain-step {
+    padding: 8px 12px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; font-size: 0.9em; box-shadow: var(--shadow);
+}
+.chain-step.final {
+    background: var(--primary); color: var(--on-primary); font-weight: 700; border-color: var(--primary);
+}
+.chain-arrow { display: flex; align-items: center; color: var(--muted); font-weight: 700; }
 .gd-plot { height: 500px; }
 .dp-plot { height: 440px; }
 .chart-card h3 { color: var(--primary); margin: 0 0 10px; font-size: 1.02em; }

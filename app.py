@@ -280,7 +280,9 @@ def build_economic_details(v, cf_with_list, cf_without_list, cash_flows, npv_ter
 # MODULE 2 — GIÁ NƯỚC NÔNG NGHIỆP (Cơ chế Trung Quốc, Chương 6)
 # ============================================================
 def compute_pricing(form):
-    dep = float(form.get("dep", 0))
+    invest = float(form.get("invest", 100))            # triệu CNY — vốn đầu tư ban đầu
+    dep_life = float(form.get("dep_life", 5))          # năm — thời gian khấu hao
+    dep = invest / dep_life if dep_life > 0 else 0.0   # khấu hao hàng năm = I ÷ số năm
     om_lab = float(form.get("om_labor", 0))
     om_en = float(form.get("om_energy", 0))
     om_rep = float(form.get("om_repair", 0))
@@ -301,6 +303,13 @@ def compute_pricing(form):
         "Điện năng": om_en,
         "Sửa chữa": om_rep,
         "Quản lý": om_mg,
+    }
+    calc_map = {
+        "Khấu hao": f"Khấu hao = Vốn đầu tư ÷ Số năm KH = {invest:,.0f} ÷ {dep_life:,.0f} = {dep:,.2f}",
+        "Nhân công": "Chi phí nhân công vận hành (lương + phụ cấp) quy ra 1 năm",
+        "Điện năng": "Chi phí điện bơm/sai kênh thực tế trong 1 năm vận hành",
+        "Sửa chữa": "Trích chi phí sửa chữa, bảo trì định kỳ trong 1 năm",
+        "Quản lý": "Chi phí quản lý hành chính, giám sát công trình trong 1 năm",
     }
     C = dep + om_lab + om_en + om_rep + om_mg
     profit_amt = C * profit
@@ -350,17 +359,19 @@ def compute_pricing(form):
     total_ha_quota = area_ha * quota
     total_ha_bill = area_ha * bill
 
-    # Bảng cơ cấu chi phí có tỉ trọng
+    # Bảng cơ cấu chi phí có tỉ trọng + cách tính ra tiền
     cost_rows = []
     for name, val in breakdown.items():
         cost_rows.append({
             "name": name, "value": round(val, 2),
             "share": round(val / C * 100, 2) if C > 0 else 0.0,
+            "calc": calc_map[name],
         })
 
     return {
         "breakdown": breakdown,
         "cost_rows": cost_rows,
+        "invest": invest, "dep_life": dep_life,
         "C": C, "profit_amt": profit_amt, "tax_amt": tax_amt,
         "profit_pct": profit * 100, "tax_pct": tax * 100, "R": R,
         "design_q": dq, "actual_q": aq, "q_pricing": q_pricing,

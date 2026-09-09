@@ -13,22 +13,32 @@
             <h2 class="card-title">Nhập liệu <span class="unit">đơn vị: triệu CNY / triệu m³</span></h2>
 
             <div class="form-group">
-                <div class="group-label">🧮 Nhóm Chi phí (准许成本) <span class="unit">đơn vị: triệu CNY/năm</span></div>
+                <div class="group-label">🏗️ Nhóm Vốn đầu tư <span class="unit">đơn vị: Vốn (triệu CNY), thời gian (năm)</span></div>
                 <div class="form-row">
-                    <div><label>Khấu hao</label><input type="number" step="any" name="dep" value="20"></div>
+                    <div><label>Vốn đầu tư ban đầu (I)</label><input type="number" step="any" name="invest" value="100"></div>
+                    <div><label>Số năm khấu hao (n)</label><input type="number" step="any" name="dep_life" value="5"></div>
+                </div>
+                <p class="note" style="margin-top:6px">⚙️ <b>Khấu hao hàng năm</b> = Vốn đầu tư ÷ Số năm khấu hao = 100 ÷ 5 = <b>20,0 triệu CNY/năm</b> (tự tính, không nhập tay).</p>
+            </div>
+
+            <div class="form-group">
+                <div class="group-label">🧮 Nhóm Chi phí vận hành (准许成本) <span class="unit">đơn vị: triệu CNY/năm</span></div>
+                <div class="form-row">
                     <div><label>Nhân công</label><input type="number" step="any" name="om_labor" value="10"></div>
                     <div><label>Điện năng</label><input type="number" step="any" name="om_energy" value="8"></div>
                     <div><label>Sửa chữa</label><input type="number" step="any" name="om_repair" value="4"></div>
                     <div><label>Quản lý</label><input type="number" step="any" name="om_mgmt" value="3"></div>
                 </div>
+                <p class="note" style="margin-top:6px">Mỗi mục ở trên là chi phí vận hành trực tiếp quy về 1 năm. Tổng chi phí C = Khấu hao + Nhân công + Điện năng + Sửa chữa + Quản lý.</p>
             </div>
 
             <div class="form-group">
-                <div class="group-label">💰 Nhóm Tài chính</div>
+                <div class="group-label">💰 Nhóm Tài chính <span class="unit">đơn vị: %</span></div>
                 <div class="form-row">
-                    <div><label>Tỉ suất lợi nhuận <span class="unit">%</span></label><input type="number" step="any" name="profit" value="5"></div>
-                    <div><label>Thuế <span class="unit">%</span></label><input type="number" step="any" name="tax" value="3"></div>
+                    <div><label>Tỉ suất lợi nhuận <span class="unit">% của C</span></label><input type="number" step="any" name="profit" value="5"></div>
+                    <div><label>Thuế <span class="unit">% của C</span></label><input type="number" step="any" name="tax" value="3"></div>
                 </div>
+                <p class="note" style="margin-top:6px">📖 <b>Tại sao 5% lợi nhuận và 3% thuế?</b> Theo 《水利工程供水价格管理办法》 (Trung Quốc): tỉ suất lợi nhuận hợp lý do cơ quan giá nước <u>ấn định trước</u> (thường 5–8% chi phí cho phép) nhằm bảo đảm doanh nghiệp thủy nông bền vững mà không thu lợi độc quyền. Thuế 3% là thuế GTGT ưu đãi cho nước tưới tiêu (phục vụ an ninh lương thực). Hai con số này <b>không biến thiên theo thị trường</b> mà do chính sách/thời điểm quyết định — sinh viên có thể thay đổi để mô phỏng kịch bản khác nhau.</p>
             </div>
 
             <div class="form-group">
@@ -116,14 +126,15 @@
                 <div id="costChart" class="plot"></div>
             </div>
             <div class="card">
-                <h3>🧾 Bảng cơ cấu chi phí (准许成本)</h3>
+                <h3>🧾 Bảng cơ cấu chi phí (准许成本) — cách tính ra tiền từng mục</h3>
                 <div class="table-responsive">
                     <table>
-                        <thead><tr><th>Hạng mục</th><th>Giá trị (triệu CNY/năm)</th><th>Tỉ trọng</th><th class="bar-col">Thanh tỉ trọng</th></tr></thead>
+                        <thead><tr><th>Hạng mục</th><th>Cách tính tiền</th><th>Giá trị (triệu CNY/năm)</th><th>Tỉ trọng</th><th class="bar-col">Thanh</th></tr></thead>
                         <tbody>
                             {% for row in result.cost_rows %}
                             <tr>
                                 <td>{{ row.name }}</td>
+                                <td class="calc">{{ row.calc }}</td>
                                 <td>{{ '{:,.2f}'.format(row.value) }}</td>
                                 <td>{{ '{:.1f}%'.format(row.share) }}</td>
                                 <td class="bar-col">
@@ -133,14 +144,31 @@
                             {% endfor %}
                         </tbody>
                         <tfoot>
-                            <tr><th>Chi phí cho phép C</th><th>{{ '{:,.2f}'.format(result.C) }}</th><th>100%</th><th class="bar-col"></th></tr>
-                            <tr><th>+ Lợi nhuận ({{ '{:,.0f}'.format(result.profit_pct) }}%)</th><th>{{ '{:,.2f}'.format(result.profit_amt) }}</th><th colspan="2" class="bar-col"></th></tr>
-                            <tr><th>+ Thuế ({{ '{:,.0f}'.format(result.tax_pct) }}%)</th><th>{{ '{:,.2f}'.format(result.tax_amt) }}</th><th colspan="2" class="bar-col"></th></tr>
-                            <tr><th>Doanh thu cho phép R</th><th>{{ '{:,.2f}'.format(result.R) }}</th><th colspan="2" class="bar-col"></th></tr>
+                            <tr><th>C = Σ chi phí trên</th><th></th><th>{{ '{:,.2f}'.format(result.C) }}</th><th>100%</th><th class="bar-col"></th></tr>
+                            <tr><th>+ Lợi nhuận ({{ '{:,.0f}'.format(result.profit_pct) }}% × C)</th><th>{{ '{:,.2f}'.format(result.C) }} × {{ '{:.2f}'.format(result.profit_pct / 100) }}</th><th>{{ '{:,.2f}'.format(result.profit_amt) }}</th><th colspan="2" class="bar-col"></th></tr>
+                            <tr><th>+ Thuế ({{ '{:,.0f}'.format(result.tax_pct) }}% × C)</th><th>{{ '{:,.2f}'.format(result.C) }} × {{ '{:.2f}'.format(result.tax_pct / 100) }}</th><th>{{ '{:,.2f}'.format(result.tax_amt) }}</th><th colspan="2" class="bar-col"></th></tr>
+                            <tr><th>Doanh thu cho phép R = C + LN + Thuế</th><th></th><th>{{ '{:,.2f}'.format(result.R) }}</th><th colspan="2" class="bar-col"></th></tr>
                         </tfoot>
                     </table>
                 </div>
-                <p class="note">C = {{ '{:,.2f}'.format(result.C) }} triệu CNY; sau khi cộng lợi nhuận và thuế → R = <b>{{ '{:,.2f}'.format(result.R) }}</b> triệu CNY, chia cho Q_pricing để ra giá P.</p>
+                <div class="chain">
+                    <div class="chain-step">Vốn đầu tư <b>{{ '{:,.0f}'.format(result.invest) }}</b> triệu CNY ÷ <b>{{ '{:,.0f}'.format(result.dep_life) }}</b> năm</div>
+                    <div class="chain-arrow">→</div>
+                    <div class="chain-step">Khấu hao <b>{{ '{:,.2f}'.format(result.breakdown['Khấu hao']) }}</b></div>
+                    <div class="chain-arrow">→</div>
+                    <div class="chain-step">C = <b>{{ '{:,.2f}'.format(result.C) }}</b></div>
+                    <div class="chain-arrow">→</div>
+                    <div class="chain-step">+ LN {{ '{:,.0f}'.format(result.profit_pct) }}% <b>{{ '{:,.2f}'.format(result.profit_amt) }}</b></div>
+                    <div class="chain-arrow">→</div>
+                    <div class="chain-step">+ Thuế {{ '{:,.0f}'.format(result.tax_pct) }}% <b>{{ '{:,.2f}'.format(result.tax_amt) }}</b></div>
+                    <div class="chain-arrow">→</div>
+                    <div class="chain-step">R = <b>{{ '{:,.2f}'.format(result.R) }}</b> triệu CNY/năm</div>
+                    <div class="chain-arrow">→</div>
+                    <div class="chain-step">R ÷ Q_pricing <b>{{ '{:,.0f}'.format(result.q_pricing) }}</b> triệu m³</div>
+                    <div class="chain-arrow">→</div>
+                    <div class="chain-step final">{{ '{:.4f}'.format(result.price_cny) if result.price_cny is not none else '—' }} CNY/m³</div>
+                </div>
+                <p class="note">💡 Lợi nhuận và thuế đều tính theo phần trăm của C. Tổng R (triệu CNY/năm) chia cho lượng nước định giá Q_pricing (triệu m³/năm) cho ra giá tổng hợp P (CNY/m³).</p>
             </div>
         </div>
 
