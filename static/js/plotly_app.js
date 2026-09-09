@@ -405,7 +405,7 @@
             '🚁 Newton dùng <b>xấp xỉ bậc 2 (Hessian)</b>: chỉ cần <b>1 bước</b> để về đáy ' +
             '(' + fmt(from[0]) + ', ' + fmt(from[1]) + ') → (' + fmt(t[0]) + ', ' + fmt(t[1]) + '). Đây chính là "cái bát giả định" hoàn hảo vì f(x,y) là hàm toàn phương.';
         document.getElementById('gdWarn').classList.add('hidden');
-        drawGdConvergence([from], target);
+        drawGdConvergence([from], t);
         const fv = GD_K * (Math.pow(from[0] - 40, 2) + Math.pow(from[1] - 60, 2));
         const st = document.getElementById('gdStatus');
         st.innerHTML += '<br>📉 f(x₀,y₀) = ' + fmt(fv) + ' → f(40,60) = 0 sau 1 Newton step.';
