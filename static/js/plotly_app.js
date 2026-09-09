@@ -202,12 +202,12 @@
             theoryDiv.className = 'steps';
             theoryDiv.style.marginTop = '12px';
             theoryDiv.innerHTML =
-                '<h4 style="color:var(--primary);margin:0 0 8px">📖 Phương pháp Interior Point (Barrier)</h4>' +
-                '<p>① <b>Hàm rào cản:</b> f_μ(x) = −Z − μ·[Σ ln(s_i) + Σ ln(x_j)], với s_i = b_i − a_i·x. Khi μ → 0, nghiệm của f_μ tiến tới nghiệm tối ưu của bài toán gốc.</p>' +
-                '<p>② <b>Đường trung tâm (Central Path):</b> Tập hợp các điểm x(μ) tối ưu hóa f_μ với μ > 0. Khi μ giảm dần, đường trung tâm đi từ tâm miền khả thi về đỉnh tối ưu.</p>' +
-                '<p>③ <b>Newton cho mỗi μ:</b> Giải H(f_μ)·p = −∇f_μ để tìm hướng Newton, duyệt bước với line search đảm bảo x > 0, s > 0.</p>' +
-                '<p>④ <b>Giảm μ:</b> Sau khi hội tụ Newton, giảm μ × 0.3 và lặp lại. Chuỗi μ = 2000, 600, 180, 54, 16.2, ... hội tụ về 0.</p>' +
-                '<p>⑤ <b>Kết quả:</b> x* = (50, 50), Z* = 4000 (nghìn CNY). Tối đa lợi ích từ phân bổ nước tưới lúa và rau màu.</p>';
+                '<h4 style="color:var(--primary);margin:0 0 8px">📖 Lý thuyết Interior Point (Barrier Method)</h4>' +
+                '<p><b>① Bài toán:</b> Max Z=50x₁+30x₂, ràng buộc 140x₁+60x₂≤10.000, x₁+x₂≤100, x₁,x₂≥0. Nghiệm tối ưu: x₁=50, x₂=50, Z*=4.000.</p>' +
+                '<p><b>② Hàm rào cản (Barrier Function):</b> f_μ(x) = 50x₁+30x₂+μ[ln(x₁)+ln(x₂)+ln(100−x₁−x₂)+ln(10.000−140x₁−60x₂)]. Các hàm ln(...) tạo 4 bức tường vô hình bọc miền khả thi — khi điểm chạm biên, ln→−∞, kéo Z_μ→−∞ nên thuật toán tự động né.</p>' +
+                '<p><b>③ Đường trung tâm (Central Path):</b> Tập các điểm tối ưu của f_μ khi μ thay đổi. Khi μ→0, đường trung tâm tiến sát biên và hội tụ về đỉnh (50,50).</p>' +
+                '<p><b>④ Ba giai đoạn:</b> (a) μ rất lớn (μ=2000) → bức tường cao, nghiệm ở tâm miền (~x₁=20,x₂=20); (b) Giảm μ dần (×0.3) → thuật toán dám tiến gần biên hơn, Z tăng dần; (c) μ→0 → bức tường biến mất, nghiệm hội tụ (50,50).</p>' +
+                '<p><b>⑤ Thuật toán Newton:</b> Với mỗi μ cố định, giải H(f_μ)·p=−∇f_μ để tìm bước Newton, duyệt line search đảm bảo x₁,x₂,s_i>0. Chuỗi μ=2000→600→180→54→16.2→...→0.</p>';
             stepsDiv.appendChild(theoryDiv);
             // Animation: animate IPM path on LP plot
             if (ipm.path && ipm.path.length > 1) {
