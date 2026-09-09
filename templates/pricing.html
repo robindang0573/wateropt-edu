@@ -13,7 +13,7 @@
             <h2 class="card-title">Nhập liệu <span class="unit">đơn vị: triệu CNY / triệu m³</span></h2>
 
             <div class="form-group">
-                <div class="group-label">🧮 Nhóm Chi phí (准许成本)</div>
+                <div class="group-label">🧮 Nhóm Chi phí (准许成本) <span class="unit">đơn vị: triệu CNY/năm</span></div>
                 <div class="form-row">
                     <div><label>Khấu hao</label><input type="number" step="any" name="dep" value="20"></div>
                     <div><label>Nhân công</label><input type="number" step="any" name="om_labor" value="10"></div>
@@ -32,11 +32,12 @@
             </div>
 
             <div class="form-group">
-                <div class="group-label">🏞️ Nhóm Nước</div>
+                <div class="group-label">🏞️ Nhóm Nước <span class="unit">đơn vị: triệu m³/năm</span></div>
                 <div class="form-row">
                     <div><label>Công suất thiết kế (Design_Q)</label><input type="number" step="any" name="design_q" value="100"></div>
                     <div><label>Lượng nước bán thực (Actual_Q)</label><input type="number" step="any" name="actual_q" value="40"></div>
                 </div>
+                <p class="note" style="margin-top:6px">⚙️ <b>Q_pricing</b> = max(Actual_Q, 60% × Design_Q) — là <b>lượng nước tối thiểu dùng để định giá</b>, <u>không phải</u> lượng nước bán thực. Khi bán ít nước mà tính giá trên lượng bán thực thì giá sẽ đội lên quá cao; định giá trên 60% công suất giúp thu đủ chi phí ở mức giá hợp lý.</p>
             </div>
 
             <div class="form-group">
@@ -89,8 +90,8 @@
         <div class="metric-details" id="d-price">
             <h3>Giá nước tổng hợp</h3>
             <div class="formula">$$P = \frac{R}{Q_{pricing}} = \frac{Doanh\ thu\ cho\ phép}{Lượng\ nước\ định\ giá}$$</div>
-            <p>Doanh thu cho phép R = C + Lợi nhuận + Thuế. Chia cho lượng nước định giá (đã qua quy tắc 60%).</p>
-            <p class="result-line">R = {{ '{:,.2f}'.format(result.R) }} triệu CNY ; Q_pricing = {{ '{:,.0f}'.format(result.q_pricing) }} → P = <b>{{ '{:.4f}'.format(result.price_cny) }} CNY/m³</b></p>
+            <p>Doanh thu cho phép R = C + Lợi nhuận + Thuế (đơn vị <b>triệu CNY/năm</b>). Chia cho <b>lượng nước định giá Q_pricing</b> (<b>triệu m³/năm</b> — đã qua quy tắc 60%) → P đơn vị <b>CNY/m³</b>.</p>
+            <p class="result-line">R = {{ '{:,.2f}'.format(result.R) }} triệu CNY/năm ; Q_pricing = {{ '{:,.0f}'.format(result.q_pricing) }} triệu m³/năm → P = <b>{{ '{:.4f}'.format(result.price_cny) }} CNY/m³</b></p>
         </div>
         <div class="metric-details" id="d-vnd">
             <h3>Quy đổi Việt Nam</h3>
@@ -99,7 +100,10 @@
         <div class="metric-details" id="d-qp">
             <h3>Quy tắc 60%</h3>
             <div class="formula">$$Q_{pricing} = \max\big(Actual\_Q,\ 0{,}6 \times Design\_Q\big)$$</div>
-            <p>Khi bán ít nước (mùa khô, ít trồng trọt) vẫn phải đóng chi phí cố định. Vì vậy giá tính trên tối thiểu 60% công suất.</p>
+            <p><b>Q_pricing là lượng nước định giá tối thiểu (triệu m³/năm), KHÔNG phải lượng nước bán.</b> Lượng nước bán thực ở đây là {{ '{:,.0f}'.format(result.actual_q) }} triệu m³ — nhưng giá được định trên <b>{{ '{:,.0f}'.format(result.q_pricing) }} triệu m³</b>. Nếu tính giá trên lượng bán thực thì doanh thu cho phép {{ '{:,.2f}'.format(result.R) }} triệu CNY quy ra {{ '{:.4f}'.format(result.R / result.actual_q) if result.actual_q > 0 else '—' }} CNY/m³ — quá cao, nông dân không chịu nổi (vụ khô bán ít nhưng chi phí cố định vẫn đóng đủ).</p>
+            <p class="result-line">
+                max({{ '{:,.0f}'.format(result.actual_q) }}, 60% × {{ '{:,.0f}'.format(result.design_q) }}) = max({{ '{:,.0f}'.format(result.actual_q) }}, {{ '{:,.0f}'.format(0.6 * result.design_q) }}) = <b>{{ '{:,.0f}'.format(result.q_pricing) }} triệu m³</b> — phần chênh coi như công suất dự phòng, giúp giá P = {{ '{:.4f}'.format(result.price_cny) if result.price_cny is not none else '—' }} CNY/m³ giữ ở mức thu đủ chi phí.
+            </p>
         </div>
         <div class="metric-details" id="d-bill">
             <h3>Hóa đơn hộ mẫu (3 bậc lũy tiến)</h3>
@@ -112,26 +116,54 @@
                 <div id="costChart" class="plot"></div>
             </div>
             <div class="card">
-                <h3>🧾 Bảng tính tiền lũy tiến</h3>
+                <h3>🧾 Bảng cơ cấu chi phí (准许成本)</h3>
                 <div class="table-responsive">
                     <table>
-                        <thead><tr><th>Bậc</th><th>Khoảng</th><th>Hệ số</th><th>Giá (CNY/m³)</th><th>Thành tiền</th></tr></thead>
+                        <thead><tr><th>Hạng mục</th><th>Giá trị (triệu CNY/năm)</th><th>Tỉ trọng</th><th class="bar-col">Thanh tỉ trọng</th></tr></thead>
                         <tbody>
-                            {% for t in result.tiers %}
+                            {% for row in result.cost_rows %}
                             <tr>
-                                <td>{{ loop.index }}</td>
-                                <td>{{ t.range }}</td>
-                                <td>{{ t.rate }}</td>
-                                <td>{{ '{:,.4f}'.format(t.price) if t.price is not none else '—' }}</td>
-                                <td>{{ '{:,.0f}'.format(t.amount) }}</td>
+                                <td>{{ row.name }}</td>
+                                <td>{{ '{:,.2f}'.format(row.value) }}</td>
+                                <td>{{ '{:.1f}%'.format(row.share) }}</td>
+                                <td class="bar-col">
+                                    <div class="sharebar"><div class="sharebar-fill" style="width: {{ row.share }}%"></div></div>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
-                        <tfoot><tr><td colspan="4">Tổng hóa đơn</td><td>{{ '{:,.0f}'.format(result.bill) }}</td></tr></tfoot>
+                        <tfoot>
+                            <tr><th>Chi phí cho phép C</th><th>{{ '{:,.2f}'.format(result.C) }}</th><th>100%</th><th class="bar-col"></th></tr>
+                            <tr><th>+ Lợi nhuận ({{ '{:,.0f}'.format(result.profit_pct) }}%)</th><th>{{ '{:,.2f}'.format(result.profit_amt) }}</th><th colspan="2" class="bar-col"></th></tr>
+                            <tr><th>+ Thuế ({{ '{:,.0f}'.format(result.tax_pct) }}%)</th><th>{{ '{:,.2f}'.format(result.tax_amt) }}</th><th colspan="2" class="bar-col"></th></tr>
+                            <tr><th>Doanh thu cho phép R</th><th>{{ '{:,.2f}'.format(result.R) }}</th><th colspan="2" class="bar-col"></th></tr>
+                        </tfoot>
                     </table>
                 </div>
-                <p class="note">Vùng {{ '{:,.0f}'.format(result.area_ha) }} ha (1 hộ/ha): lượng dùng ~{{ '{:,.0f}'.format(result.total_ha_use) }} m³, doanh thu ước {{ '{:,.0f}'.format(result.total_ha_bill) }} CNY/năm.</p>
+                <p class="note">C = {{ '{:,.2f}'.format(result.C) }} triệu CNY; sau khi cộng lợi nhuận và thuế → R = <b>{{ '{:,.2f}'.format(result.R) }}</b> triệu CNY, chia cho Q_pricing để ra giá P.</p>
             </div>
+        </div>
+
+        <div class="card">
+            <h3>🧾 Bảng tính tiền lũy tiến</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Bậc</th><th>Khoảng</th><th>Hệ số</th><th>Giá (CNY/m³)</th><th>Thành tiền</th></tr></thead>
+                    <tbody>
+                        {% for t in result.tiers %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ t.range }}</td>
+                            <td>{{ t.rate }}</td>
+                            <td>{{ '{:,.4f}'.format(t.price) if t.price is not none else '—' }}</td>
+                            <td>{{ '{:,.0f}'.format(t.amount) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot><tr><td colspan="4">Tổng hóa đơn</td><td>{{ '{:,.0f}'.format(result.bill) }}</td></tr></tfoot>
+                </table>
+            </div>
+            <p class="note">Vùng {{ '{:,.0f}'.format(result.area_ha) }} ha (1 hộ/ha): lượng dùng ~{{ '{:,.0f}'.format(result.total_ha_use) }} m³, doanh thu ước {{ '{:,.0f}'.format(result.total_ha_bill) }} CNY/năm.</p>
         </div>
 
         <div class="card">

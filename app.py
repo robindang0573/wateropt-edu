@@ -350,8 +350,17 @@ def compute_pricing(form):
     total_ha_quota = area_ha * quota
     total_ha_bill = area_ha * bill
 
+    # Bảng cơ cấu chi phí có tỉ trọng
+    cost_rows = []
+    for name, val in breakdown.items():
+        cost_rows.append({
+            "name": name, "value": round(val, 2),
+            "share": round(val / C * 100, 2) if C > 0 else 0.0,
+        })
+
     return {
         "breakdown": breakdown,
+        "cost_rows": cost_rows,
         "C": C, "profit_amt": profit_amt, "tax_amt": tax_amt,
         "profit_pct": profit * 100, "tax_pct": tax * 100, "R": R,
         "design_q": dq, "actual_q": aq, "q_pricing": q_pricing,
