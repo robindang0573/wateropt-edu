@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}WaterOpt Edu — Dashboard{% endblock %}
+{% block content %}
+<h1 class="page-title">🗂️ Dashboard</h1>
+<p class="page-desc">Nền tảng tương tác giúp trực quan hóa kinh tế, giá nước và các thuật toán tối ưu trong quản lý tài nguyên nước. <em>"No Math Wall"</em> — mọi công thức đều có chú thích đời thường & hình minh họa.</p>
+
+<div class="module-grid">
+    <a class="module-card" href="{{ url_for('economic') }}">
+        <div class="module-icon">📊</div>
+        <h2>Module 1 · Kinh tế dự án</h2>
+        <p>NPV, B/C, IRR, AW và thời gian hoàn vốn cho dự án TNN. Biểu đồ dòng tiền, đường chiết khấu lũy tích.</p>
+        <div class="module-tags"><span>NPV</span><span>B/C</span><span>IRR</span><span>Payback</span></div>
+    </a>
+    <a class="module-card" href="{{ url_for('pricing') }}">
+        <div class="module-icon">🌾</div>
+        <h2>Module 2 · Giá nước nông nghiệp</h2>
+        <p>Cơ chế Trung Quốc: chi phí cho phép, quy tắc 60%, giá hai thành phần, giá lũy tiến.</p>
+        <div class="module-tags"><span>Quy tắc 60%</span><span>Lũy tiến</span><span>CNY/m³</span></div>
+    </a>
+    <a class="module-card" href="{{ url_for('optimization') }}">
+        <div class="module-icon">🧠</div>
+        <h2>Module 3 · Tối ưu hóa & Thuật toán</h2>
+        <p>Trực quan hóa Quy hoạch tuyến tính (Simplex/Interior Point), Gradient Descent & Newton, Quy hoạch động vận hành hồ chứa.</p>
+        <div class="module-tags"><span>LP</span><span>Gradient</span><span>Newton</span><span>DP</span></div>
+    </a>
+</div>
+
+<div class="card">
+    <h2>🎓 Dùng thế nào?</h2>
+    <div class="intro-grid">
+        <div class="intro-card">
+            <h3>Với sinh viên</h3>
+            <ul>
+                <li>Chạy ví dụ mẫu trước, sau đó đổi số liệu để tự kiểm chứng.</li>
+                <li>Bấm nút <b>"Chạy thuật toán"</b> để <b>thấy</b> từng bước hội tụ.</li>
+                <li>Hover các thuật ngữ có gạch chân để xem tooltip giải thích.</li>
+            </ul>
+        </div>
+        <div class="intro-card">
+            <h3>Với giảng viên</h3>
+            <ul>
+                <li>Dùng chế độ theme tối khi chiếu ngoài trời, theme "Đồng ruộng" khi thuyết trình.</li>
+                <li>Biểu đồ 3D/hoạt ảnh phù hợp trình chiếu trên iPad.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

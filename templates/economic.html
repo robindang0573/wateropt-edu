@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Kinh tế dự án — WaterOpt Edu{% endblock %}
+{% block content %}
+
+<h1 class="page-title">📊 Module 1 · Phân tích Kinh tế Dự án TNN</h1>
+<p class="page-desc">
+    Dòng tiền được chiết khấu về <b>năm gốc 0</b> với tỉ suất $i$.
+    NPV > 0, B/C > 1 → dự án khả thi về kinh tế.
+</p>
+
+<div class="psplit">
+    <div>
+        <form method="post" id="ecoForm" class="card">
+            <h2 class="card-title">Nhập liệu <span class="unit">đơn vị: triệu USD</span></h2>
+
+            <div class="form-group">
+                <div class="group-label">🏗️ Nhóm Đầu tư</div>
+                <label>Vốn đầu tư năm 0 (I) <span class="unit">triệu USD</span></label>
+                <input type="number" step="any" name="invest" id="f_invest" value="120">
+                <label>Giá trị còn lại cuối kỳ (Salvage) <span class="unit">triệu USD</span></label>
+                <input type="number" step="any" name="salvage" id="f_salvage" value="8">
+            </div>
+
+            <div class="form-group">
+                <div class="group-label">🔧 Nhóm Vận hành</div>
+                <div class="form-row">
+                    <div>
+                        <label>Lợi ích hàng năm (B)</label>
+                        <input type="number" step="any" name="benefit" id="f_benefit" value="24">
+                    </div>
+                    <div>
+                        <label>Chi phí O&amp;M (OM)</label>
+                        <input type="number" step="any" name="om" id="f_om" value="6">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label>Chi phí thay thế</label>
+                        <input type="number" step="any" name="rep_cost" id="f_rep_cost" value="10">
+                    </div>
+                    <div>
+                        <label>Năm thay thế</label>
+                        <input type="number" name="rep_year" id="f_rep_year" value="10">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="group-label">📐 Nhóm Thông số kinh tế</div>
+                <div class="form-row">
+                    <div>
+                        <label>Tỉ suất chiết khấu (i) <span class="unit">%/năm</span></label>
+                        <input type="number" step="any" name="rate" id="f_rate" value="8">
+                    </div>
+                    <div>
+                        <label>Số năm phân tích (n)</label>
+                        <input type="number" name="nper" id="f_nper" value="20">
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button type="submit" class="btn primary">Tính toán</button>
+                <button type="button" class="btn ghost" id="loadExample">⚡ Load Example</button>
+            </div>
+        </form>
+
+        {% if result and result.error %}
+        <div class="alert error">⚠️ {{ result.error }}</div>
+        {% endif %}
+    </div>
+
+    <div>
+        {% if result %}
+        <div class="kpi-grid">
+            <button class="kpi-box {{ 'positive' if result.npv > 0 else 'negative' }}" onclick="toggleDetails('d-npv')">
+                <span>NPV</span>
+                <strong>{{ '{:,.2f}'.format(result.npv) }}</strong>
+            </button>
+            <button class="kpi-box {{ 'positive' if result.bc and result.bc > 1 else 'negative' }}" onclick="toggleDetails('d-bc')">
+                <span>B/C</span>
+                <strong>{{ '{:,.2f}'.format(result.bc) if result.bc is not none else '—' }}</strong>
+            </button>
+            <button class="kpi-box {{ 'positive' if result.irr and result.irr*100 > result.i else 'negative' }}" onclick="toggleDetails('d-irr')">
+                <span>IRR</span>
+                <strong>{{ '{:.2f}%'.format(result.irr*100) if result.irr is not none else '—' }}</strong>
+            </button>
+            <button class="kpi-box {{ 'positive' if result.aw > 0 else 'negative' }}" onclick="toggleDetails('d-aw')">
+                <span>AW (niên kim)</span>
+                <strong>{{ '{:,.2f}'.format(result.aw) }}</strong>
+            </button>
+        </div>
+
+        <div class="decision-box {{ 'positive' if result.status == 'feasible' else 'negative' }}">
+            {% if result.status == 'feasible' %}
+            ✅ NPV &gt; 0 và B/C &gt; 1 → DỰ ÁN KHẢ THI, chấp nhận đầu tư
+            {% else %}
+            ❌ NPV ≤ 0 hoặc B/C ≤ 1 → DỰ ÁN KHÔNG KHẢ THI
+            {% endif %}
+        </div>
+
+        <div class="metric-details" id="d-npv">
+            <h3>NPV — Giá trị hiện tại ròng</h3>
+            <div class="formula">$$NPV = \sum_{t=0}^{n} \frac{B_t - C_t}{(1+i)^t}$$</div>
+            <p>Tổng tất cả dòng tiền <b>đã quy về năm 0</b>. NPV > 0 nghĩa là lợi ích vượt chi phí sau khi tính trượt giá theo thời gian.</p>
+            <p class="result-line">Kết quả: <b>{{ '{:,.2f}'.format(result.npv) }}</b> triệu USD</p>
+        </div>
+        <div class="metric-details" id="d-bc">
+            <h3>B/C — Tỉ số Lợi ích / Chi phí</h3>
+            <div class="formula">$$B/C = \frac{\sum B_t/(1+i)^t}{\sum C_t/(1+i)^t}$$</div>
+            <p>Mỗi 1 đồng bỏ ra thu về bao nhiêu đồng lợi ích. B/C > 1 là đang "lời".</p>
+            <p class="result-line">Giá trị hiện tại lợi ích: {{ '{:,.2f}'.format(result.pw_b) }} ; chi phí: {{ '{:,.2f}'.format(result.pw_c) }} → B/C = <b>{{ '{:,.2f}'.format(result.bc) if result.bc is not none else '—' }}</b></p>
+        </div>
+        <div class="metric-details" id="d-irr">
+            <h3>IRR — Tỉ suất hoàn vốn nội bộ</h3>
+            <div class="formula">$$Tìm\ r\, : \quad NPV(r) = 0$$</div>
+            <p>Mức chiết khấu khiến dòng tiền vừa "huề vốn". Dự án tốt nếu IRR > tỉ suất chiết khấu yêu cầu ({{ '{:,.0f}%'.format(result.i) }}).</p>
+            <p class="result-line">IRR = <b>{{ '{:.2f}%'.format(result.irr*100) if result.irr is not none else 'Không xác định (NPV &lt; 0 với mọi i)' }}</b></p>
+        </div>
+        <div class="metric-details" id="d-aw">
+            <h3>AW — Giá trị niên kim đều</h3>
+            <div class="formula">$$AW = NPV \times \frac{i(1+i)^n}{(1+i)^n - 1}$$</div>
+            <p>Chia đều NPV ra thành 1 khoản <b>bằng nhau mỗi năm</b> trong n năm — dễ so sánh các phương án có tuổi thọ khác nhau.</p>
+            <p class="result-line">AW = <b>{{ '{:,.2f}'.format(result.aw) }}</b> triệu USD/năm</p>
+        </div>
+
+        {# Biểu đồ #}
+        <div class="card chart-card">
+            <h3>📉 Dòng tiền ròng qua các năm</h3>
+            <div id="cfChart" class="plot"></div>
+        </div>
+        <div class="card chart-card">
+            <h3>📈 Dòng tiền chiết khấu lũy tích</h3>
+            <p class="note">Điểm cắt trục hoành = <b>thời gian hoàn vốn</b> (Payback Period).</p>
+            <div id="cumChart" class="plot"></div>
+        </div>
+        {% else %}
+        <div class="card placeholder">
+            <h3>📤 Kết quả sẽ hiển thị tại đây</h3>
+            <p>Nhập số liệu rồi bấm <b>Tính toán</b>. Hoặc bấm <b>Load Example</b> để chạy ngay ví dụ I=120, B=24, OM=6, i=8%, n=20.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if result %}
+<script>
+    const years = {{ result.years | tojson }};
+    const cf = {{ result.cf | tojson }};
+    const cum = {{ result.cum | tojson }};
+    const payback = {{ result.payback | tojson }};
+
+    Plotly.newPlot('cfChart', [{
+        x: years, y: cf, type: 'bar',
+        marker: { color: cf.map(v => v < 0 ? '#e76f51' : '#0a9396') },
+        name: 'Dòng tiền ròng'
+    }], {
+        margin: { t: 10, b: 45, l: 55, r: 15 },
+        xaxis: { title: 'Năm (t)' },
+        yaxis: { title: 'Triệu USD' },
+        bargap: 0.15, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)'
+    });
+
+    const traces = [{
+        x: years, y: cum, type: 'scatter', mode: 'lines+markers',
+        line: { color: '#005f73', width: 3 },
+        name: 'NPV lũy tích'
+    }, {
+        x: years, y: cum.map(() => 0), type: 'scatter', mode: 'lines',
+        line: { color: '#e76f51', width: 1, dash: 'dash' }, name: 'Hoàn vốn', hoverinfo: 'skip'
+    }];
+    {% if result.payback is not none %}
+    traces.push({
+        x: [years[payback]], y: [cum[payback]], type: 'scatter', mode: 'markers+text',
+        marker: { size: 14, color: '#e76f51' }, text: ['Payback : ' + payback + ' năm'],
+        textposition: 'top center', name: 'Payback'
+    });
+    {% endif %}
+    Plotly.newPlot('cumChart', traces, {
+        margin: { t: 10, b: 45, l: 55, r: 15 },
+        xaxis: { title: 'Năm (t)' },
+        yaxis: { title: 'Triệu USD' },
+        paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', showlegend: true
+    });
+</script>
+{% endif %}
+{% endblock %}

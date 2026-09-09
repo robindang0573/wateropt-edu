@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Tối ưu hóa & Thuật toán — WaterOpt Edu{% endblock %}
+{% block content %}
+
+<h1 class="page-title">🧠 Module 3 · Trực quan hóa Thuật toán Tối ưu</h1>
+<p class="page-desc">
+    Ba thuật toán kinh điển: <b>Quy hoạch tuyến tính</b> (miền khả thi + Simplex), <b>Gradient Descent &amp; Newton</b> (bề mặt 3D), <b>Quy hoạch động</b> (truy hồi ngược hồ chứa).
+</p>
+
+<div class="jumpbar">
+    <a href="#lp" class="chip">3.1 Quy hoạch tuyến tính</a>
+    <a href="#gd" class="chip">3.2 Gradient & Newton</a>
+    <a href="#dp" class="chip">3.3 Quy hoạch động</a>
+</div>
+
+<!-- ============ 3.1 LP ============ -->
+<section class="card" id="lp">
+    <h2>3.1 🎯 Quy hoạch tuyến tính — Phương pháp đồ thị</h2>
+    <p class="note">
+        Phân bổ nước tưới: tối đa lợi ích $Z = c_1 x_1 + c_2 x_2$ (nghìn CNY) với $x_1$ (ha trồng <i>lúa</i>), $x_2$ (ha trồng <i>rau màu</i>), dưới các ràng buộc về nước, đất, lao động.
+        <span class="hint" data-tip="Nghiệm tối ưu của bài toán tuyến tính luôn nằm ở một đỉnh (vertex) của đa diện lồi.">Đỉnh tối ưu?<sup>ⓘ</sup></span>
+    </p>
+
+    <div class="psplit">
+        <div>
+            <div class="form-group">
+                <div class="group-label">🎯 Hàm mục tiêu (Max Z)</div>
+                <div class="form-row small">
+                    <div><label>c₁</label><input type="number" step="any" id="lp_c1" value="{{ lp.obj[0] }}"></div>
+                    <div><label>c₂</label><input type="number" step="any" id="lp_c2" value="{{ lp.obj[1] }}"></div>
+                    <div class="none"></div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="group-label">🔗 Ràng buộc (a₁·x₁ + a₂·x₂ ≤ b; x₁, x₂ ≥ 0)</div>
+                {% for r in lp.rows %}
+                <div class="form-row small cons-row">
+                    <input type="number" step="any" class="con_a1" value="{{ r.a1 }}">
+                    <input type="number" step="any" class="con_a2" value="{{ r.a2 }}">
+                    <input type="number" step="any" class="con_b" value="{{ r.b }}">
+                </div>
+                {% endfor %}
+                <div class="form-row small cons-row">
+                    <input type="number" step="any" class="con_a1" placeholder="a₁">
+                    <input type="number" step="any" class="con_a2" placeholder="a₂">
+                    <input type="number" step="any" class="con_b" placeholder="b">
+                </div>
+                <p class="note" style="font-size:0.8em">Mỗi hàng = 1 ràng buộc. Hàng trống sẽ bị bỏ qua.</p>
+            </div>
+            <div class="btn-row">
+                <button type="button" class="btn primary" id="lpRun">Giải &amp; Vẽ</button>
+                <button type="button" class="btn ghost" id="lpSimplex">▶ Chạy Simplex</button>
+                <button type="button" class="btn ghost" id="lpInterior">▶ Chạy Interior Point</button>
+            </div>
+            <div id="lpStatus" class="sim-readout hidden">…</div>
+        </div>
+
+        <div>
+            <div id="lpPlot" class="plot lp-plot"></div>
+            <p class="note">
+                <b>Miền xanh</b> = miền khả thi. <b>Đường đứt ngang</b> = đường đồng mức lợi ích Z.
+                <b>Simplex</b> nhảy theo cạnh đa diện; <b>Interior Point</b> đi xuyên qua trong.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- ============ 3.2 GD / Newton ============ -->
+<section class="card" id="gd">
+    <h2>3.2 📉 Gradient Descent &amp; Newton (NLP)</h2>
+    <p class="note">
+        Hàm chi phí $f(x,y) = 3\big[(x-40)^2 + (y-60)^2\big]$ — đáy bát tại <b>(40, 60)</b>.
+        Quả bóng lăn theo hướng ngược gradient với bước nhảy $\alpha$. <span class="hint" data-tip="Với hệ số f = 3×(...)², hội tụ khi α ≤ 0,33; ngược lại (vd α = 0,5) quả bóng nhảy văng ra ngoài 'bát' và phân kỳ.">α quá lớn?<sup>ⓘ</sup></span>
+    </p>
+
+    <div class="psplit">
+        <div>
+            <div class="form-row small">
+                <div><label>Điểm khởi tạo x₀</label><input type="number" step="any" id="gd_x0" value="{{ gd.traj[0][0] }}"></div>
+                <div><label>Điểm khởi tạo y₀</label><input type="number" step="any" id="gd_y0" value="{{ gd.traj[0][1] }}"></div>
+            </div>
+            <div class="sim-controls">
+                <label>Learning rate α = <b id="gdAlphaOut">0,05</b>
+                    <input type="range" id="gdAlpha" min="0.01" max="0.6" step="0.005" value="0.05">
+                </label>
+            </div>
+            <div id="gdWarn" class="alert warning hidden"></div>
+            <div class="btn-row">
+                <button type="button" class="btn primary" id="gdRun">▶ Chạy Gradient Descent</button>
+                <button type="button" class="btn ghost" id="gdNewton">🚁 Bật Drone (Newton — 1 bước)</button>
+            </div>
+            <div id="gdStatus" class="sim-readout hidden"></div>
+        </div>
+        <div>
+            <div id="gdPlot" class="plot gd-plot"></div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ 3.3 DP ============ -->
+<section class="card" id="dp">
+    <h2>3.3 🔁 Quy hoạch động — Vận hành hồ chứa (Backward Recursion)</h2>
+    <p class="note">
+        Quyết định <b>xả bao nhiêu nước mỗi tháng</b> để tối đa tổng lợi ích - năng lượng/tưới 12 tháng.
+        <span class="hint" data-tip="Giải từ tháng 12 về tháng 1: mỗi bước nhớ 'giá trị tốt nhất từ tháng t đến hết kỳ' (hàm Bellman).">Truy hồi ngược?<sup>ⓘ</sup></span>
+    </p>
+    <div class="formula">$$F_t(S_t) = \max_{R_t \in [0,\ S_t + I_t]} \Big[ B(R_t) + F_{t+1}\big(\underbrace{S_t + I_t - R_t}_{\text{mực nước kế}}\big) \Big]$$</div>
+
+    <div class="psplit">
+        <div>
+            <div class="btn-row">
+                <button type="button" class="btn primary" id="dpPlay">▶ Play Backward</button>
+                <button type="button" class="btn ghost" id="dpReset">↺ Reset</button>
+            </div>
+            <div class="dp-timeline" id="dpTimeline"></div>
+            <div id="dpReadout" class="sim-readout"></div>
+            <div class="card">
+                <h3>🧾 Bảng State → Decision → Reward</h3>
+                <div class="table-responsive">
+                    <table id="dpTable" class="dp-table">
+                        <thead><tr><th>Tháng</th><th>Dòng vào Iₜ</th><th>Mực nước Sₜ</th><th>Xả R*ₜ</th><th>Lợi ích B(R)</th><th>Fₜ(Sₜ)</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div>
+            <div id="dpPlot" class="plot dp-plot"></div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.__LP = {{ lp | tojson }};
+    window.__GD = {{ gd | tojson }};
+    window.__NEWTON = {{ newton | tojson }};
+    window.__DP = {{ dp | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/plotly_app.js') }}"></script>
+{% endblock %}

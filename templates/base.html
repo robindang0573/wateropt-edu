@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}WaterOpt Edu{% endblock %}</title>
+    <script>
+        (function () {
+            var t = localStorage.getItem('wateropt-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js"></script>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar" id="sidebar">
+        <div class="brand">
+            <div class="brand-icon">💧</div>
+            <div>
+                <div class="brand-name">WaterOpt Edu</div>
+                <div class="brand-sub">Tối ưu & Kinh tế TNN</div>
+            </div>
+        </div>
+
+        <nav class="menu">
+            <a class="menu-item {{ 'active' if active == 'home' }}" href="{{ url_for('index') }}">
+                <span class="icon">🏠</span><span>Dashboard</span>
+            </a>
+            <div class="menu-label">Các Module</div>
+            <a class="menu-item {{ 'active' if active == 'economic' }}" href="{{ url_for('economic') }}">
+                <span class="icon">📊</span><span>1. Kinh tế dự án</span>
+            </a>
+            <a class="menu-item {{ 'active' if active == 'pricing' }}" href="{{ url_for('pricing') }}">
+                <span class="icon">🌾</span><span>2. Giá nước nông nghiệp</span>
+            </a>
+            <a class="menu-item {{ 'active' if active == 'optimization' }}" href="{{ url_for('optimization') }}">
+                <span class="icon">🧠</span><span>3. Tối ưu hóa</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-foot">
+            <div class="theme-switch" id="themeSwitch">
+                <button type="button" data-theme-opt="light" title="Sáng">☀️</button>
+                <button type="button" data-theme-opt="dark" title="Tối">🌙</button>
+                <button type="button" data-theme-opt="lake" title="Hồ Động Đình">🌊</button>
+                <button type="button" data-theme-opt="rice" title="Đồng ruộng">🌾</button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="main-inner">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (window.renderMathInElement) {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '\\(', right: '\\)', display: false },
+                    { left: '$', right: '$', display: false }
+                ],
+                throwOnError: false
+            });
+        }
+    });
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

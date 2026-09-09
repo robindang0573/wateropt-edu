@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block title %}Giá nước nông nghiệp — WaterOpt Edu{% endblock %}
+{% block content %}
+
+<h1 class="page-title">🌾 Module 2 · Cơ chế Giá nước Nông nghiệp (Trung Quốc)</h1>
+<p class="page-desc">
+    Chuỗi tính giá: <b>Chi phí cho phép (准许成本)</b> → <b>Doanh thu cho phép</b> → <b>Quy tắc 60%</b> → <b>Giá nước hai thành phần</b> → <b>Giá lũy tiến</b>.
+</p>
+
+<div class="psplit">
+    <div>
+        <form method="post" id="priceForm" class="card">
+            <h2 class="card-title">Nhập liệu <span class="unit">đơn vị: triệu CNY / triệu m³</span></h2>
+
+            <div class="form-group">
+                <div class="group-label">🧮 Nhóm Chi phí (准许成本)</div>
+                <div class="form-row">
+                    <div><label>Khấu hao</label><input type="number" step="any" name="dep" value="20"></div>
+                    <div><label>Nhân công</label><input type="number" step="any" name="om_labor" value="10"></div>
+                    <div><label>Điện năng</label><input type="number" step="any" name="om_energy" value="8"></div>
+                    <div><label>Sửa chữa</label><input type="number" step="any" name="om_repair" value="4"></div>
+                    <div><label>Quản lý</label><input type="number" step="any" name="om_mgmt" value="3"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="group-label">💰 Nhóm Tài chính</div>
+                <div class="form-row">
+                    <div><label>Tỉ suất lợi nhuận <span class="unit">%</span></label><input type="number" step="any" name="profit" value="5"></div>
+                    <div><label>Thuế <span class="unit">%</span></label><input type="number" step="any" name="tax" value="3"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="group-label">🏞️ Nhóm Nước</div>
+                <div class="form-row">
+                    <div><label>Công suất thiết kế (Design_Q)</label><input type="number" step="any" name="design_q" value="100"></div>
+                    <div><label>Lượng nước bán thực (Actual_Q)</label><input type="number" step="any" name="actual_q" value="40"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="group-label">🚜 Nhóm Giá lũy tiến (bậc)</div>
+                <div class="form-row">
+                    <div><label>Định mức hộ <span class="unit">m³/năm</span></label><input type="number" step="any" name="quota" value="6000"></div>
+                    <div><label>Dùng thực tế hộ mẫu</label><input type="number" step="any" name="use" value="7200"></div>
+                    <div><label>Diện tích vùng <span class="unit">ha</span></label><input type="number" step="any" name="area_ha" value="1000"></div>
+                </div>
+                <div class="form-row">
+                    <div><label>Bậc 2 (vượt ≤10%) <span class="unit">+%</span></label><input type="number" step="any" name="tier2" value="20"></div>
+                    <div><label>Bậc 3 (vượt &gt;10%) <span class="unit">+%</span></label><input type="number" step="any" name="tier3" value="50"></div>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button type="submit" class="btn primary">Tính giá</button>
+            </div>
+        </form>
+    </div>
+
+    <div>
+        {% if result %}
+        {% if result.rule60 %}
+        <div class="alert warning">
+            ⚠️ Lượng nước bán thực ({{ '{:,.0f}'.format(result.actual_q) }} triệu m³) &lt; 60% công suất thiết kế ({{ '{:,.0f}'.format(0.6*result.design_q) }} triệu m³).<br>
+            Áp dụng <b>Q_pricing = 60% × Design_Q = {{ '{:,.0f}'.format(result.q_pricing) }}</b> triệu m³ để bảo đảm O&amp;M.
+        </div>
+        {% endif %}
+
+        <div class="kpi-grid">
+            <button class="kpi-box positive" onclick="toggleDetails('d-price')">
+                <span>Giá tổng hợp P</span>
+                <strong>{{ '{:.4f}'.format(result.price_cny) if result.price_cny is not none else '—' }} CNY/m³</strong>
+            </button>
+            <button class="kpi-box positive" onclick="toggleDetails('d-vnd')">
+                <span>Quy đổi</span>
+                <strong>{{ '{:,.0f}'.format(result.price_vnd) if result.price_vnd is not none else '—' }} đ/m³</strong>
+            </button>
+            <button class="kpi-box" onclick="toggleDetails('d-qp')">
+                <span>Q_pricing</span>
+                <strong>{{ '{:,.1f}'.format(result.q_pricing) }} triệu m³</strong>
+            </button>
+            <button class="kpi-box positive" onclick="toggleDetails('d-bill')">
+                <span>Hóa đơn hộ mẫu</span>
+                <strong>{{ '{:,.0f}'.format(result.bill) }} CNY</strong>
+            </button>
+        </div>
+
+        <div class="metric-details" id="d-price">
+            <h3>Giá nước tổng hợp</h3>
+            <div class="formula">$$P = \frac{R}{Q_{pricing}} = \frac{Doanh\ thu\ cho\ phép}{Lượng\ nước\ định\ giá}$$</div>
+            <p>Doanh thu cho phép R = C + Lợi nhuận + Thuế. Chia cho lượng nước định giá (đã qua quy tắc 60%).</p>
+            <p class="result-line">R = {{ '{:,.2f}'.format(result.R) }} triệu CNY ; Q_pricing = {{ '{:,.0f}'.format(result.q_pricing) }} → P = <b>{{ '{:.4f}'.format(result.price_cny) }} CNY/m³</b></p>
+        </div>
+        <div class="metric-details" id="d-vnd">
+            <h3>Quy đổi Việt Nam</h3>
+            <p>Với tỉ giá tham chiếu <b>3.550 đ/CNY</b>: P ≈ <b>{{ '{:,.0f}'.format(result.price_vnd) }} đồng/m³</b>. So với tỉnh Hồ Nam (0,038 CNY/m³) cho thấy độ lớn hợp lý của cơ chế.</p>
+        </div>
+        <div class="metric-details" id="d-qp">
+            <h3>Quy tắc 60%</h3>
+            <div class="formula">$$Q_{pricing} = \max\big(Actual\_Q,\ 0{,}6 \times Design\_Q\big)$$</div>
+            <p>Khi bán ít nước (mùa khô, ít trồng trọt) vẫn phải đóng chi phí cố định. Vì vậy giá tính trên tối thiểu 60% công suất.</p>
+        </div>
+        <div class="metric-details" id="d-bill">
+            <h3>Hóa đơn hộ mẫu (3 bậc lũy tiến)</h3>
+            <p>Ông dùng {{ '{:,.0f}'.format(result.use) }} m³/năm, định mức {{ '{:,.0f}'.format(result.quota) }} m³ → tổng <b>{{ '{:,.0f}'.format(result.bill) }} CNY/năm</b>.</p>
+        </div>
+
+        <div class="psplit">
+            <div class="card chart-card">
+                <h3>🥧 Cơ cấu chi phí cho phép</h3>
+                <div id="costChart" class="plot"></div>
+            </div>
+            <div class="card">
+                <h3>🧾 Bảng tính tiền lũy tiến</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>Bậc</th><th>Khoảng</th><th>Hệ số</th><th>Giá (CNY/m³)</th><th>Thành tiền</th></tr></thead>
+                        <tbody>
+                            {% for t in result.tiers %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ t.range }}</td>
+                                <td>{{ t.rate }}</td>
+                                <td>{{ '{:,.4f}'.format(t.price) if t.price is not none else '—' }}</td>
+                                <td>{{ '{:,.0f}'.format(t.amount) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot><tr><td colspan="4">Tổng hóa đơn</td><td>{{ '{:,.0f}'.format(result.bill) }}</td></tr></tfoot>
+                    </table>
+                </div>
+                <p class="note">Vùng {{ '{:,.0f}'.format(result.area_ha) }} ha (1 hộ/ha): lượng dùng ~{{ '{:,.0f}'.format(result.total_ha_use) }} m³, doanh thu ước {{ '{:,.0f}'.format(result.total_ha_bill) }} CNY/năm.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🔄 Tham chiếu thực tế</h3>
+            <p><b>Hồ Nam (湖南):</b> giá nước tưới tiêu ~<b>0,038 CNY/m³</b> — chủ yếu hỗ trợ chi phí vận hành (含运行维护费). Giá cao hơn thường kèm cơ chế hai thành phần: <i>phí cơ bản theo diện tích + phí lượng nước</i> (两部制水价).</p>
+        </div>
+        {% else %}
+        <div class="card placeholder">
+            <h3>📤 Kết quả sẽ hiển thị tại đây</h3>
+            <p>Điền chi phí, lượng nước và bậc lũy tiến rồi bấm <b>Tính giá</b>.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if result %}
+<script>
+    const breakdown = {{ result.breakdown | tojson }};
+    const keys = Object.keys(breakdown);
+    Plotly.newPlot('costChart', [{
+        labels: keys, values: Object.values(breakdown), type: 'pie',
+        hole: 0.55,
+        marker: { colors: ['#005f73', '#0a9396', '#e9c46a', '#f4a261', '#e76f51'] },
+        textinfo: 'label+percent',
+        hovertemplate: '%{label}: %{value:.1f} triệu CNY (%{percent})<extra></extra>'
+    }], {
+        margin: { t: 10, b: 10, l: 10, r: 10 },
+        paper_bgcolor: 'rgba(0,0,0,0)', showlegend: false
+    });
+</script>
+{% endif %}
+{% endblock %}

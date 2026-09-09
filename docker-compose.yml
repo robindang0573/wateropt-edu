@@ -1,0 +1,7 @@
+services:
+  wateropt:
+    build: .
+    container_name: wateropt-edu
+    ports:
+      - "5001:5000"
+    restart: unless-stopped
