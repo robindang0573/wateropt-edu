@@ -16,10 +16,14 @@
 <!-- ============ 3.1 LP ============ -->
 <section class="card" id="lp">
     <h2>3.1 🎯 Quy hoạch tuyến tính — Phương pháp đồ thị</h2>
-    <p class="note">
-        Phân bổ nước tưới: tối đa lợi ích $Z = c_1 x_1 + c_2 x_2$ (nghìn CNY) với $x_1$ (ha trồng <i>lúa</i>), $x_2$ (ha trồng <i>rau màu</i>), dưới các ràng buộc về nước, đất, lao động.
-        <span class="hint" data-tip="Nghiệm tối ưu của bài toán tuyến tính luôn nằm ở một đỉnh (vertex) của đa diện lồi.">Đỉnh tối ưu?<sup>ⓘ</sup></span>
-    </p>
+<p class="note">
+         Phân bổ nước tưới: tối đa lợi ích $Z = c_1 x_1 + c_2 x_2$ (nghìn CNY) với $x_1$ (ha trồng <i>lúa</i>), $x_2$ (ha trồng <i>rau màu</i>), dưới các ràng buộc về nước, đất, lao động.
+         <span class="hint" data-tip="Nghiệm tối ưu của bài toán tuyến tính luôn nằm ở một đỉnh (vertex) của đa diện lồi.">Đỉnh tối ưu?<sup>ⓘ</sup></span>
+     </p>
+     <p class="note">
+         <b>Interior Point</b> dùng hàm rào cản log-barrier: tối thiểu $f_\mu(x) = -Z - \mu[\sum \ln s_i + \sum \ln x_j]$ với $s_i = b_i - a_ix$, rồi giảm dần $\mu \to 0$ theo đường trung tâm (central path).
+         <span class="hint" data-tip="Thuật toán đi xuyên qua phần trong của miền khả thi, theo đường cong hội tụ về đỉnh tối ưu — khác Simplex chỉ đi dọc cạnh.">Barrier method?<sup>ⓘ</sup></span>
+     </p>
 
     <div class="psplit">
         <div>
@@ -53,6 +57,9 @@
                 <button type="button" class="btn ghost" id="lpInterior">▶ Chạy Interior Point</button>
             </div>
             <div id="lpStatus" class="sim-readout hidden">…</div>
+            <div id="ipmStatus" class="sim-readout hidden">…</div>
+            <div id="ipmSteps" class="steps hidden"></div>
+            <div id="ipmConvChart" class="plot small" style="height:220px;"></div>
         </div>
 
         <div>

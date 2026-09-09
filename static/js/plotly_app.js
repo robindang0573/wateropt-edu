@@ -152,17 +152,90 @@
     }
 
     async function lpInteriorClick() {
-        if (!window.__lpCur || !window.__lpCur.optimal) { return lpSimplexClick(); }
-        const o = window.__lpCur.optimal;
-        const path = [];
-        const N = 24;
-        for (let i = 0; i <= N; i++) {
-            const t = i / N;
-            // đi xuyên qua ruột đa diện (hơi cong) về phía tối ưu
-            const wob = 0.18 * Math.sin(Math.PI * t);
-            path.push([t * o[0] + wob * Math.max(1, o[1] / 3), t * o[1] - wob * Math.max(1, o[0] / 3)]);
+        if (!window.__lpCur || !window.__lpCur.optimal) {
+            document.getElementById('ipmStatus').textContent = '⚠️ Hãy ấn "Giải & Vẽ" trước.';
+            document.getElementById('ipmStatus').classList.remove('hidden');
+            return;
         }
-        animateLP(path, 'Interior Point', '#9d4edd');
+        const f = readLPForm();
+        const fd = new FormData();
+        fd.append('c1', f.c1); fd.append('c2', f.c2);
+        f.rows.forEach(function (r, i) {
+            fd.append('a1_' + (i + 1), r.a1); fd.append('a2_' + (i + 1), r.a2); fd.append('b_' + (i + 1), r.b);
+        });
+        document.getElementById('ipmStatus').textContent = '⏳ Đang chạy Interior Point...';
+        document.getElementById('ipmStatus').classList.remove('hidden');
+        document.getElementById('ipmSteps').classList.add('hidden');
+        document.getElementById('ipmConvChart').style.display = '';
+        try {
+            const res = await fetch('/api/optimize/ipm', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data.error) { document.getElementById('ipmStatus').textContent = '⚠️ ' + data.error; return; }
+            const ipm = data.ipm;
+            const o = data.optimal;
+            const st = document.getElementById('ipmStatus');
+            st.textContent = '✅ Interior Point: x₁ = ' + fmt(o[0]) + ', x₂ = ' + fmt(o[1]) +
+                '  ·  Z* = ' + fmt(data.z_star) + '  (sau ' + ipm.iterations + ' bước barrier)';
+            // Hiển thị các bước lặp
+            const stepsDiv = document.getElementById('ipmSteps');
+            stepsDiv.classList.remove('hidden');
+            let html = '<h4 style="color:var(--primary);margin:0 0 8px">📋 Các bước lặp Barrier Interior Point</h4>';
+            html += '<table class="dp-table" style="font-size:0.82em"><thead><tr>' +
+                '<th>Bước</th><th>μ</th><th>x₁</th><th>x₂</th><th>Z</th><th>inner</th><th>||∇||</th></tr></thead><tbody>';
+            (ipm.hist || []).forEach(function (h) {
+                html += '<tr><td>' + h.outer + '</td><td>' + h.mu + '</td><td>' + fmt(h.x1) + '</td>' +
+                    '<td>' + fmt(h.x2) + '</td><td>' + fmt(h.z) + '</td><td>' + h.inner + '</td><td>' + h.grad + '</td></tr>';
+            });
+            html += '</tbody></table>';
+            stepsDiv.innerHTML = html;
+            // Animation: animate IPM path on LP plot
+            if (ipm.path && ipm.path.length > 1) {
+                await animateLP(ipm.path, 'Interior Point', '#9d4edd');
+            }
+            // Convergence chart: Z vs iteration
+            drawIpmConvergence(ipm.convergence || []);
+        } catch (e) {
+            document.getElementById('ipmStatus').textContent = '⚠️ Lỗi kết nối API.';
+        }
+    }
+
+    function drawIpmConvergence(conv) {
+        if (!conv || conv.length === 0) return;
+        const traces = [
+            {
+                x: conv.map(function (c) { return c.iter; }),
+                y: conv.map(function (c) { return c.z; }),
+                type: 'scatter', mode: 'lines+markers',
+                line: { color: '#9d4edd', width: 3 }, marker: { size: 6 },
+                name: 'Z(μ)', hovertemplate: 'Bước %{x}<br>Z=%{y}<extra></extra>'
+            },
+            {
+                x: conv.map(function (c) { return c.iter; }),
+                y: conv.map(function (c) { return c.z; }).map(function (z, i) {
+                    return z + (conv[i].mu > 0.01 ? conv[i].mu * 10 : 0);
+                }),
+                type: 'scatter', mode: 'markers',
+                marker: { size: 4, color: '#e76f51', symbol: 'triangle-up' },
+                name: 'Giới trên (Z + μ·10)', hoverinfo: 'skip', showlegend: false
+            }
+        ];
+        // Thêm đường Z* mốc
+        if (window.__lpCur && window.__lpCur.z_star) {
+            traces.push({
+                x: [1, conv.length], y: [window.__lpCur.z_star, window.__lpCur.z_star],
+                type: 'scatter', mode: 'lines',
+                line: { color: '#0a9396', width: 2, dash: 'dash' },
+                name: 'Z*', hoverinfo: 'skip'
+            });
+        }
+        Plotly.newPlot('ipmConvChart', traces, {
+            margin: { t: 12, b: 40, l: 55, r: 15 },
+            xaxis: { title: 'Bước barrier (outer)', zeroline: false },
+            yaxis: { title: 'Z(μ)' },
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            legend: { orientation: 'h', y: 1.12 },
+            showlegend: true
+        }, CNF);
     }
 
     /* ============================= GD / NEWTON ============================= */

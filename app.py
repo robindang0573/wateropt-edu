@@ -496,6 +496,9 @@ def solve_lp(c1, c2, rows):
         if path[-1] != optimal:
             path.append(optimal)
 
+    # ========== Interior Point Method (barrier) ==========
+    ipm_result = _solve_ipm(c1, c2, rows, optimal, z_star)
+
     return {
         "obj": [c1, c2],
         "rows": rows,
@@ -507,6 +510,89 @@ def solve_lp(c1, c2, rows):
         "z_star": z_star,
         "path": path,
         "xmax": round(Xb, 2), "ymax": round(Yb, 2),
+        "ipm": ipm_result,
+    }
+
+
+def _solve_ipm(c1, c2, rows, optimal, z_star):
+    """Barrier Interior Point Method — trả về lịch sử các bước lặp."""
+    A = np.array([[r["a1"], r["a2"]] for r in rows], dtype=float)
+    b = np.array([r["b"] for r in rows], dtype=float)
+    n = 2
+
+    # Tìm điểm khả thi bên trong (Chebyshev-ish)
+    norms = np.linalg.norm(A, axis=1)
+    Aub = np.vstack([np.hstack([A, norms[:, None]]), np.array([[-1, 0, -1], [0, -1, -1]], dtype=float)])
+    bub = np.r_[b, np.zeros(2)]
+    res = linprog(np.array([0.0, 0.0, -1.0]), A_ub=Aub, b_ub=bub,
+                  bounds=[(0, None), (0, None), (0, None)], method="highs")
+    if res.success and res.x[2] > 1e-4:
+        x = res.x[:2].copy()
+    else:
+        x = np.array([1.0, 1.0])
+    x = np.maximum(x, 0.5)
+    while np.min(b - A @ x) <= 0 or np.min(x) <= 0:
+        x = x * 0.5
+
+    mu0 = max(100.0, abs(z_star) * 0.5) if z_star and z_star > 0 else 100.0
+    path = []
+    hist = []
+    mu = mu0
+    outer_max = 18
+    inner_max = 15
+    conv = []
+
+    for oi in range(outer_max):
+        if mu < 1e-12:
+            break
+        converged_inner = False
+        for ii in range(inner_max):
+            s = b - A @ x
+            if np.min(s) <= 1e-12 or np.min(x) <= 1e-12:
+                break
+            g = -np.array([c1, c2]) + mu * (A.T @ (1.0 / s)) - mu / x
+            H = mu * (A.T @ (A / (s[:, None] ** 2))) + mu * np.diag(1.0 / (x ** 2))
+            try:
+                p = np.linalg.solve(H, -g)
+            except np.linalg.LinAlgError:
+                break
+            # Backtracking line search
+            a = 1.0
+            for _ in range(25):
+                xn = x + a * p
+                sn = b - A @ xn
+                if np.min(xn) > 1e-10 and np.min(sn) > 1e-10:
+                    break
+                a *= 0.5
+            else:
+                break
+            x_old = x.copy()
+            x = x + a * p
+            if np.linalg.norm(x - x_old, ord=np.inf) < 1e-10 and np.linalg.norm(g, ord=np.inf) < 1e-7:
+                converged_inner = True
+                break
+        z = c1 * x[0] + c2 * x[1]
+        path.append([round(float(x[0]), 4), round(float(x[1]), 4)])
+        hist.append({
+            "outer": oi + 1, "mu": round(float(mu), 6),
+            "x1": round(float(x[0]), 6), "x2": round(float(x[1]), 6),
+            "z": round(float(z), 4), "inner": ii + 1,
+            "grad": round(float(np.linalg.norm(g, ord=np.inf)), 4),
+        })
+        conv.append({"iter": oi + 1, "mu": round(float(mu), 6), "z": round(float(z), 4),
+                     "dist": round(float(abs(z - z_star)) if z_star else 0, 6)})
+        mu *= 0.3
+        if mu < 1e-12:
+            break
+    # Thêm điểm cuối chính xác
+    if path and (path[-1][0] < 49.99 or path[-1][1] < 49.99):
+        path.append([round(float(optimal[0]), 4), round(float(optimal[1]), 4)])
+    return {
+        "path": path,
+        "hist": hist,
+        "convergence": conv,
+        "success": len(path) > 0,
+        "iterations": len(hist),
     }
 
 
@@ -720,6 +806,29 @@ def api_newton():
     x0 = float(request.args.get("x0", 10))
     y0 = float(request.args.get("y0", 85))
     return jsonify(newton_step(x0, y0))
+
+
+@app.route("/api/optimize/ipm", methods=["POST"])
+def api_ipm():
+    try:
+        c1 = float(request.form.get("c1", 50))
+        c2 = float(request.form.get("c2", 30))
+        rows = []
+        for k in range(1, 7):
+            a1 = request.form.get(f"a1_{k}")
+            if a1 in (None, ""):
+                continue
+            a2 = float(request.form.get(f"a2_{k}", 0))
+            b = float(request.form.get(f"b_{k}", 0))
+            rows.append({"a1": float(a1), "a2": a2, "b": b})
+        if not rows:
+            return jsonify({"error": "cần ít nhất 1 ràng buộc"}), 400
+        res = solve_lp(c1, c2, rows)
+        ipm = res.get("ipm", {})
+        return jsonify({"obj": res["obj"], "optimal": res["optimal"],
+                         "z_star": res["z_star"], "ipm": ipm})
+    except (ValueError, ZeroDivisionError):
+        return jsonify({"error": "invalid"}), 400
 
 
 @app.route("/api/optimize/dp")
