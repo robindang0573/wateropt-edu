@@ -18,7 +18,32 @@ def money(x, unit="triệu USD"):
 
 # ============================================================
 # MODULE 1 — PHÂN TÍCH KINH TẾ DỰ ÁN (Chương 3)
+# Nguyên tắc With–Without (Incremental): các chỉ số tính trên
+# DÒNG TIỀN CHÊNH LỆCH ΔCF = CF(có dự án) − CF(không dự án).
 # ============================================================
+def calculate_irr(cash_flows):
+    """IRR bằng Newton–Raphson (kèm nhật ký lặp để giảng dạy)."""
+    rate = 0.1
+    iterations = []
+    for k in range(100):
+        npv = sum(cf / ((1 + rate) ** i) for i, cf in enumerate(cash_flows))
+        if k < 4:
+            iterations.append(f"Lần lặp {k + 1}: r = {rate * 100:.2f}% → NPV = {npv:.4f}")
+        elif k == 4:
+            iterations.append("... (tiếp tục lặp tới khi |NPV| < 0.0001)")
+        if abs(npv) < 0.0001:
+            iterations.append("⇒ |NPV| < 0.0001 — hội tụ.")
+            iterations.append(f"⇒ IRR = {rate * 100:.2f}% (làm ΔNPV ≈ 0)")
+            return rate, iterations
+        d_npv = sum(-i * cf / ((1 + rate) ** (i + 1)) for i, cf in enumerate(cash_flows) if i > 0)
+        if d_npv == 0:
+            break
+        rate = rate - npv / d_npv
+    if abs(rate) > 1000:
+        return None, iterations
+    return rate, iterations
+
+
 def compute_economic(form):
     I = float(form.get("invest", 0))
     B = float(form.get("benefit", 0))
@@ -29,67 +54,206 @@ def compute_economic(form):
     rep_cost = float(form.get("rep_cost", 0))
     salvage = float(form.get("salvage", 0))
 
+    # Kịch bản cơ sở "không có dự án" (Without-project)
+    B0 = float(form.get("base_benefit", 0))
+    OM0 = float(form.get("base_om", 0))
+    g0 = float(form.get("base_growth", 0)) / 100.0
+
     n = max(1, n)
-    # Dòng tiền ròng qua từng năm (t = 0..n)
-    cf = []
-    pw_b, pw_c = 0.0, 0.0
+
+    cash_flows = []          # ΔCF (chênh lệch)
+    cf_with_list = []        # dòng tiền "có dự án"
+    cf_without_list = []     # dòng tiền "không dự án"
+    npv_terms = []
+    table = []
+
+    # B/C theo từng kịch bản (PW của B và C)
+    pw_b_with, pw_c_with = 0.0, I
+    pw_b_without, pw_c_without = 0.0, 0.0
+    ben_with = [f"Năm 0: Vốn đầu tư I = {I:,.2f} → PW = {I:,.2f}"]
+    cost_with = [f"Năm 0: Vốn đầu tư I = {I:,.2f} → PW = {I:,.2f}"]
+    ben_without, cost_without = [], []
+
     for t in range(n + 1):
+        at = (1 + i) ** t
+
         if t == 0:
-            c = -I
-            pw_c += I
+            cfw, cfw0 = -I, 0.0
         else:
-            b = B + (salvage if t == n else 0.0)
-            o = OM + (rep_cost if t == rep_year else 0.0)
-            c = b - o
-            if (1 + i) ** t > 0:
-                pw_b += b / (1 + i) ** t
-                pw_c += o / (1 + i) ** t
-        cf.append(c)
+            nb = B - OM
+            if t == rep_year:
+                nb -= rep_cost
+            if t == n:
+                nb += salvage
+            cfw = nb
 
-    f = [(1 + i) ** t for t in range(n + 1)]
-    npv = sum(cf[t] / f[t] for t in range(n + 1))
-    bc = pw_b / pw_c if pw_c > 0 else None
+            bt = B0 * (1 + g0) ** (t - 1)
+            cfw0 = bt - OM0
 
-    # AW: NPV × [i(1+i)^n] / [(1+i)^n − 1]  (i=0 → NPV/n)
-    if abs(i) < 1e-12:
-        aw = npv / n
-    else:
-        aw = npv * (i * (1 + i) ** n) / ((1 + i) ** n - 1)
+            ben_with.append(f"Năm {t}: Lợi ích B = {B:,.2f} / {at:,.4f} = {B / at:,.2f}")
+            cost_with.append(f"Năm {t}: O&amp;M = {OM:,.2f} / {at:,.4f} = {OM / at:,.2f}")
+            pw_b_with += B / at
+            pw_c_with += OM / at
+            if t == rep_year:
+                cost_with.append(f"Năm {t}: Thay thế = {rep_cost:,.2f} / {at:,.4f} = {rep_cost / at:,.2f}")
+                pw_c_with += rep_cost / at
+            if t == n:
+                ben_with.append(f"Năm {t}: Giá trị còn lại = {salvage:,.2f} / {at:,.4f} = {salvage / at:,.2f}")
+                pw_b_with += salvage / at
 
-    # IRR: tìm r sao cho NPV(r)=0 (brentq, dải (-0.999, 10))
-    def npv_of(rr):
-        rr = rr + 1.0
-        return sum(cf[t] / (rr ** t) for t in range(n + 1))
+            ben_without.append(f"Năm {t}: Lợi ích cơ sở B0 = {bt:,.2f} / {at:,.4f} = {bt / at:,.2f}")
+            cost_without.append(f"Năm {t}: O&amp;M cơ sở = {OM0:,.2f} / {at:,.4f} = {OM0 / at:,.2f}")
+            pw_b_without += bt / at
+            pw_c_without += OM0 / at
 
-    irr = None
-    lo, hi = -0.999, 10.0
+        dcf = (cfw - cfw0) / at
+        cash_flows.append(cfw - cfw0)
+        cf_with_list.append(cfw)
+        cf_without_list.append(cfw0)
+
+        if t == 0 or abs(cfw - cfw0) > 0.005:
+            npv_terms.append(
+                f"Năm {t}: ΔCF = {cfw:,.2f} − ({cfw0:,.2f}) = {cfw - cfw0:,.2f} → / {at:,.4f} = {dcf:,.2f}"
+            )
+
+        table.append({
+            "year": t,
+            "cf_with": round(cfw, 2),
+            "cf_without": round(cfw0, 2),
+            "incremental": round(cfw - cfw0, 2),
+            "discounted": round(dcf, 2),
+        })
+
+    # ---- Chỉ số trên dòng tiền chênh lệch ----
+    npv = sum(cf / ((1 + i) ** t) for t, cf in enumerate(cash_flows))
+    pw_b_inc = pw_b_with - pw_b_without
+    pw_c_inc = pw_c_with - pw_c_without
+    bc = pw_b_inc / pw_c_inc if pw_c_inc > 0 else None
+    crf = (i * (1 + i) ** n) / ((1 + i) ** n - 1) if abs(i) > 1e-12 else 1.0 / n
+    aw = npv * crf
+
     try:
-        if npv_of(lo) * npv_of(hi) < 0:
-            irr = brentq(npv_of, lo, hi)
-    except (ValueError, RuntimeError):
-        pass
+        irr, irr_iterations = calculate_irr(cash_flows)
+        irr_null = irr is None
+    except (OverflowError, ValueError):
+        irr, irr_iterations, irr_null = None, [], True
+    if not irr_null and irr is not None and (abs(irr) > 10 or not np.isfinite(irr)):
+        irr = None
 
-    # Dòng tiền chiết khấu lũy tích → Payback
+    # ---- Bảng "phép chiếu chiết khấu" (P = F/(1+r)^t) ----
+    discount_table = []
+    face_cf, pv_cf = [], []
+    for t in range(n + 1):
+        factor = 1 / (1 + i) ** t
+        F = cash_flows[t]
+        P = F * factor
+        face_cf.append(F)
+        pv_cf.append(P)
+        discount_table.append({"year": t, "face": round(F, 2), "factor": round(factor, 6), "pv": round(P, 2)})
+
     cum, payback = 0.0, None
     cum_list = []
     for t in range(n + 1):
-        cum += cf[t] / f[t]
-        cum_list.append(cum)
+        cum += cash_flows[t] / (1 + i) ** t
+        cum_list.append(round(cum, 2))
         if payback is None and t >= 1 and cum >= 0:
             payback = t
 
     status = "feasible" if npv > 0 and (bc is None or bc > 1) else "not"
 
+    detail_val = {
+        "npv": npv, "bc": bc, "irr": irr, "crf": crf, "aw": aw,
+        "r_pct": i * 100, "n": n,
+    }
+    details = build_economic_details(
+        detail_val, cf_with_list, cf_without_list, cash_flows, npv_terms,
+        ben_with, cost_with, ben_without, cost_without,
+        pw_b_with, pw_c_with, pw_b_without, pw_c_without, pw_b_inc, pw_c_inc,
+        irr_iterations, irr_null, I, B, OM, rep_cost, rep_year, salvage, B0, OM0, g0, i, n,
+    )
+
     return {
         "I": I, "B": B, "OM": OM, "i": i * 100, "n": n,
         "rep_year": rep_year, "rep_cost": rep_cost, "salvage": salvage,
-        "npv": npv, "bc": bc, "aw": aw, "irr": irr,
+        "B0": B0, "OM0": OM0, "g0": g0 * 100,
+        "npv": npv, "bc": bc, "aw": aw, "irr": irr, "crf": crf,
         "payback": payback,
         "years": list(range(n + 1)),
-        "cf": [round(x, 2) for x in cf],
-        "cum": [round(x, 2) for x in cum_list],
+        "cf": [round(x, 2) for x in cash_flows],
+        "cum": cum_list,
         "status": status,
-        "pw_b": pw_b, "pw_c": pw_c,
+        "pw_b_with": pw_b_with, "pw_c_with": pw_c_with,
+        "pw_b_without": pw_b_without, "pw_c_without": pw_c_without,
+        "pw_b_inc": pw_b_inc, "pw_c_inc": pw_c_inc,
+        "cf_with": [round(x, 2) for x in cf_with_list],
+        "cf_without": [round(x, 2) for x in cf_without_list],
+        "table": table,
+        "discount_table": discount_table,
+        "details": details,
+    }
+
+
+def build_economic_details(v, cf_with_list, cf_without_list, cash_flows, npv_terms,
+                           ben_with, cost_with, ben_without, cost_without,
+                           pw_b_with, pw_c_with, pw_b_without, pw_c_without, pw_b_inc, pw_c_inc,
+                           irr_iterations, irr_null, I, B, OM, rep_cost, rep_year, salvage,
+                           B0, OM0, g0, i, n):
+    r_pct = i * 100
+    npv, bc, aw, crf, irr = v["npv"], v["bc"], v["aw"], v["crf"], v["irr"]
+    return {
+        "npv": {
+            "name": "NPV — Giá trị hiện tại ròng (dòng tiền chênh lệch)",
+            "formula": "ΔCF<sub>t</sub> = CF<sub>t</sub>(có dự án) − CF<sub>t</sub>(không dự án)<br>"
+                       "NPV = Σ<sub>t=0..n</sub> ΔCF<sub>t</sub> / (1+r)<sup>t</sup>",
+            "meaning": "<strong>Nguyên tắc With–Without:</strong> lợi ích dự án = <em>chênh lệch do dự án tạo ra</em> "
+                       "so với kịch bản cơ sở (không dự án nhưng vẫn có xu thế phát triển tự nhiên). NU (NPV &gt; 0) → khả thi.",
+            "steps": ["Mỗi năm tính ΔCF<sub>t</sub> = CF<sub>t</sub>(có) − CF<sub>t</sub>(không), "
+                      "quy về hiện giá ΔCF<sub>t</sub>/(1+r)<sup>t</sup> rồi cộng dồn:"] + npv_terms + [
+                f"⇒ NPV = Σ ΔDCF = {npv:,.2f} — " +
+                ("phần diện tích giữa hai đường cong thể hiện lợi ích thuần của dự án." if npv > 0 else "dự án không sinh lợi.")
+            ],
+        },
+        "bc": {
+            "name": "B/C — Tỷ số Lợi ích / Chi phí (incremental)",
+            "formula": "B/C = [PW(B)<sub>có</sub> − PW(B)<sub>không</sub>] ÷ [PW(C)<sub>có</sub> − PW(C)<sub>không</sub>]",
+            "meaning": "Phần tăng thêm của hiện giá lợi ích so với phần tăng thêm của hiện giá chi phí "
+                       "khi chuyển từ kịch bản cơ sở sang làm dự án. B/C ≥ 1 → khả thi.",
+            "steps": [
+                "Bước 1 — PW(B) của kịch bản CÓ dự án:"] + ben_with + [
+                f"⇒ PW(B) có dự án = {pw_b_with:,.2f}",
+                "Bước 2 — PW(C) của kịch bản CÓ dự án:"] + cost_with + [
+                f"⇒ PW(C) có dự án = {pw_c_with:,.2f}",
+                "Bước 3 — PW(B) của kịch bản KHÔNG dự án:"] + (
+                ben_without + [f"⇒ PW(B) không dự án = {pw_b_without:,.2f}"]
+                if pw_b_without else [f"⇒ PW(B) không dự án = 0 (chưa nhập kịch bản cơ sở)"]) + [
+                "Bước 4 — PW(C) của kịch bản KHÔNG dự án:"] + (
+                cost_without + [f"⇒ PW(C) không dự án = {pw_c_without:,.2f}"]
+                if pw_c_without else [f"⇒ PW(C) không dự án = 0 (chưa nhập kịch bản cơ sở)"]) + [
+                "Bước 5 — Chênh lệch (incremental):",
+                f"PW(B) chênh lệch = {pw_b_with:,.2f} − {pw_b_without:,.2f} = {pw_b_inc:,.2f}",
+                f"PW(C) chênh lệch = {pw_c_with:,.2f} − {pw_c_without:,.2f} = {pw_c_inc:,.2f}",
+                f"⇒ B/C = {pw_b_inc:,.2f} ÷ {pw_c_inc:,.2f} = {bc:.2f}" if bc else "⇒ B/C không xác định (chi phí chênh lệch ≤ 0)",
+            ],
+        },
+        "irr": {
+            "name": "IRR — Suất sinh lợi nội tại (dòng chênh lệch)",
+            "formula": "Tìm r* sao cho Σ ΔCF<sub>t</sub>/(1+r*)<sup>t</sup> = 0",
+            "meaning": f"Tỉ suất chiết khấu làm ΔNPV = 0 — mức lợi nhuận do riêng dự án tạo ra (vượt xu thế cơ sở). "
+                       f"IRR ≥ {r_pct:.1f}% → khả thi.",
+            "steps": (["Giải bằng Newton–Raphson trên dòng ΔCF:"] + irr_iterations) if not irr_null else [
+                "⚠️ IRR không hội tụ (dòng tiền đổi dấu nhiều lần hoặc ΔNPV &lt; 0 với mọi r). "
+                "Với dòng chênh lệch này IRR không có nghĩa — dùng NPV/AW để đánh giá."
+            ],
+        },
+        "aw": {
+            "name": "AW — Giá trị đều hàng năm (dòng chênh lệch)",
+            "formula": "AW = NPV × (A/P, r, n) ; (A/P, r, n) = r(1+r)<sup>n</sup> ÷ [(1+r)<sup>n</sup> − 1]",
+            "meaning": "Quy NPV thành giá trị đều mỗi năm — mức gia tăng thu nhập thuần hàng năm so với kịch bản cơ sở. AW &gt; 0 → khả thi.",
+            "steps": [
+                f"Bước 1 — Hệ số thu hồi vốn (A/P, r, n) = {r_pct:.1f}% × {i:.4f}^{n} ÷ [(1+{i:.4f})^{n} − 1] = {crf:.6f}",
+                f"Bước 2 — AW = NPV × (A/P, r, n) = {npv:,.2f} × {crf:.6f} = {aw:,.2f} (đơn vị tiền tệ/năm)",
+            ],
+        },
     }
 
 

@@ -4,8 +4,9 @@
 
 <h1 class="page-title">📊 Module 1 · Phân tích Kinh tế Dự án TNN</h1>
 <p class="page-desc">
-    Dòng tiền được chiết khấu về <b>năm gốc 0</b> với tỉ suất $i$.
-    NPV > 0, B/C > 1 → dự án khả thi về kinh tế.
+    Nguyên tắc <b>With–Without</b>: các chỉ số tính trên <b>dòng tiền chênh lệch</b>
+    $\Delta CF_t = CF_t(\text{có dự án}) - CF_t(\text{không dự án})$ rồi chiết khấu về năm gốc với tỉ suất $r$.
+    NPV &gt; 0, B/C &gt; 1 → dự án khả thi.
 </p>
 
 <div class="psplit">
@@ -46,10 +47,29 @@
             </div>
 
             <div class="form-group">
+                <div class="group-label">🏁 Nhóm Kịch bản cơ sở (Without-project)</div>
+                <p class="note" style="margin-top:0">Nếu để trống: ΔCF = CF(có dự án) — tương đương cách tính cổ điển.</p>
+                <div class="form-row">
+                    <div>
+                        <label>Lợi ích cơ sở B₀</label>
+                        <input type="number" step="any" name="base_benefit" id="f_base_benefit" value="0">
+                    </div>
+                    <div>
+                        <label>O&amp;M cơ sở</label>
+                        <input type="number" step="any" name="base_om" id="f_base_om" value="0">
+                    </div>
+                    <div>
+                        <label>Tăng trưởng tự nhiên <span class="unit">%/năm</span></label>
+                        <input type="number" step="any" name="base_growth" id="f_base_growth" value="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
                 <div class="group-label">📐 Nhóm Thông số kinh tế</div>
                 <div class="form-row">
                     <div>
-                        <label>Tỉ suất chiết khấu (i) <span class="unit">%/năm</span></label>
+                        <label>Tỉ suất chiết khấu (r) <span class="unit">%/năm</span></label>
                         <input type="number" step="any" name="rate" id="f_rate" value="8">
                     </div>
                     <div>
@@ -99,45 +119,91 @@
             {% endif %}
         </div>
 
-        <div class="metric-details" id="d-npv">
-            <h3>NPV — Giá trị hiện tại ròng</h3>
-            <div class="formula">$$NPV = \sum_{t=0}^{n} \frac{B_t - C_t}{(1+i)^t}$$</div>
-            <p>Tổng tất cả dòng tiền <b>đã quy về năm 0</b>. NPV > 0 nghĩa là lợi ích vượt chi phí sau khi tính trượt giá theo thời gian.</p>
-            <p class="result-line">Kết quả: <b>{{ '{:,.2f}'.format(result.npv) }}</b> triệu USD</p>
+        {% if result.B0 > 0 %}
+        <p class="note">
+            Kịch bản cơ sở B₀ = {{ '{:,.2f}'.format(result.B0) }}, tăng trưởng g₀ = {{ '{:,.1f}%'.format(result.g0) }} được trừ vào
+            dòng chênh lệch → các chỉ số trên phản ánh <b>đúng phần dự án tạo thêm</b>.
+        </p>
+        {% endif %}
+
+        {% for key in ['npv', 'bc', 'irr', 'aw'] %}
+        {% set d = result.details[key] %}
+        <div class="metric-details" id="d-{{ key }}">
+            <h3>{{ d.name }}</h3>
+            <div class="formula">{{ d.formula | safe }}</div>
+            <p>{{ d.meaning | safe }}</p>
+            <div class="steps">
+                {% for s in d.steps %}<p>{{ s | safe }}</p>{% endfor %}
+            </div>
         </div>
-        <div class="metric-details" id="d-bc">
-            <h3>B/C — Tỉ số Lợi ích / Chi phí</h3>
-            <div class="formula">$$B/C = \frac{\sum B_t/(1+i)^t}{\sum C_t/(1+i)^t}$$</div>
-            <p>Mỗi 1 đồng bỏ ra thu về bao nhiêu đồng lợi ích. B/C > 1 là đang "lời".</p>
-            <p class="result-line">Giá trị hiện tại lợi ích: {{ '{:,.2f}'.format(result.pw_b) }} ; chi phí: {{ '{:,.2f}'.format(result.pw_c) }} → B/C = <b>{{ '{:,.2f}'.format(result.bc) if result.bc is not none else '—' }}</b></p>
-        </div>
-        <div class="metric-details" id="d-irr">
-            <h3>IRR — Tỉ suất hoàn vốn nội bộ</h3>
-            <div class="formula">$$Tìm\ r\, : \quad NPV(r) = 0$$</div>
-            <p>Mức chiết khấu khiến dòng tiền vừa "huề vốn". Dự án tốt nếu IRR > tỉ suất chiết khấu yêu cầu ({{ '{:,.0f}%'.format(result.i) }}).</p>
-            <p class="result-line">IRR = <b>{{ '{:.2f}%'.format(result.irr*100) if result.irr is not none else 'Không xác định (NPV &lt; 0 với mọi i)' }}</b></p>
-        </div>
-        <div class="metric-details" id="d-aw">
-            <h3>AW — Giá trị niên kim đều</h3>
-            <div class="formula">$$AW = NPV \times \frac{i(1+i)^n}{(1+i)^n - 1}$$</div>
-            <p>Chia đều NPV ra thành 1 khoản <b>bằng nhau mỗi năm</b> trong n năm — dễ so sánh các phương án có tuổi thọ khác nhau.</p>
-            <p class="result-line">AW = <b>{{ '{:,.2f}'.format(result.aw) }}</b> triệu USD/năm</p>
-        </div>
+        {% endfor %}
 
         {# Biểu đồ #}
-        <div class="card chart-card">
-            <h3>📉 Dòng tiền ròng qua các năm</h3>
-            <div id="cfChart" class="plot"></div>
+        <div class="chart-grid">
+            <div class="card chart-card">
+                <h3>🔄 Hai kịch bản (With–Without)</h3>
+                <div id="scenarioChart" class="plot small"></div>
+            </div>
+            <div class="card chart-card">
+                <h3>📉 Dòng tiền chênh lệch ΔCF</h3>
+                <div id="cfChart" class="plot small"></div>
+            </div>
+            <div class="card chart-card">
+                <h3>📈 Dòng tiền chiết khấu lũy tích</h3>
+                <p class="note" style="margin-top:0">Điểm cắt trục hoành = <b>thời gian hoàn vốn</b>.</p>
+                <div id="cumChart" class="plot small"></div>
+            </div>
+            <div class="card chart-card">
+                <h3>🔭 Phép chiếu chiết khấu (r co dãn tương lai)</h3>
+                <p class="note" style="margin-top:0">F nhìn từ Năm 0 với toán tử co $1/(1+r)^t$.</p>
+                <div id="projChart" class="plot small"></div>
+            </div>
         </div>
-        <div class="card chart-card">
-            <h3>📈 Dòng tiền chiết khấu lũy tích</h3>
-            <p class="note">Điểm cắt trục hoành = <b>thời gian hoàn vốn</b> (Payback Period).</p>
-            <div id="cumChart" class="plot"></div>
+
+        {# Bảng dòng tiền #}
+        <div class="card">
+            <h3>🧾 Bảng dòng tiền hàng năm</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Năm</th><th>CF (có dự án)</th><th>CF (không dự án)</th><th>ΔCF</th><th>ΔCF chiết khấu</th></tr></thead>
+                    <tbody>
+                        {% for row in result.table %}
+                        <tr>
+                            <td>{{ row.year }}</td>
+                            <td>{{ '{:,.2f}'.format(row.cf_with) }}</td>
+                            <td>{{ '{:,.2f}'.format(row.cf_without) }}</td>
+                            <td class="{{ 'pos' if row.incremental >= 0 else 'neg' }}">{{ '{:,.2f}'.format(row.incremental) }}</td>
+                            <td class="{{ 'pos' if row.discounted >= 0 else 'neg' }}">{{ '{:,.2f}'.format(row.discounted) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {# Bảng "phép chiếu chiết khấu" #}
+        <div class="card">
+            <h3>🗺️ Bảng phép chiếu chiết khấu về Năm 0 <span class="unit">(P = F/(1+r)<sup>t</sup>)</span></h3>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Năm</th><th>F (mệnh giá)</th><th>Hệ số chiết khấu</th><th>P (hiện giá)</th></tr></thead>
+                    <tbody>
+                        {% for d in result.discount_table %}
+                        <tr>
+                            <td>{{ d.year }}</td>
+                            <td>{{ '{:,.2f}'.format(d.face) }}</td>
+                            <td>{{ '{:.6f}'.format(d.factor) }}</td>
+                            <td class="{{ 'pos' if d.pv >= 0 else 'neg' }}">{{ '{:,.2f}'.format(d.pv) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
         {% else %}
         <div class="card placeholder">
             <h3>📤 Kết quả sẽ hiển thị tại đây</h3>
-            <p>Nhập số liệu rồi bấm <b>Tính toán</b>. Hoặc bấm <b>Load Example</b> để chạy ngay ví dụ I=120, B=24, OM=6, i=8%, n=20.</p>
+            <p>Nhập số liệu rồi bấm <b>Tính toán</b>, hoặc bấm <b>Load Example</b> (I=120, B=24, OM=6, r=8%, n=20). Nhập thêm <b>Kịch bản cơ sở</b> để so sánh với nguyên tắc With–Without.</p>
         </div>
         {% endif %}
     </div>
@@ -145,45 +211,49 @@
 {% endblock %}
 
 {% block scripts %}
-{% if result %}
 <script>
+    document.getElementById('loadExample').addEventListener('click', function () {
+        const map = { f_invest: 120, f_salvage: 8, f_benefit: 24, f_om: 6, f_rep_cost: 10, f_rep_year: 10, f_rate: 8, f_nper: 20 };
+        Object.keys(map).forEach(id => document.getElementById(id).value = map[id]);
+    });
+{% if result %}
     const years = {{ result.years | tojson }};
+    const cfWith = {{ result.cf_with | tojson }};
+    const cfWithout = {{ result.cf_without | tojson }};
     const cf = {{ result.cf | tojson }};
     const cum = {{ result.cum | tojson }};
     const payback = {{ result.payback | tojson }};
+    const dcf = {{ result.discount_table | tojson }};
+    const face = dcf.map(d => d.face);
+    const pv = dcf.map(d => d.pv);
 
-    Plotly.newPlot('cfChart', [{
+    Plotly.plot('scenarioChart', [
+        { x: years, y: cfWith, type: 'scatter', mode: 'lines+markers', name: 'Có dự án', line: { color: '#005f73', width: 3 }, fill: 'tozeroy', fillcolor: 'rgba(0,95,115,0.08)' },
+        { x: years, y: cfWithout, type: 'scatter', mode: 'lines+markers', name: 'Không dự án (cơ sở)', line: { color: '#e9c46a', width: 3, dash: 'dot' }, fill: 'tozeroy', fillcolor: 'rgba(233,196,106,0.18)' }
+    ], { margin: { t: 12, b: 45, l: 55, r: 15 }, xaxis: { title: 'Năm' }, yaxis: { title: 'Triệu USD' }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)' });
+
+    Plotly.plot('cfChart', [{
         x: years, y: cf, type: 'bar',
-        marker: { color: cf.map(v => v < 0 ? '#e76f51' : '#0a9396') },
-        name: 'Dòng tiền ròng'
-    }], {
-        margin: { t: 10, b: 45, l: 55, r: 15 },
-        xaxis: { title: 'Năm (t)' },
-        yaxis: { title: 'Triệu USD' },
-        bargap: 0.15, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)'
-    });
+        marker: { color: cf.map(v => v < 0 ? '#e76f51' : '#0a9396') }, name: 'ΔCF'
+    }], { margin: { t: 12, b: 45, l: 55, r: 15 }, xaxis: { title: 'Năm' }, yaxis: { title: 'Triệu USD' }, bargap: 0.15, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)' });
 
-    const traces = [{
-        x: years, y: cum, type: 'scatter', mode: 'lines+markers',
-        line: { color: '#005f73', width: 3 },
-        name: 'NPV lũy tích'
-    }, {
-        x: years, y: cum.map(() => 0), type: 'scatter', mode: 'lines',
-        line: { color: '#e76f51', width: 1, dash: 'dash' }, name: 'Hoàn vốn', hoverinfo: 'skip'
-    }];
+    const traces = [
+        { x: years, y: cum, type: 'scatter', mode: 'lines+markers', line: { color: '#005f73', width: 3 }, name: 'NPV lũy tích' },
+        { x: years, y: cum.map(() => 0), type: 'scatter', mode: 'lines', line: { color: '#e76f51', width: 1, dash: 'dash' }, name: 'Hoàn vốn', hoverinfo: 'skip' }
+    ];
     {% if result.payback is not none %}
-    traces.push({
-        x: [years[payback]], y: [cum[payback]], type: 'scatter', mode: 'markers+text',
-        marker: { size: 14, color: '#e76f51' }, text: ['Payback : ' + payback + ' năm'],
-        textposition: 'top center', name: 'Payback'
-    });
+    traces.push({ x: [years[payback]], y: [cum[payback]], type: 'scatter', mode: 'markers+text', marker: { size: 14, color: '#e76f51' }, text: ['Payback: ' + payback + ' năm'], textposition: 'top center', name: 'Payback' });
     {% endif %}
-    Plotly.newPlot('cumChart', traces, {
-        margin: { t: 10, b: 45, l: 55, r: 15 },
-        xaxis: { title: 'Năm (t)' },
-        yaxis: { title: 'Triệu USD' },
-        paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', showlegend: true
+    Plotly.plot('cumChart', traces, { margin: { t: 12, b: 45, l: 55, r: 15 }, xaxis: { title: 'Năm' }, yaxis: { title: 'Triệu USD' }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)' });
+
+    Plotly.plot('projChart', [
+        { x: years, y: face, type: 'scatter', mode: 'lines+markers', name: 'F (mệnh giá)', line: { color: '#8d99ae', width: 2, dash: 'dot' } },
+        { x: years, y: pv, type: 'scatter', mode: 'lines+markers', name: 'P (hiện giá)', line: { color: '#0a9396', width: 3, shape: 'spline' } }
+    ], { margin: { t: 12, b: 45, l: 55, r: 15 }, xaxis: { title: 'Năm' }, yaxis: { title: 'Triệu USD' }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)' });
+
+    window.addEventListener('resize', function () {
+        ['scenarioChart', 'cfChart', 'cumChart', 'projChart'].forEach(id => Plotly.Plots.resize(document.getElementById(id)));
     });
-</script>
 {% endif %}
+</script>
 {% endblock %}
