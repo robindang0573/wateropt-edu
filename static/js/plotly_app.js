@@ -362,6 +362,7 @@
             st.innerHTML = '✅ Hội tụ về (' + fmt(res.xf) + ', ' + fmt(res.yf) + ') sau <b>' + res.traj.length + '</b> bước với α = ' + fmt(f.alpha);
         }
         drawGdConvergence(res.traj, target);
+        populateGDTable(res.traj, 'gd');
     }
 
     function drawGdConvergence(traj, target) {
@@ -408,6 +409,44 @@
         const fv = GD_K * (Math.pow(from[0] - 40, 2) + Math.pow(from[1] - 60, 2));
         const st = document.getElementById('gdStatus');
         st.innerHTML += '<br>📉 f(x₀,y₀) = ' + fmt(fv) + ' → f(40,60) = 0 sau 1 Newton step.';
+        showNewtonTheory(from, t, fv);
+        populateGDTable([from], 'newton');
+    }
+
+    function showNewtonTheory(from, target, fv) {
+        const theoryDiv = document.createElement('div');
+        theoryDiv.className = 'steps newton-theory';
+        theoryDiv.style.marginTop = '12px';
+        theoryDiv.innerHTML =
+            '<h4 style="color:var(--primary);margin:0 0 8px">🚁 Lý thuyết Ma trận Hessian (Newton Step)</h4>' +
+            '<p><b>Ma trận Hessian H:</b> Đối với f(x,y) = k[(x−a)²+(y−b)²], H = [[2k, 0],[0, 2k]] = 2k·I.</p>' +
+            '<p><b>Phương trình Newton:</b> H·Δx = −∇f(x). Vì H = 2k·I, nên Δx = −(1/2k)·∇f(x).</p>' +
+            '<p><b>Cập nhật:</b> x_new = x_old − (1/(2k))·∇f(x). Với f là hàm toàn phương, bước này đưa thẳng đến cực tiểu trong 1 lần.</p>' +
+            '<p><b>Ý nghĩa:</b> Gradient cho biết hướng dốc, Hessian cho biết độ cong. Với f=3[(x−40)²+(y−60)²], H=6I — bát đối xứng hoàn hảo, Newton tìm đúng đáy sau 1 bước từ bất kỳ điểm nào.</p>' +
+            '<p>📍 Khởi tạo (' + fmt(from[0]) + ', ' + fmt(from[1]) + ') → f = ' + fmt(fv) + ' → 1 Newton step → (40, 60) → f = 0.</p>';
+        const gdSection = document.getElementById('gd');
+        if (gdSection) {
+            let existing = gdSection.querySelector('.newton-theory');
+            if (existing) existing.remove();
+            gdSection.appendChild(theoryDiv);
+        }
+    }
+
+    function populateGDTable(traj, method) {
+        const tbody = document.querySelector('#gdTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        const k = 3.0;
+        traj.forEach(function (p, i) {
+            const gx = 2 * k * (p[0] - 40);
+            const gy = 2 * k * (p[1] - 60);
+            const fv = k * (Math.pow(p[0] - 40, 2) + Math.pow(p[1] - 60, 2));
+            const tr = document.createElement('tr');
+            const methodLabel = (method === 'newton') ? 'Newton' : 'GD (α=' + document.getElementById('gdAlpha').value + ')';
+            tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + fmt(p[0]) + '</td><td>' + fmt(p[1]) + '</td>' +
+                '<td>' + fmt(gx) + '</td><td>' + fmt(gy) + '</td><td>' + fmt(fv) + '</td><td>' + methodLabel + '</td>';
+            tbody.appendChild(tr);
+        });
     }
 
     function gdInit() {
@@ -419,6 +458,7 @@
         const res = gdTrajectory(f.x0, f.y0, f.alpha, [40, 60], 200, GD_K);
         plotGDSurface(res.traj.slice(0, 12), null);
         drawGdConvergence(res.traj, [40, 60]);
+        populateGDTable(res.traj, 'gd');
     }
 
     /* ============================= DP ============================= */

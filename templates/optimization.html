@@ -107,6 +107,19 @@
             </div>
             <div id="gdStatus" class="sim-readout hidden"></div>
             <div id="gdConvChart" class="plot small" style="height:220px;"></div>
+            <div id="gdHessian" class="steps" style="margin-top:12px">
+                <h4 style="color:var(--primary);margin:0 0 8px">📖 Ma trận Hessian & Bảng tính — Gradient Descent & Newton</h4>
+                <p><b>Hàm:</b> f(x,y) = 3[(x−40)² + (y−60)²] — đáy bát tại (40, 60)</p>
+                <p><b>Gradient:</b> ∇f = [∂f/∂x, ∂f/∂y] = [6(x−40), 6(y−60)]</p>
+                <p><b>Hessian:</b> H = [[∂²f/∂x², ∂²f/∂x∂y], [∂²f/∂y∂x, ∂²f/∂y²]] = [[6, 0], [0, 6]] = 6·I</p>
+                <p><b>Newton update:</b> x<sub>new</sub> = x<sub>old</sub> − H⁻¹·∇f = x<sub>old</sub> − (1/6)·∇f</p>
+                <div id="gdTableWrap" class="table-responsive">
+                    <table id="gdTable" class="dp-table" style="font-size:0.82em">
+                        <thead><tr><th>Bước</th><th>x</th><th>y</th><th>∇f<sub>x</sub></th><th>∇f<sub>y</sub></th><th>f(x,y)</th><th>Phương pháp</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
         <div>
             <div id="gdPlot" class="plot gd-plot"></div>
