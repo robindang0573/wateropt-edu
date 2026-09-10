@@ -393,11 +393,12 @@
             '🚁 Newton dùng <b>xấp xỉ bậc 2 (Hessian)</b>: chỉ cần <b>1 bước</b> để về đáy ' +
             '(' + fmt(from[0]) + ', ' + fmt(from[1]) + ') → (' + fmt(t[0]) + ', ' + fmt(t[1]) + '). Đây chính là "cái bát giả định" hoàn hảo vì f(x,y) là hàm toàn phương.';
         document.getElementById('gdWarn').classList.add('hidden');
-        drawGdConvergence([from], t);
+        const result = [t[0], t[1]];
         const fv = GD_K * (Math.pow(from[0] - 40, 2) + Math.pow(from[1] - 60, 2));
+        drawGdConvergence([from, result], t);
         const st = document.getElementById('gdStatus');
-        st.innerHTML += '<br>📉 f(x₀,y₀) = ' + fmt(fv) + ' → f(40,60) = 0 sau 1 Newton step.';
-        populateGDTable([from], 'newton');
+        st.innerHTML += '<br>📉 f(x₀,y₀) = ' + fmt(fv) + ' → f(x₁,y₁) = ' + fmt(0) + ' = 0 sau 1 Newton step.';
+        populateGDTable([from, result], 'newton');
     }
 
     function populateGDTable(traj, method) {
@@ -405,16 +406,30 @@
         if (!tbody) return;
         tbody.innerHTML = '';
         const k = 3.0;
+        const isNewton = (method === 'newton');
+        const last = traj.length - 1;
         traj.forEach(function (p, i) {
             const gx = 2 * k * (p[0] - 40);
             const gy = 2 * k * (p[1] - 60);
             const fv = k * (Math.pow(p[0] - 40, 2) + Math.pow(p[1] - 60, 2));
             const tr = document.createElement('tr');
-            const methodLabel = (method === 'newton') ? 'Newton' : 'GD (α=' + document.getElementById('gdAlpha').value + ')';
+            const methodLabel = isNewton
+                ? (i === 0 ? 'Newton: khởi tạo' : 'Newton: kết quả (f=0)')
+                : 'GD (α=' + document.getElementById('gdAlpha').value + ')';
             tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + fmt(p[0]) + '</td><td>' + fmt(p[1]) + '</td>' +
-                '<td>' + fmt(gx) + '</td><td>' + fmt(gy) + '</td><td>' + fmt(fv) + '</td><td>' + methodLabel + '</td>';
+                '<td>' + fmt(gx) + '</td><td>' + fmt(gy) + '</td><td><b>' + fmt(fv) + '</b></td><td>' + methodLabel + '</td>';
             tbody.appendChild(tr);
         });
+        if (isNewton && traj.length >= 2) {
+            const tr = document.createElement('tr');
+            tr.className = 'active-row';
+            const p0 = traj[0], p1 = traj[last];
+            const dx = p1[0] - p0[0], dy = p1[1] - p0[1];
+            tr.innerHTML = '<td>Δ</td><td>' + fmt(dx) + '</td><td>' + fmt(dy) + '</td>' +
+                '<td>' + fmt(2 * k * (p1[0] - 40)) + '</td><td>' + fmt(2 * k * (p1[1] - 60)) + '</td>' +
+                '<td>0</td><td>Δx = −H⁻¹∇f</td>';
+            tbody.appendChild(tr);
+        }
     }
 
     function gdInit() {
