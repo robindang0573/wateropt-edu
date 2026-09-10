@@ -132,7 +132,7 @@
                     <tbody></tbody>
                 </table>
             </div>
-            <p class="note" style="font-size:0.82em">Màu xanh nhạt = cột biến vào; nền cam = phần tử trục (pivot). Tỷ số = RHS ÷ hệ số biến vào (hàng nào nhỏ nhất thì biến cơ sở đó ra). Hàng Z cuối: dừng khi không còn hệ số âm.</p>
+            <p class="note" style="font-size:0.82em"><b>→ x₁</b> = cột biến vào; <b>s₁ ←</b> = hàng biến ra; ô nền cam viền trắng = phần tử trục (pivot). Tỷ số = RHS ÷ hệ số biến vào, chọn nhỏ nhất. Hàng "🎯 Nghiệm hiện tại" tóm tắt nghiệm sau mỗi lần lặp; dừng khi z-row không còn số âm.</p>
         </div>
     </div>
 
@@ -279,5 +279,5 @@
     window.__NEWTON = {{ newton | tojson }};
     window.__DP = {{ dp | tojson }};
 </script>
-<script src="{{ url_for('static', filename='js/plotly_app.js') }}?v=6"></script>
+<script src="{{ url_for('static', filename='js/plotly_app.js') }}?v=7"></script>
 {% endblock %}

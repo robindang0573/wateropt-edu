@@ -294,9 +294,16 @@ tfoot td { font-weight: 700; background: var(--subtle); }
     padding: 6px 8px; font-size: 0.82em;
 }
 .itr-colhdr th { font-size: 0.82em; }
-.pivot-cell { background: #ffb703; color: #073b4c; font-weight: 800; }
+.pivot-cell {
+    background: #ff922b; color: #fff; font-weight: 900;
+    box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 4px #d9480f;
+}
 .enter-col { background: var(--subtle); }
 .itr-zrow td { border-top: 2px solid var(--border); font-weight: 700; }
+.itr-sum td {
+    background: var(--subtle); font-weight: 600; border-top: 2px solid var(--primary);
+    font-size: 0.85em; padding: 6px 8px;
+}
 .cell-note { padding: 10px; color: var(--muted); }
 
 .steps p {

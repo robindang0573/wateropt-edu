@@ -253,31 +253,37 @@
         its.forEach(function (it) {
             let title = 'Lặp ' + it.it + ' · đỉnh (x₁, x₂) = (' + fmt(it.point[0]) + '; ' + fmt(it.point[1]) + ')' +
                 ' · Z = <b>' + fmt(it.z) + '</b>';
-            if (it.entering) title += ' · vào: <b>' + it.entering + '</b>';
-            if (it.leaving) title += ' · ra: <b>' + it.leaving + '</b> · trục = <b>' + fmt(it.pivot) + '</b>';
+            if (it.entering) title += ' · vào: <b>→ ' + it.entering + '</b>';
+            if (it.leaving) title += ' · ra: <b>' + it.leaving + ' ←</b> · trục = <b>' + fmt(it.pivot) + '</b>';
             if (it.optimal) title += '  ✅ TỐI ƯU';
             tbody.insertAdjacentHTML('beforeend',
                 '<tr class="itr-hdr"><td colspan="' + cols + '">' + title + '</td></tr>');
-            let hdr = '<tr class="itr-colhdr"><th>Biến cơ sở</th>';
-            names.forEach(function (nm) { hdr += '<th>' + nm + '</th>'; });
-            hdr += '<th>RHS</th><th>Tỷ số</th></tr>';
-            tbody.insertAdjacentHTML('beforeend', hdr);
 
             const enterIdx = it.entering ? names.indexOf(it.entering) : -1;
             const leaveRow = it.leaving ? it.basis.indexOf(it.leaving) : -1;
             const rows = it.tableau;
             const nrow = rows.length - 1;
 
+            let hdr = '<tr class="itr-colhdr"><th>Biến cơ sở</th>';
+            names.forEach(function (nm, j) {
+                hdr += (j === enterIdx) ? '<th class="enter-col">' + nm + ' →</th>' : '<th>' + nm + '</th>';
+            });
+            hdr += '<th>RHS</th><th>Tỷ số</th></tr>';
+            tbody.insertAdjacentHTML('beforeend', hdr);
+
             rows.forEach(function (row, i) {
                 const isZ = (i === nrow);
                 const isLeave = (i === leaveRow);
-                let cells = '<td><b>' + (isZ ? 'Z' : it.basis[i]) + '</b></td>';
+                const basisLabel = isZ ? 'Z' : (isLeave ? it.leaving + ' ←' : it.basis[i]);
+                let cells = '<td><b>' + basisLabel + '</b></td>';
                 for (let j = 0; j < names.length; j++) {
                     let cls = '';
                     if (j === enterIdx) cls = (isZ || !isLeave) ? ' enter-col' : ' pivot-cell';
-                    cells += '<td' + (cls ? ' class="' + cls.trim() + '"' : '') + '>' + fmt(row[j]) + '</td>';
+                    const v = fmt(row[j]);
+                    cells += '<td' + (cls ? ' class="' + cls.trim() + '"' : '') + '>' +
+                        (cls === 'pivot-cell' ? '<b>' + v + '</b>' : v) + '</td>';
                 }
-                cells += '<td>' + fmt(row[names.length]) + '</td>';   // RHS
+                cells += '<td>' + fmt(row[names.length]) + '</td>';
                 if (isZ) {
                     cells += '<td>—</td>';
                 } else {
@@ -286,6 +292,16 @@
                 tbody.insertAdjacentHTML('beforeend',
                     '<tr' + (isZ ? ' class="itr-zrow"' : '') + '>' + cells + '</tr>');
             });
+
+            const solParts = [];
+            for (let v = 0; v < names.length; v++) {
+                const bi = it.basis.indexOf(names[v]);
+                solParts.push(names[v] + ' = ' + fmt(bi >= 0 ? rows[bi][rows[bi].length - 1] : 0));
+            }
+            const optTag = it.optimal ? '  ★ Nghiệm tối ưu' : '';
+            tbody.insertAdjacentHTML('beforeend',
+                '<tr class="itr-sum"><td colspan="' + cols + '">🎯 Nghiệm hiện tại: ' +
+                solParts.join('; ') + '  →  Z = <b>' + fmt(it.z) + '</b>' + optTag + '</td></tr>');
         });
     }
 
