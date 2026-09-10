@@ -348,6 +348,7 @@
             st.innerHTML = '✅ Hội tụ về (' + fmt(res.xf) + ', ' + fmt(res.yf) + ') sau <b>' + res.traj.length + '</b> bước với α = ' + fmt(f.alpha);
         }
         document.getElementById('gdContent').classList.remove('hidden');
+        document.querySelectorAll('.gd-result').forEach(function (el) { el.classList.remove('hidden'); });
         drawGdConvergence(res.traj, target);
         populateGDTable(res.traj, 'gd');
     }
@@ -387,18 +388,16 @@
             from = [f.x0, f.y0];
         }
         document.getElementById('gdContent').classList.remove('hidden');
+        document.querySelectorAll('.gd-result').forEach(function (el) { el.classList.add('hidden'); });
         plotGDSurface([], { from: from, to: t });
         document.getElementById('gdStatus').classList.remove('hidden');
         document.getElementById('gdStatus').innerHTML =
             '🚁 Newton dùng <b>xấp xỉ bậc 2 (Hessian)</b>: chỉ cần <b>1 bước</b> để về đáy ' +
             '(' + fmt(from[0]) + ', ' + fmt(from[1]) + ') → (' + fmt(t[0]) + ', ' + fmt(t[1]) + '). Đây chính là "cái bát giả định" hoàn hảo vì f(x,y) là hàm toàn phương.';
         document.getElementById('gdWarn').classList.add('hidden');
-        const result = [t[0], t[1]];
         const fv = GD_K * (Math.pow(from[0] - 40, 2) + Math.pow(from[1] - 60, 2));
-        drawGdConvergence([from, result], t);
         const st = document.getElementById('gdStatus');
-        st.innerHTML += '<br>📉 f(x₀,y₀) = ' + fmt(fv) + ' → f(x₁,y₁) = ' + fmt(0) + ' = 0 sau 1 Newton step.';
-        populateGDTable([from, result], 'newton');
+        st.innerHTML += '<br>📉 f(x₀,y₀) = ' + fmt(fv) + ' → f(x₁,y₁) = 0 sau đúng 1 bước Newton.';
     }
 
     function populateGDTable(traj, method) {
