@@ -119,6 +119,20 @@
             </div>
         </div>
 
+        <div class="chart-card full">
+            <h3>🎯 Biến cơ sở / không cơ sở — được chọn theo tiêu chí nào?</h3>
+            <div class="steps">
+                <p><b>① BƯỚC KHỞI TẠO (Lặp 1) — tìm "Ma trận đơn vị" (Identity Matrix):</b> sau khi thêm biến bù, các cột biến bù tạo thành ma trận đơn vị — cột $s_1 = \begin{bmatrix}1\\0\end{bmatrix}$, cột $s_2 = \begin{bmatrix}0\\1\end{bmatrix}$ (mỗi cột đúng một số 1, còn lại là 0). Cột nào có dạng "cột đơn vị" ⟹ biến đó <b>được chọn làm biến cơ sở</b>.</p>
+                <p><b>② Vì sao lại chọn như vậy?</b> Khi đặt biến còn lại là không cơ sở ($x_1 = x_2 = 0$), ta <i>đọc ngay giá trị biến cơ sở từ cột RHS</i> ($s_1 = 10.000$, $s_2 = 100$) <b>mà không cần giải hệ phương trình</b>. Áp dụng: chọn $\{s_1, s_2\}$ làm cơ sở; $\{x_1, x_2\}$ là không cơ sở (= 0).</p>
+                <p><b>③ CÁC BƯỚC LẶP SAU (Pivot) — 2 tiêu chí: tối ưu &amp; khả thi.</b></p>
+                <p><b>Chọn BIẾN VÀO (không cơ sở → cơ sở) — Optimality Condition:</b> nhìn hàng $Z$, chọn hệ số <b>âm nhất</b> đối với bài Max (dương nhất đối với Min). Hệ số đó là <i>reduced cost</i>: Áp dụng — Lặp 1 có $-50$ và $-30$; $-50$ âm nhất ⟹ $x_1$ vào (mỗi đơn vị $x_1$ làm Z tăng nhanh nhất: +50).</p>
+                <p><b>Chọn BIẾN RA (cơ sở → không cơ sở) — Feasibility Condition (tỷ số tối thiểu):</b> lấy RHS ÷ cột biến vào, chỉ xét hệ số <b>dương &gt; 0</b>. Hàng có tỷ số nhỏ nhất ⟹ biến cơ sở hàng đó bị "đá" ra (gán về 0). Ý nghĩa: khi tăng biến vào, <b>không biến cơ sở nào bị âm</b>. Áp dụng: $10.000/140 = 71{,}43$ và $100/1 = 100$ ⟹ $71{,}43$ nhỏ nhất ⟹ $s_1$ ra.</p>
+                <p><b>④ Kết quả Pivot:</b> $x_1$ thay thế vị trí $s_1$ trong cột "Biến cơ sở" ⟹ cơ sở mới $\{x_1, s_2\}$, không cơ sở $\{x_2, s_1\} = 0$.</p>
+                <p><b>⑤ Luật bất biến về số lượng:</b> với $m$ = số ràng buộc (số hàng, không tính hàng Z) và $n$ = tổng số biến (biến quyết định + biến bù) thì <b>luôn có đúng $m$ biến cơ sở và $n - m$ biến không cơ sở</b>. Bài này: $m = 2$, $n = 4$ $(x_1, x_2, s_1, s_2)$ ⟹ luôn 2 cơ sở và 2 không cơ sở tại mọi thời điểm.</p>
+                <p><b>💡 Tóm tắt quy trình ra quyết định:</b> Lần 1: cột nào là Ma trận đơn vị ⟹ gán làm cơ sở. Các lần sau: hàng $Z$ (chọn âm nhất) ⟹ biến vào; cột Tỷ số (chọn dương nhỏ nhất) ⟹ biến ra; biến vào thay thế biến ra trong cột cơ sở.</p>
+            </div>
+        </div>
+
         <div class="chart-card">
             <h3>🛰️ Minh họa biến bù s₁, s₂ — khoảng cách đến biên</h3>
             <div id="lpSimplexChart" class="plot small"></div>
@@ -279,5 +293,5 @@
     window.__NEWTON = {{ newton | tojson }};
     window.__DP = {{ dp | tojson }};
 </script>
-<script src="{{ url_for('static', filename='js/plotly_app.js') }}?v=7"></script>
+<script src="{{ url_for('static', filename='js/plotly_app.js') }}?v=8"></script>
 {% endblock %}
