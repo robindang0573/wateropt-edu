@@ -145,6 +145,72 @@
         }
     }
 
+    function drawSimplexSlackChart(data) {
+        const traces = buildLPTraces(data, 0.5);
+        const iters = (data.simplex && data.simplex.iterations) || [];
+        const rows = (data.rows || []).filter(function (r) { return r.b > 0; });
+        const annotations = [];
+        const xs = [], ys = [], labels = [];
+        iters.forEach(function (it, i) {
+            xs.push(it.point[0]); ys.push(it.point[1]); labels.push('#' + (i + 1));
+        });
+        traces.push({
+            x: xs, y: ys, type: 'scatter', mode: 'lines+markers+text',
+            line: { color: '#005f73', width: 3.5 },
+            marker: { size: 11, color: '#0a9396', symbol: 'circle', line: { color: '#005f73', width: 1.5 } },
+            text: labels, textposition: 'top right',
+            name: 'Đường đi Simplex', hovertemplate: 'x₁=%{x}<br>x₂=%{y}<extra></extra>'
+        });
+
+        rows.forEach(function (r, j) {
+            const na = r.a1 * r.a1 + r.a2 * r.a2;
+            if (na < 1e-12) return;
+            iters.forEach(function (it) {
+                const p = it.point;
+                const slack = r.b - (r.a1 * p[0] + r.a2 * p[1]);
+                if (Math.abs(slack) < 1e-6) return;
+                const foot = [p[0] + (slack / na) * r.a1, p[1] + (slack / na) * r.a2];
+                traces.push({
+                    x: [p[0], foot[0]], y: [p[1], foot[1]], type: 'scatter', mode: 'lines',
+                    line: { color: '#9d4edd', width: 2, dash: 'dot' },
+                    showlegend: false, hoverinfo: 'skip'
+                });
+                annotations.push({
+                    x: (p[0] + foot[0]) / 2, y: (p[1] + foot[1]) / 2,
+                    text: 's' + (j + 1) + '=' + fmt(slack),
+                    xref: 'x', yref: 'y', showarrow: false,
+                    font: { size: 10, color: '#9d4edd' },
+                    bgcolor: 'rgba(255,255,255,0.75)', bordercolor: '#9d4edd', borderwidth: 0.5
+                });
+            });
+            const X = Math.max(data.xmax, data.ymax);
+            let lx, ly;
+            if (Math.abs(r.a2) > 1e-9) {
+                const xx = [0, X];
+                const yy = xx.map(function (x) { return (r.b - r.a1 * x) / r.a2; });
+                lx = xx[1]; ly = yy[1];
+            } else {
+                lx = r.b / r.a1; ly = X * 0.02;
+            }
+            annotations.push({
+                x: lx, y: ly, text: 's' + (j + 1) + ' = 0 (biên)',
+                xref: 'x', yref: 'y', showarrow: false,
+                font: { size: 10, color: '#e76f51' },
+                bgcolor: 'rgba(255,255,255,0.75)', bordercolor: '#e76f51', borderwidth: 0.5
+            });
+        });
+
+        const Xmax = Math.max(data.xmax, data.ymax);
+        Plotly.newPlot('lpSimplexChart', traces, {
+            margin: { t: 12, b: 50, l: 60, r: 20 },
+            xaxis: { title: 'x₁ (ha)', range: [0, Xmax * 1.08], zeroline: false },
+            yaxis: { title: 'x₂ (ha)', range: [0, Xmax * 1.08], zeroline: false },
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            annotations: annotations,
+            showlegend: false
+        }, CNF);
+    }
+
     async function lpSimplexClick() {
         if (!window.__lpCur || !window.__lpCur.feasible) {
             document.getElementById('lpStatus').textContent = '⚠️ Hãy ấn "Giải & Vẽ" trước.';
@@ -152,6 +218,7 @@
             return;
         }
         document.getElementById('lpSimplexContent').classList.remove('hidden');
+        drawSimplexSlackChart(window.__lpCur);
         populateSimplexTable(window.__lpCur.simplex);
         await animateLP(window.__lpCur.path || [], 'Simplex', '#005f73');
     }

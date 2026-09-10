@@ -95,15 +95,14 @@
     <!-- Lý thuyết + Bảng lặp Simplex: hiện khi bấm "Chạy Simplex" -->
     <div id="lpSimplexContent" class="chart-grid hidden" style="margin-top:18px">
         <div class="chart-card full">
-            <h3>📖 Lý thuyết bảng Simplex — $s_1$, $s_2$ và RHS được xác định thế nào?</h3>
+            <h3>📖 Bảng Simplex &mdash; từ hệ bất phương trình sang hệ phương trình (s₁, s₂, RHS)</h3>
             <div class="steps">
-                <p><b>① Ràng buộc ≤ → đẳng thức bằng biến bù (slack) ≥ 0:</b>
-                    $140x_1 + 60x_2 \le 10.000 \ \Rightarrow\ 140x_1 + 60x_2 + s_1 = 10.000$ &nbsp;và&nbsp;
-                    $x_1 + x_2 \le 100 \ \Rightarrow\ x_1 + x_2 + s_2 = 100$, với $s_1, s_2 \ge 0$.</p>
-                <p><b>② Ý nghĩa các biến bù:</b> $s_1 = 10.000 - 140x_1 - 60x_2$ = lượng giới hạn thứ nhất <i>còn dư</i> khi sản xuất $(x_1, x_2)$; $s_2 = 100 - x_1 - x_2$ = lượng giới hạn thứ hai còn dư. Cạnh đa diện ứng với 1 biến = 0 (một biến bù triệt tiêu → ràng buộc đó đúng biên).</p>
-                <p><b>③ Ý nghĩa cột RHS (right-hand side):</b> là các hằng số $b$ của ràng buộc ($10.000$ và $100$) — sau mỗi phép pivot, RHS cho giá trị hiện tại của biến cơ sở trong hàng đó: hàng 1 → $s_1 = 10.000$, hàng 2 → $s_2 = 100$ ở lần lặp đầu.</p>
-                <p><b>④ Bảng khởi tạo:</b> cơ sở $\{s_1, s_2\}$ (ma trận đơn vị), $x_1 = x_2 = 0$ ⟹ $s_1 = 10.000$, $s_2 = 100$, $Z = 0$ — đây chính là đỉnh $(0,0)$ của miền khả thi.</p>
-                <p><b>⑤ Hàng Z (z-row):</b> $Z - 50x_1 - 30x_2 = 0$, các hệ số $[-50, -30]$ gọi là <i>reduced cost</i>: mỗi đơn vị $x_1$ nhập vào làm Z tăng 50 (lớn hơn $x_2$ tăng 30).</p>
+                <p><b>① Simplex giải hệ <u>phương trình</u> (dạng ma trận), không phải hệ bất phương trình:</b> hệ $Ax \le b$ không có "nghiệm cơ bản" để khởi tạo vòng lặp. Simplex chỉ thao tác trên đẳng thức $Ax = b$ với ma trận hệ số &mdash; nên bước đầu tiên bắt buộc phải chuyển bất đẳng thức thành đẳng thức.</p>
+                <p><b>② Chuyển đổi bằng biến bù (slack):</b> $140x_1 + 60x_2 \le 10.000 \Rightarrow 140x_1 + 60x_2 + s_1 = 10.000$; &nbsp;$x_1 + x_2 \le 100 \Rightarrow x_1 + x_2 + s_2 = 100$, với điều kiện $s_1, s_2 \ge 0$. Chính điều kiện $s \ge 0$ giữ cho hệ đẳng thức <i>tương đương</i> với bất đẳng thức gốc.</p>
+                <p><b>③ Điểm xuất phát (Initial Basic Feasible Solution):</b> đặt các biến quyết định $x_1 = x_2 = 0$ ⟹ biến bù tự động nhận đúng giá trị vế phải: $s_1 = 10.000$, $s_2 = 100$. Về ma trận, các biến bù tạo thành <b>Ma trận đơn vị (Identity Matrix)</b> &mdash; nhờ có ma trận đơn vị này, Simplex khởi tạo được bảng đầu tiên mà <i>không cần giải hệ phương trình phức tạp</i>.</p>
+                <p><b>④ Ý nghĩa hình học &mdash; khoảng cách đến biên:</b> đường $140x_1 + 60x_2 = 10.000$ là một <i>mặt biên</i> của đa diện khả thi; giá trị $s_1 = 10.000 - 140x_1 - 60x_2$ chính là <b>khoảng cách đại số</b> từ điểm hiện tại $(x_1, x_2)$ đến biên đó (tương tự $s_2$ với biên $x_1 + x_2 = 100$).</p>
+                <p><b>⑤ Đọc dấu của biến bù:</b> $s_1 > 0$ ⟹ điểm nằm <i>bên trong</i> miền khả thi (chưa dùng hết giới hạn); $s_1 = 0$ ⟹ điểm nằm <i>trên biên</i> (đã dùng hết tài nguyên); $s_1 < 0$ ⟹ điểm nằm <i>ngoài</i> miền khả thi &mdash; bị cấm bởi $s \ge 0$.</p>
+                <p><b>⑥ Cột RHS &amp; hàng Z:</b> sau mỗi pivot, RHS ghi giá trị hiện tại của biến cơ sở trong hàng đó (khởi tạo: $s_1 = 10.000$, $s_2 = 100$). Hàng Z cuối bảng chứa <i>reduced cost</i>: hệ số âm nhất (−50 của $x_1$) là biến vào.</p>
             </div>
         </div>
 
@@ -120,7 +119,13 @@
             </div>
         </div>
 
-        <div class="chart-card full">
+        <div class="chart-card">
+            <h3>🛰️ Minh họa biến bù s₁, s₂ — khoảng cách đến biên</h3>
+            <div id="lpSimplexChart" class="plot small"></div>
+            <p class="note" style="font-size:0.82em"><b>Đường tím chấm</b> = khoảng cách đại số từ đỉnh hiện tại đến biên (chính là biến bù s). Điểm trên biên có s = 0; đụng biên = đã dùng hết giới hạn. Mũi tên xanh = đường đi Simplex qua các đỉnh.</p>
+        </div>
+
+        <div class="chart-card">
             <h3>🧮 Bảng lặp Simplex (tableaus)</h3>
             <div class="table-responsive" style="max-height:340px; overflow:auto">
                 <table id="lpSimplexTable" class="dp-table" style="font-size:0.80em; min-width:760px">
@@ -274,5 +279,5 @@
     window.__NEWTON = {{ newton | tojson }};
     window.__DP = {{ dp | tojson }};
 </script>
-<script src="{{ url_for('static', filename='js/plotly_app.js') }}?v=5"></script>
+<script src="{{ url_for('static', filename='js/plotly_app.js') }}?v=6"></script>
 {% endblock %}
