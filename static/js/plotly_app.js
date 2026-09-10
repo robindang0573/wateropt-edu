@@ -130,6 +130,9 @@
             if (data.error) { document.getElementById('lpStatus').textContent = '⚠️ ' + data.error; return; }
             window.__lpCur = data;
             plotLP(data, 0.6);
+            document.getElementById('lpContent').classList.remove('hidden');
+            document.querySelectorAll('.lp-simplex-card').forEach(function (el) { el.classList.add('hidden'); });
+            populateVertexTable(data);
             const st = document.getElementById('lpStatus');
             if (data.status === 'optimal') {
                 st.textContent = '✅ Tối ưu: x₁ = ' + fmt(data.optimal[0]) + ', x₂ = ' + fmt(data.optimal[1]) +
@@ -148,7 +151,75 @@
             document.getElementById('lpStatus').classList.remove('hidden');
             return;
         }
-        animateLP(window.__lpCur.path || [], 'Simplex', '#005f73');
+        document.getElementById('lpContent').classList.remove('hidden');
+        document.querySelectorAll('.lp-simplex-card').forEach(function (el) { el.classList.remove('hidden'); });
+        populateSimplexTable(window.__lpCur.simplex);
+        await animateLP(window.__lpCur.path || [], 'Simplex', '#005f73');
+    }
+
+    function populateVertexTable(data) {
+        const tbody = document.querySelector('#lpVertexTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        (data.vertex_zs || []).forEach(function (v, i) {
+            const tr = document.createElement('tr');
+            if (v.optimal) tr.className = 'active-row';
+            const note = v.optimal
+                ? '★ Tối ưu (Z lớn nhất)'
+                : (i === 0 ? 'Khởi tạo, Z nhỏ nhất' : 'Ứng viên');
+            tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + fmt(v.x1) + '</td><td>' + fmt(v.x2) + '</td>' +
+                '<td><b>' + fmt(v.z) + '</b></td><td>' + note + '</td>';
+            tbody.appendChild(tr);
+        });
+    }
+
+    function populateSimplexTable(sim) {
+        const tbody = document.querySelector('#lpSimplexTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        const its = (sim && sim.iterations) ? sim.iterations : [];
+        if (!its.length) {
+            tbody.innerHTML = '<tr><td class="cell-note">⚠️ Hệ này không lập được bảng Simplex (miền khả thi rỗng).</td></tr>';
+            return;
+        }
+        const names = its[0].var_names || ['x1', 'x2', 's1', 's2'];
+        const cols = names.length + 3;
+        its.forEach(function (it) {
+            let title = 'Lặp ' + it.it + ' · Z = <b>' + fmt(it.z) + '</b>';
+            if (it.entering) title += ' · vào: <b>' + it.entering + '</b>';
+            if (it.leaving) title += ' · ra: <b>' + it.leaving + '</b> · trục = <b>' + fmt(it.pivot) + '</b>';
+            if (it.optimal) title += '  ✅ TỐI ƯU';
+            tbody.insertAdjacentHTML('beforeend',
+                '<tr class="itr-hdr"><td colspan="' + cols + '">' + title + '</td></tr>');
+            let hdr = '<tr class="itr-colhdr"><th>Biến cơ sở</th>';
+            names.forEach(function (nm) { hdr += '<th>' + nm + '</th>'; });
+            hdr += '<th>RHS</th><th>Tỷ số</th></tr>';
+            tbody.insertAdjacentHTML('beforeend', hdr);
+
+            const enterIdx = it.entering ? names.indexOf(it.entering) : -1;
+            const leaveRow = it.leaving ? it.basis.indexOf(it.leaving) : -1;
+            const rows = it.tableau;
+            const nrow = rows.length - 1;
+
+            rows.forEach(function (row, i) {
+                const isZ = (i === nrow);
+                const isLeave = (i === leaveRow);
+                let cells = '<td><b>' + (isZ ? 'Z' : it.basis[i]) + '</b></td>';
+                for (let j = 0; j < names.length; j++) {
+                    let cls = '';
+                    if (j === enterIdx) cls = (isZ || !isLeave) ? ' enter-col' : ' pivot-cell';
+                    cells += '<td' + (cls ? ' class="' + cls.trim() + '"' : '') + '>' + fmt(row[j]) + '</td>';
+                }
+                cells += '<td>' + fmt(row[names.length]) + '</td>';   // RHS
+                if (isZ) {
+                    cells += '<td>—</td>';
+                } else {
+                    cells += '<td>' + (it.ratios[i] != null ? fmt(it.ratios[i]) : '—') + '</td>';
+                }
+                tbody.insertAdjacentHTML('beforeend',
+                    '<tr' + (isZ ? ' class="itr-zrow"' : '') + '>' + cells + '</tr>');
+            });
+        });
     }
 
     async function lpInteriorClick() {

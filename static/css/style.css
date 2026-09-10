@@ -288,6 +288,17 @@ tfoot td { font-weight: 700; background: var(--subtle); }
 .dp-plot { height: 440px; }
 .chart-card h3 { color: var(--primary); margin: 0 0 10px; font-size: 1.02em; }
 
+/* Bảng lặp Simplex */
+.itr-hdr td {
+    background: var(--primary); color: var(--on-primary); font-weight: 700;
+    padding: 6px 8px; font-size: 0.82em;
+}
+.itr-colhdr th { font-size: 0.82em; }
+.pivot-cell { background: #ffb703; color: #073b4c; font-weight: 800; }
+.enter-col { background: var(--subtle); }
+.itr-zrow td { border-top: 2px solid var(--border); font-weight: 700; }
+.cell-note { padding: 10px; color: var(--muted); }
+
 .steps p {
     margin: 5px 0; padding: 5px 8px; border-bottom: 1px dotted var(--border); font-size: 0.93em;
 }

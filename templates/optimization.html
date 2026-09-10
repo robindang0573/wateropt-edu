@@ -65,6 +65,43 @@
         </div>
     </div>
 
+    <!-- Kết quả đồ giải + Simplex: hiện khi bấm "Giải & Vẽ" -->
+    <div id="lpContent" class="chart-grid hidden" style="margin-top:18px">
+        <div class="chart-card full">
+            <h3>📖 Cách giải — Phương pháp đồ giải &amp; Simplex (Max Z = 50x₁ + 30x₂)</h3>
+            <div class="steps">
+                <p><b>① Vẽ miền khả thi:</b> giao của các nửa mặt phẳng ràng buộc (các đường đỏ chấm trên đồ thị).</p>
+                <p><b>② Xác định đỉnh (corner points):</b> giao điểm từng cặp đường biên, giữ lại điểm nằm trong miền khả thi.</p>
+                <p><b>③ Đánh giá Z tại mỗi đỉnh:</b> thay tọa độ vào $Z = 50x_1 + 30x_2$ — đỉnh cho Z lớn nhất là tối ưu (bảng bên dưới).</p>
+                <p><b>④ Ý nghĩa hình học:</b> kéo dần đường đồng mức Z (các đường xám đứt) theo chiều $+\nabla Z$; điểm khả thi cuối cùng đường còn chạm là nghiệm tối ưu $(50, 50)$ với $Z^* = 4.000$.</p>
+                <p><b>⑤ Simplex tương ứng:</b> khởi đầu tại đỉnh $(0,0)$, mỗi bước đi dọc cạnh tới đỉnh kề có Z tăng — bảng lặp tableau hiện khi bấm "Chạy Simplex".</p>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3>🏔 Bảng đánh giá Z tại các đỉnh</h3>
+            <div class="table-responsive" style="max-height:340px; overflow:auto">
+                <table id="lpVertexTable" class="dp-table" style="font-size:0.80em; min-width:460px">
+                    <thead>
+                        <tr><th>#</th><th>x₁</th><th>x₂</th><th>Z = 50x₁ + 30x₂</th><th>Ghi chú</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <p class="note" style="font-size:0.82em">Z tăng dần theo chiều mũi tên; đỉnh có Z lớn nhất mang dấu ★ = nghiệm tối ưu.</p>
+        </div>
+
+        <div class="chart-card lp-simplex-card">
+            <h3>🧮 Bảng lặp Simplex (tableaus)</h3>
+            <div class="table-responsive" style="max-height:340px; overflow:auto">
+                <table id="lpSimplexTable" class="dp-table" style="font-size:0.80em; min-width:640px">
+                    <tbody></tbody>
+                </table>
+            </div>
+            <p class="note" style="font-size:0.82em">Màu xanh nhạt = cột biến vào; nền cam = phần tử trục (pivot). Hàng Z cuối: dừng khi không còn hệ số âm.</p>
+        </div>
+    </div>
+
     <!-- Kết quả Interior Point: hiện khi bấm nút (bố trí theo hàng) -->
     <div id="ipmContent" class="chart-grid hidden" style="margin-top:18px">
         <div class="chart-card full">
@@ -208,5 +245,5 @@
     window.__NEWTON = {{ newton | tojson }};
     window.__DP = {{ dp | tojson }};
 </script>
-<script src="{{ url_for('static', filename='js/plotly_app.js') }}?v=3"></script>
+<script src="{{ url_for('static', filename='js/plotly_app.js') }}?v=4"></script>
 {% endblock %}

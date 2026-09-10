@@ -499,6 +499,19 @@ def solve_lp(c1, c2, rows):
     # ========== Interior Point Method (barrier) ==========
     ipm_result = _solve_ipm(c1, c2, rows, optimal, z_star)
 
+    # ========== Đánh giá Z tại từng đỉnh (đồ giải) ==========
+    vertex_zs = []
+    if feasible:
+        for v in vertices:
+            z = c1 * v[0] + c2 * v[1]
+            is_opt = (
+                optimal is not None
+                and abs(v[0] - optimal[0]) < 1e-6
+                and abs(v[1] - optimal[1]) < 1e-6
+            )
+            vertex_zs.append({"x1": v[0], "x2": v[1], "z": round(float(z), 3), "optimal": bool(is_opt)})
+        vertex_zs.sort(key=lambda e: e["z"])
+
     return {
         "obj": [c1, c2],
         "rows": rows,
@@ -510,8 +523,69 @@ def solve_lp(c1, c2, rows):
         "z_star": z_star,
         "path": path,
         "xmax": round(Xb, 2), "ymax": round(Yb, 2),
+        "vertex_zs": vertex_zs,
+        "simplex": simplex_tableau(c1, c2, rows) if feasible else {"iterations": []},
         "ipm": ipm_result,
     }
+
+
+def simplex_tableau(c1, c2, rows):
+    """Bảng lặp Simplex (dạng chuẩn Max, với biến bù s_i ≥ 0)."""
+    A = np.array([[r["a1"], r["a2"]] for r in rows], dtype=float)
+    b = np.array([r["b"] for r in rows], dtype=float)
+    c = np.array([c1, c2], dtype=float)
+    m, n = A.shape
+    T = np.hstack([A, np.eye(m), b.reshape(-1, 1)]).astype(float)
+    zrow = np.hstack([-c, np.zeros(m), [0.0]]).astype(float)
+    basis = list(range(n, n + m))
+    vn = ["x1", "x2"] + [f"s{i + 1}" for i in range(m)]
+    iters = []
+    for it in range(1, 60):
+        entering = None
+        for j in range(n + m):
+            if zrow[j] < -1e-9 and (entering is None or zrow[j] < zrow[entering]):
+                entering = j
+        zv = sum(c[bi] * T[i, -1] for i, bi in enumerate(basis) if bi < n)
+        ratios = [None] * m
+        leaving = None
+        pivot = None
+        if entering is not None:
+            rmin = None
+            for i in range(m):
+                if T[i, entering] > 1e-9:
+                    r = T[i, -1] / T[i, entering]
+                    ratios[i] = round(float(r), 4)
+                    if rmin is None or r < rmin:
+                        rmin, leaving = r, i
+            if leaving is not None:
+                pivot = round(float(T[leaving, entering]), 4)
+        iters.append({
+            "it": it,
+            "entering": vn[entering] if entering is not None else None,
+            "leaving": vn[basis[leaving]] if leaving is not None else None,
+            "pivot": pivot,
+            "z": round(float(zv), 4),
+            "basis": [vn[bi] for bi in basis],
+            "ratios": ratios,
+            "optimal": entering is None,
+            "var_names": vn,
+            "tableau": np.round(np.vstack([T, zrow]), 4).tolist(),
+        })
+        if entering is None or leaving is None:
+            break
+        piv = T[leaving, entering]
+        T[leaving] = T[leaving] / piv
+        for i in range(m):
+            if i != leaving and abs(T[i, entering]) > 1e-12:
+                T[i] = T[i] - T[i, entering] * T[leaving]
+            elif i != leaving:
+                T[i, entering] = 0.0
+        if abs(zrow[entering]) > 1e-12:
+            zrow = zrow - zrow[entering] * T[leaving]
+        else:
+            zrow[entering] = 0.0
+        basis[leaving] = entering
+    return {"iterations": iters}
 
 
 def _solve_ipm(c1, c2, rows, optimal, z_star):
