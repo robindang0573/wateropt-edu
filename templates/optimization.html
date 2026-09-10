@@ -16,14 +16,10 @@
 <!-- ============ 3.1 LP ============ -->
 <section class="card" id="lp">
     <h2>3.1 🎯 Quy hoạch tuyến tính — Phương pháp đồ thị</h2>
-<p class="note">
-         Phân bổ nước tưới: tối đa lợi ích $Z = c_1 x_1 + c_2 x_2$ (nghìn CNY) với $x_1$ (ha trồng <i>lúa</i>), $x_2$ (ha trồng <i>rau màu</i>), dưới các ràng buộc về nước, đất, lao động.
-         <span class="hint" data-tip="Nghiệm tối ưu của bài toán tuyến tính luôn nằm ở một đỉnh (vertex) của đa diện lồi.">Đỉnh tối ưu?<sup>ⓘ</sup></span>
-     </p>
-     <p class="note">
-         <b>Interior Point</b> dùng hàm rào cản log-barrier: tối thiểu $f_\mu(x) = -Z - \mu[\sum \ln s_i + \sum \ln x_j]$ với $s_i = b_i - a_ix$, rồi giảm dần $\mu \to 0$ theo đường trung tâm (central path).
-         <span class="hint" data-tip="Thuật toán đi xuyên qua phần trong của miền khả thi, theo đường cong hội tụ về đỉnh tối ưu — khác Simplex chỉ đi dọc cạnh.">Barrier method?<sup>ⓘ</sup></span>
-     </p>
+    <p class="note">
+        Phân bổ nước tưới: tối đa lợi ích $Z = c_1 x_1 + c_2 x_2$ (nghìn CNY) với $x_1$ (ha trồng <i>lúa</i>), $x_2$ (ha trồng <i>rau màu</i>), dưới các ràng buộc về nước, đất, lao động.
+        <span class="hint" data-tip="Nghiệm tối ưu của bài toán tuyến tính luôn nằm ở một đỉnh (vertex) của đa diện lồi.">Đỉnh tối ưu?<sup>ⓘ</sup></span>
+    </p>
 
     <div class="psplit">
         <div>
@@ -58,17 +54,6 @@
             </div>
             <div id="lpStatus" class="sim-readout hidden">…</div>
             <div id="ipmStatus" class="sim-readout hidden">…</div>
-            <div id="ipmSteps" class="steps hidden"></div>
-            <div id="ipmConvChart" class="plot small" style="height:220px;"></div>
-            <div id="ipmTheory" class="steps" style="margin-top:14px">
-                <h4 style="color:var(--primary);margin:0 0 8px">📖 Lý thuyết Interior Point (Barrier Method)</h4>
-                <p><b>① Bài toán:</b> Max Z=50x₁+30x₂, ràng buộc 140x₁+60x₂≤10.000, x₁+x₂≤100, x₁,x₂≥0. Nghiệm tối ưu: x₁=50, x₂=50, Z*=4.000.</p>
-                <p><b>② Hàm rào cản (Barrier Function):</b> f_μ(x) = 50x₁+30x₂+μ[ln(x₁)+ln(x₂)+ln(100−x₁−x₂)+ln(10.000−140x₁−60x₂)]. Các hàm ln(...) tạo 4 bức tường vô hình bọc miền khả thi — khi điểm chạm biên, ln→−∞, kéo Z_μ→−∞ nên thuật toán tự động né.</p>
-                <p><b>③ Đường trung tâm (Central Path):</b> Tập các điểm tối ưu của f_μ khi μ thay đổi. Khi μ→0, đường trung tâm tiến sát biên và hội tụ về đỉnh (50,50).</p>
-                <p><b>④ Ba giai đoạn:</b> (a) μ rất lớn (μ=2000) → bức tường cao, nghiệm ở tâm miền (~x₁=20,x₂=20); (b) Giảm μ dần (×0.3) → thuật toán dám tiến gần biên hơn, Z tăng dần; (c) μ→0 → bức tường biến mất, nghiệm hội tụ (50,50).</p>
-                <p><b>⑤ Thuật toán Newton:</b> Với mỗi μ cố định, giải H(f_μ)·p=−∇f_μ để tìm bước Newton, duyệt line search đảm bảo x₁,x₂,s_i>0. Chuỗi μ=2000→600→180→54→16.2→...→0.</p>
-                <p><b>⑥ Ma trận Hessian:</b> H(f_μ) = μ·Aᵀ·diag(1/sᵢ²)·A + μ·diag(1/xⱼ²). Trong đó A là ma trận ràng buộc, sᵢ=bᵢ−aᵢ·x là khoảng cách đến biên. H cho biết độ cong của mặt rào cản — dùng để xác định hướng Newton tối ưu.</p>
-            </div>
         </div>
 
         <div>
@@ -77,6 +62,41 @@
                 <b>Miền xanh</b> = miền khả thi. <b>Đường đứt ngang</b> = đường đồng mức lợi ích Z.
                 <b>Simplex</b> nhảy theo cạnh đa diện; <b>Interior Point</b> đi xuyên qua trong.
             </p>
+        </div>
+    </div>
+
+    <!-- Kết quả Interior Point: hiện khi bấm nút (bố trí theo hàng) -->
+    <div id="ipmContent" class="chart-grid hidden" style="margin-top:18px">
+        <div class="chart-card full">
+            <h3>📖 Lý thuyết Interior Point (Barrier Method) — ví dụ Max Z = 50x₁ + 30x₂</h3>
+            <div class="steps">
+                <p><b>① Bài toán:</b> Max $Z = 50x_1 + 30x_2$ với $140x_1 + 60x_2 \le 10.000$, $x_1 + x_2 \le 100$, $x_1, x_2 \ge 0$. Nghiệm tối ưu: $x_1^* = 50$, $x_2^* = 50$, $Z^* = 4.000$.</p>
+                <p><b>② Hàm rào cản (Barrier Function):</b> $Z_\mu = 50x_1 + 30x_2 + \mu\big[\ln x_1 + \ln x_2 + \ln(100 - x_1 - x_2) + \ln(10.000 - 140x_1 - 60x_2)\big]$. Khi điểm chạm biên: $\ln\to -\infty$ → «bức tường vô hình» chặn đường ra ngoài miền khả thi.</p>
+                <p><b>③ Đường trung tâm (Central Path):</b> Tập điểm tối ưu $x(\mu)$ khi $\mu$ giảm dần — đi từ tâm miền khả thi cắt vào đỉnh tối ưu $(50, 50)$.</p>
+                <p><b>④ Gradient (cho mỗi μ):</b> $\nabla Z_\mu = \begin{bmatrix}50\\30\end{bmatrix} + \mu\Big[\frac{A^\top}{s} + \frac{1}{x}\Big]$ với $s = [s_1, s_2, s_3, s_4] = [10000 - 140x_1 - 60x_2,\ 100 - x_1 - x_2,\ x_1,\ x_2]$.</p>
+                <p><b>⑤ Ma trận Hessian:</b> $H = \mu\, A^\top \mathrm{diag}\big(\tfrac{1}{s^2}\big) A + \mu\, \mathrm{diag}\big(\tfrac{1}{x^2}\big)$ — độ cong của mặt rào cản.</p>
+                <p><b>⑥ Bước Newton:</b> $H \cdot \Delta x = -\nabla Z_\mu$, cập nhật $x_{k+1} = x_k + \Delta x$ (line search giữ $x_k > 0$, $s > 0$). Chuỗi $\mu$: $2000 \to 600 \to 180 \to 54 \to 16{,}2 \to \ldots \to 0$.</p>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3>📊 Đồ thị hội tụ Z theo bước barrier (Z* = 4.000)</h3>
+            <div id="ipmConvChart" class="plot small"></div>
+            <p class="note" style="font-size:0.82em">Z(μ) tăng dần và tiến sát đường Z* đứt nét khi μ → 0. Điểm cuối chuỗi hội tụ về (50, 50).</p>
+        </div>
+
+        <div class="chart-card">
+            <h3>🧾 Bảng tính các bước lặp Interior Point</h3>
+            <div class="table-responsive" style="max-height:340px; overflow:auto">
+                <table id="ipmTable" class="dp-table" style="font-size:0.80em; min-width:520px">
+                    <thead>
+                        <tr>
+                            <th>Bước</th><th>Lý thuyết</th><th>μ</th><th>x₁</th><th>x₂</th><th>Z</th><th>Δx₁</th><th>Δx₂</th><th>‖∇Z_μ‖</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </section>
@@ -106,23 +126,42 @@
                 <button type="button" class="btn ghost" id="gdNewton">🚁 Bật Drone (Newton — 1 bước)</button>
             </div>
             <div id="gdStatus" class="sim-readout hidden"></div>
-            <div id="gdConvChart" class="plot small" style="height:220px;"></div>
-            <div id="gdHessian" class="steps" style="margin-top:12px">
-                <h4 style="color:var(--primary);margin:0 0 8px">📖 Ma trận Hessian & Bảng tính — Gradient Descent & Newton</h4>
-                <p><b>Hàm:</b> f(x,y) = 3[(x−40)² + (y−60)²] — đáy bát tại (40, 60)</p>
-                <p><b>Gradient:</b> ∇f = [∂f/∂x, ∂f/∂y] = [6(x−40), 6(y−60)]</p>
-                <p><b>Hessian:</b> H = [[∂²f/∂x², ∂²f/∂x∂y], [∂²f/∂y∂x, ∂²f/∂y²]] = [[6, 0], [0, 6]] = 6·I</p>
-                <p><b>Newton update:</b> x<sub>new</sub> = x<sub>old</sub> − H⁻¹·∇f = x<sub>old</sub> − (1/6)·∇f</p>
-                <div id="gdTableWrap" class="table-responsive">
-                    <table id="gdTable" class="dp-table" style="font-size:0.82em">
-                        <thead><tr><th>Bước</th><th>x</th><th>y</th><th>∇f<sub>x</sub></th><th>∇f<sub>y</sub></th><th>f(x,y)</th><th>Phương pháp</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
         </div>
         <div>
             <div id="gdPlot" class="plot gd-plot"></div>
+        </div>
+    </div>
+
+    <!-- Kết quả Gradient Descent / Newton: hiện khi bấm nút (bố trí theo hàng) -->
+    <div id="gdContent" class="chart-grid hidden" style="margin-top:18px">
+        <div class="chart-card full">
+            <h3>🚁 Lý thuyết Ma trận Hessian & Bước Newton — ví dụ f(x,y) = 3[(x−40)² + (y−60)²]</h3>
+            <div id="gdTheory" class="steps">
+                <p><b>① Hàm mục tiêu:</b> $f(x,y) = 3\big[(x-40)^2 + (y-60)^2\big]$ — đáy bát tại $(40, 60)$.</p>
+                <p><b>② Gradient (độ dốc bậc 1):</b> $\nabla f = \begin{bmatrix}\partial f/\partial x\\ \partial f/\partial y\end{bmatrix} = \begin{bmatrix}6(x-40)\\ 6(y-60)\end{bmatrix}$ — cho biết hướng dốc nhất.</p>
+                <p><b>③ Hessian (độ cong bậc 2):</b> $H = \begin{bmatrix}\partial^2 f/\partial x^2 & \partial^2 f/\partial x\partial y\\ \partial^2 f/\partial y\partial x & \partial^2 f/\partial y^2\end{bmatrix} = \begin{bmatrix}6 & 0\\ 0 & 6\end{bmatrix} = 6I$ — đạo hàm của Gradient chính là Hessian.</p>
+                <p><b>④ Phương trình Newton:</b> Từ khai triển Taylor bậc 1 của $\nabla f$: $\nabla f(x+\Delta x) \approx \nabla f(x) + H\Delta x = 0$ ⟹ <b>$H \cdot \Delta x = -\nabla f$</b>.</p>
+                <p><b>⑤ Cập nhật 1 bước:</b> $\Delta x = -H^{-1}\nabla f = -\frac{1}{6}\nabla f$ ⇒ $x_{new} = x_{old} - \frac{1}{6}\nabla f$. Hàm toàn phương ⇒ Newton hội tụ <b>đúng 1 bước</b> từ mọi điểm khởi tạo.</p>
+                <p><b>⑥ Ví dụ cụ thể:</b> Tại $(10, 85)$: $\nabla f = [6(10-40),\, 6(85-60)] = [-180,\, 150]$; $\Delta x = -H^{-1}\nabla f = [30,\, -25]$; $(x,y): (10,85) \to (40,60)$; $f$: $16.950 \to 0$.</p>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3>📊 Đồ thị hội tụ f(x,y) theo bước lặp</h3>
+            <div id="gdConvChart" class="plot small"></div>
+            <p class="note" style="font-size:0.82em">Gradient Descent giảm f dần; Newton (màu tím) nhảy thẳng về 0 sau đúng 1 bước.</p>
+        </div>
+
+        <div class="chart-card">
+            <h3>🧾 Bảng tính Gradient Descent / Newton</h3>
+            <div class="table-responsive" style="max-height:340px; overflow:auto">
+                <table id="gdTable" class="dp-table" style="font-size:0.80em; min-width:520px">
+                    <thead>
+                        <tr><th>Bước</th><th>x</th><th>y</th><th>∇f_x</th><th>∇f_y</th><th>f(x,y)</th><th>Phương pháp</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </section>

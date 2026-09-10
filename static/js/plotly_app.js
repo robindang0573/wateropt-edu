@@ -163,10 +163,9 @@
         f.rows.forEach(function (r, i) {
             fd.append('a1_' + (i + 1), r.a1); fd.append('a2_' + (i + 1), r.a2); fd.append('b_' + (i + 1), r.b);
         });
+        document.getElementById('ipmContent').classList.remove('hidden');
         document.getElementById('ipmStatus').textContent = '⏳ Đang chạy Interior Point...';
         document.getElementById('ipmStatus').classList.remove('hidden');
-        document.getElementById('ipmSteps').classList.add('hidden');
-        document.getElementById('ipmConvChart').style.display = '';
         try {
             const res = await fetch('/api/optimize/ipm', { method: 'POST', body: fd });
             const data = await res.json();
@@ -176,49 +175,36 @@
             const st = document.getElementById('ipmStatus');
             st.textContent = '✅ Interior Point: x₁ = ' + fmt(o[0]) + ', x₂ = ' + fmt(o[1]) +
                 '  ·  Z* = ' + fmt(data.z_star) + '  (sau ' + ipm.iterations + ' bước barrier)';
-            // Hiển thị các bước lặp với lý thuyết
-            const stepsDiv = document.getElementById('ipmSteps');
-            stepsDiv.classList.remove('hidden');
-            const theory = [
-                'Khởi tạo: chọn điểm khả thi trong (x₁,x₂ > 0, s_i > 0). Tính ∇f_μ và H(f_μ).',
-                'μ lớn: hàm rào cản −μ·Σln(s_i) −μ·Σln(x_j) chi phối → nghiệm gần tâm Chebyshev của miền.',
-                'μ giảm (×0.3): đường trung tâm (central path) dịch chuyển về phía đỉnh tối ưu.',
-                'Lặp Newton: giải H·p = −∇f_μ, duyệt bước, kiểm tra hội tụ.',
-                'Giai đoạn cuối: μ → 0, nghiệm xấp xỉ đỉnh tối ưu (50, 50), Z = 4000.'
-            ];
-            let html = '<h4 style="color:var(--primary);margin:0 0 8px">📋 Các bước lặp Barrier Interior Point</h4>';
-            html += '<table class="dp-table" style="font-size:0.80em"><thead><tr>' +
-                '<th>Bước</th><th>Lý thuyết</th><th>μ</th><th>x₁</th><th>x₂</th><th>Z</th><th>inner</th><th>||∇||</th></tr></thead><tbody>';
-            (ipm.hist || []).forEach(function (h, idx) {
-                const t = theory[idx % theory.length];
-                html += '<tr><td>' + h.outer + '</td><td style="font-size:0.75em;color:var(--muted);max-width:260px">' + t + '</td>' +
-                    '<td>' + h.mu + '</td><td>' + fmt(h.x1) + '</td>' +
-                    '<td>' + fmt(h.x2) + '</td><td>' + fmt(h.z) + '</td><td>' + h.inner + '</td><td>' + h.grad + '</td></tr>';
-            });
-            html += '</tbody></table>';
-            stepsDiv.innerHTML = html;
-            // Thêm phần lý thuyết tổng quan
-            const theoryDiv = document.createElement('div');
-            theoryDiv.className = 'steps';
-            theoryDiv.style.marginTop = '12px';
-            theoryDiv.innerHTML =
-                '<h4 style="color:var(--primary);margin:0 0 8px">📖 Lý thuyết Interior Point (Barrier Method)</h4>' +
-                '<p><b>① Bài toán:</b> Max Z=50x₁+30x₂, ràng buộc 140x₁+60x₂≤10.000, x₁+x₂≤100, x₁,x₂≥0. Nghiệm tối ưu: x₁=50, x₂=50, Z*=4.000.</p>' +
-                '<p><b>② Hàm rào cản (Barrier Function):</b> f_μ(x) = 50x₁+30x₂+μ[ln(x₁)+ln(x₂)+ln(100−x₁−x₂)+ln(10.000−140x₁−60x₂)]. Các hàm ln(...) tạo 4 bức tường vô hình bọc miền khả thi — khi điểm chạm biên, ln→−∞, kéo Z_μ→−∞ nên thuật toán tự động né.</p>' +
-                '<p><b>③ Đường trung tâm (Central Path):</b> Tập các điểm tối ưu của f_μ khi μ thay đổi. Khi μ→0, đường trung tâm tiến sát biên và hội tụ về đỉnh (50,50).</p>' +
-                '<p><b>④ Ba giai đoạn:</b> (a) μ rất lớn (μ=2000) → bức tường cao, nghiệm ở tâm miền (~x₁=20,x₂=20); (b) Giảm μ dần (×0.3) → thuật toán dám tiến gần biên hơn, Z tăng dần; (c) μ→0 → bức tường biến mất, nghiệm hội tụ (50,50).</p>' +
-                '<p><b>⑤ Thuật toán Newton:</b> Với mỗi μ cố định, giải H(f_μ)·p=−∇f_μ để tìm bước Newton, duyệt line search đảm bảo x₁,x₂,s_i>0. Chuỗi μ=2000→600→180→54→16.2→...→0.</p>' +
-                '<p><b>⑥ Ma trận Hessian:</b> H(f_μ) = μ·Aᵀ·diag(1/sᵢ²)·A + μ·diag(1/xⱼ²). A là ma trận hệ số ràng buộc, sᵢ=bᵢ−aᵢ·x là khoảng cách đến biên. H cho biết độ cong của mặt rào cản — xác định hướng Newton tối ưu. Trong code, H được giải trực tiếp bằng np.linalg.solve thay vì tính nghịch đảo.</p>';
-            stepsDiv.appendChild(theoryDiv);
-            // Animation: animate IPM path on LP plot
+            populateIpmTable(ipm);
             if (ipm.path && ipm.path.length > 1) {
                 await animateLP(ipm.path, 'Interior Point', '#9d4edd');
             }
-            // Convergence chart: Z vs iteration
             drawIpmConvergence(ipm.convergence || []);
         } catch (e) {
             document.getElementById('ipmStatus').textContent = '⚠️ Lỗi kết nối API.';
         }
+    }
+
+    function populateIpmTable(ipm) {
+        const tbody = document.querySelector('#ipmTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        const theory = [
+            'Khởi tạo điểm khả thi trong: x>0, s = b−Ax > 0; tính ∇Z_μ, H.',
+            'μ lớn → hàm rào cản chi phối, nghiệm gần tâm Chebyshev của miền.',
+            'μ giảm (×0.3) → central path dịch về phía đỉnh tối ưu.',
+            'Lặp Newton: giải H·Δx = −∇Z_μ, line search giữ x>0, s>0.',
+            'Giai đoạn cuối: μ→0, nghiệm hội tụ về (50,50), Z=4000.'
+        ];
+        (ipm.hist || []).forEach(function (h, idx) {
+            const t = theory[idx % theory.length];
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td>' + h.outer + '</td>' +
+                '<td style="font-size:0.72em;color:var(--muted);min-width:220px;max-width:260px">' + t + '</td>' +
+                '<td>' + h.mu + '</td><td>' + fmt(h.x1) + '</td><td>' + fmt(h.x2) + '</td><td>' + fmt(h.z) + '</td>' +
+                '<td>' + fmt(h.dx1) + '</td><td>' + fmt(h.dx2) + '</td><td>' + h.grad + '</td>';
+            tbody.appendChild(tr);
+        });
     }
 
     function drawIpmConvergence(conv) {
@@ -361,6 +347,7 @@
             warn.classList.add('hidden');
             st.innerHTML = '✅ Hội tụ về (' + fmt(res.xf) + ', ' + fmt(res.yf) + ') sau <b>' + res.traj.length + '</b> bước với α = ' + fmt(f.alpha);
         }
+        document.getElementById('gdContent').classList.remove('hidden');
         drawGdConvergence(res.traj, target);
         populateGDTable(res.traj, 'gd');
     }
@@ -399,6 +386,7 @@
         } else {
             from = [f.x0, f.y0];
         }
+        document.getElementById('gdContent').classList.remove('hidden');
         plotGDSurface([], { from: from, to: t });
         document.getElementById('gdStatus').classList.remove('hidden');
         document.getElementById('gdStatus').innerHTML =
@@ -409,27 +397,7 @@
         const fv = GD_K * (Math.pow(from[0] - 40, 2) + Math.pow(from[1] - 60, 2));
         const st = document.getElementById('gdStatus');
         st.innerHTML += '<br>📉 f(x₀,y₀) = ' + fmt(fv) + ' → f(40,60) = 0 sau 1 Newton step.';
-        showNewtonTheory(from, t, fv);
         populateGDTable([from], 'newton');
-    }
-
-    function showNewtonTheory(from, target, fv) {
-        const theoryDiv = document.createElement('div');
-        theoryDiv.className = 'steps newton-theory';
-        theoryDiv.style.marginTop = '12px';
-        theoryDiv.innerHTML =
-            '<h4 style="color:var(--primary);margin:0 0 8px">🚁 Lý thuyết Ma trận Hessian (Newton Step)</h4>' +
-            '<p><b>Ma trận Hessian H:</b> Đối với f(x,y) = k[(x−a)²+(y−b)²], H = [[2k, 0],[0, 2k]] = 2k·I.</p>' +
-            '<p><b>Phương trình Newton:</b> H·Δx = −∇f(x). Vì H = 2k·I, nên Δx = −(1/2k)·∇f(x).</p>' +
-            '<p><b>Cập nhật:</b> x_new = x_old − (1/(2k))·∇f(x). Với f là hàm toàn phương, bước này đưa thẳng đến cực tiểu trong 1 lần.</p>' +
-            '<p><b>Ý nghĩa:</b> Gradient cho biết hướng dốc, Hessian cho biết độ cong. Với f=3[(x−40)²+(y−60)²], H=6I — bát đối xứng hoàn hảo, Newton tìm đúng đáy sau 1 bước từ bất kỳ điểm nào.</p>' +
-            '<p>📍 Khởi tạo (' + fmt(from[0]) + ', ' + fmt(from[1]) + ') → f = ' + fmt(fv) + ' → 1 Newton step → (40, 60) → f = 0.</p>';
-        const gdSection = document.getElementById('gd');
-        if (gdSection) {
-            let existing = gdSection.querySelector('.newton-theory');
-            if (existing) existing.remove();
-            gdSection.appendChild(theoryDiv);
-        }
     }
 
     function populateGDTable(traj, method) {

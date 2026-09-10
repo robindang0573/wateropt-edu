@@ -545,6 +545,7 @@ def _solve_ipm(c1, c2, rows, optimal, z_star):
     for oi in range(outer_max):
         if mu < 1e-12:
             break
+        x_start = x.copy()
         converged_inner = False
         for ii in range(inner_max):
             s = b - A @ x
@@ -571,13 +572,15 @@ def _solve_ipm(c1, c2, rows, optimal, z_star):
             if np.linalg.norm(x - x_old, ord=np.inf) < 1e-10 and np.linalg.norm(g, ord=np.inf) < 1e-7:
                 converged_inner = True
                 break
+        dx = x - x_start
         z = c1 * x[0] + c2 * x[1]
         path.append([round(float(x[0]), 4), round(float(x[1]), 4)])
         hist.append({
             "outer": oi + 1, "mu": round(float(mu), 6),
             "x1": round(float(x[0]), 6), "x2": round(float(x[1]), 6),
+            "dx1": round(float(dx[0]), 6), "dx2": round(float(dx[1]), 6),
             "z": round(float(z), 4), "inner": ii + 1,
-            "grad": round(float(np.linalg.norm(g, ord=np.inf)), 4),
+            "grad": round(float(np.linalg.norm(g, ord=np.inf)), 6),
         })
         conv.append({"iter": oi + 1, "mu": round(float(mu), 6), "z": round(float(z), 4),
                      "dist": round(float(abs(z - z_star)) if z_star else 0, 6)})
