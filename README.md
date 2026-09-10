@@ -29,13 +29,16 @@ python app.py
 
 ## REST API
 
+> 📖 **Tài liệu chi tiết** (request/response đầy đủ, ví dụ curl): xem [`API.md`](API.md).
+
 | Endpoint | Phương thức | Mô tả |
 |---|---|---|
 | `/api/economic` | POST | Tính NPV/B/C/IRR/AW (form: invest, benefit, om, rate, nper, rep_cost, rep_year, salvage) |
 | `/api/pricing` | POST | Tính giá nước (form: dep, om_labor, om_energy, om_repair, om_mgmt, profit, tax, design_q, actual_q, quota, use, area_ha, tier2, tier3) |
-| `/api/optimize/lp` | POST | Giải LP 2 biến (form: c1, c2, a1_1..6, a2_1..6, b_1..6) |
+| `/api/optimize/lp` | POST | Giải LP 2 biến + đỉnh/đồ giải + tableau Simplex (form: c1, c2, a1_1..6, a2_1..6, b_1..6) |
 | `/api/optimize/gd` | GET | Gradient Descent (query: x0, y0, alpha) |
 | `/api/optimize/newton` | GET | Bước nhảy Newton (query: x0, y0) |
+| `/api/optimize/ipm` | POST | Interior Point / Barrier (form giống `/api/optimize/lp`) |
 | `/api/optimize/dp` | GET | Quy hoạch động vận hành hồ chứa (dữ liệu mẫu) |
 
 ## Đơn vị
