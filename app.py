@@ -546,6 +546,10 @@ def simplex_tableau(c1, c2, rows):
             if zrow[j] < -1e-9 and (entering is None or zrow[j] < zrow[entering]):
                 entering = j
         zv = sum(c[bi] * T[i, -1] for i, bi in enumerate(basis) if bi < n)
+        xb = [0.0, 0.0]
+        for i, bi in enumerate(basis):
+            if bi < n:
+                xb[bi] = T[i, -1]
         ratios = [None] * m
         leaving = None
         pivot = None
@@ -565,6 +569,7 @@ def simplex_tableau(c1, c2, rows):
             "leaving": vn[basis[leaving]] if leaving is not None else None,
             "pivot": pivot,
             "z": round(float(zv), 4),
+            "point": [round(float(xb[0]), 4), round(float(xb[1]), 4)],
             "basis": [vn[bi] for bi in basis],
             "ratios": ratios,
             "optimal": entering is None,

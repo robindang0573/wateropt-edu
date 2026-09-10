@@ -131,7 +131,7 @@
             window.__lpCur = data;
             plotLP(data, 0.6);
             document.getElementById('lpContent').classList.remove('hidden');
-            document.querySelectorAll('.lp-simplex-card').forEach(function (el) { el.classList.add('hidden'); });
+            document.getElementById('lpSimplexContent').classList.add('hidden');
             populateVertexTable(data);
             const st = document.getElementById('lpStatus');
             if (data.status === 'optimal') {
@@ -151,8 +151,7 @@
             document.getElementById('lpStatus').classList.remove('hidden');
             return;
         }
-        document.getElementById('lpContent').classList.remove('hidden');
-        document.querySelectorAll('.lp-simplex-card').forEach(function (el) { el.classList.remove('hidden'); });
+        document.getElementById('lpSimplexContent').classList.remove('hidden');
         populateSimplexTable(window.__lpCur.simplex);
         await animateLP(window.__lpCur.path || [], 'Simplex', '#005f73');
     }
@@ -185,7 +184,8 @@
         const names = its[0].var_names || ['x1', 'x2', 's1', 's2'];
         const cols = names.length + 3;
         its.forEach(function (it) {
-            let title = 'Lặp ' + it.it + ' · Z = <b>' + fmt(it.z) + '</b>';
+            let title = 'Lặp ' + it.it + ' · đỉnh (x₁, x₂) = (' + fmt(it.point[0]) + '; ' + fmt(it.point[1]) + ')' +
+                ' · Z = <b>' + fmt(it.z) + '</b>';
             if (it.entering) title += ' · vào: <b>' + it.entering + '</b>';
             if (it.leaving) title += ' · ra: <b>' + it.leaving + '</b> · trục = <b>' + fmt(it.pivot) + '</b>';
             if (it.optimal) title += '  ✅ TỐI ƯU';
