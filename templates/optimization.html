@@ -107,6 +107,16 @@
         </div>
 
         <div class="chart-card full">
+            <h3>❓ Tại sao cần Biến vào &amp; Biến ra?</h3>
+            <div class="steps">
+                <p><b>① Tại sao cần biến vào?</b> Ban đầu, bảng của bạn có nghiệm $x_1 = x_2 = 0,\; s_1 = 10.000,\; s_2 = 100,\; Z = 0$. Trong đó $x_1, x_2$ là các hoạt động tạo lợi ích — nếu cả hai đều bằng 0 thì chưa tạo ra giá trị nào. Hàng $Z$ cho thấy $Z = 50x_1 + 30x_2$, vì vậy muốn tăng $Z$ ta phải cho ít nhất một trong hai biến $x_1, x_2$ tăng lên. Biến được chọn tăng và đưa vào nhóm biến cơ sở gọi là <b>biến vào</b>. Trong hình, $x_1$ được chọn vì nó có khả năng cải thiện $Z$ nhanh nhất: $50 &gt; 30$. Do đó $\boxed{x_1 \text{ vào cơ sở}}$. Nếu không chọn biến vào, Simplex không biết nên di chuyển theo hướng nào để làm nghiệm tốt hơn.</p>
+                <p><b>② Tại sao cần biến ra?</b> Ta không thể tăng $x_1$ vô hạn vì các nguồn lực có giới hạn. Từ bảng: $140x_1 + 60x_2 + s_1 = 10.000$; $x_1 + x_2 + s_2 = 100$. Nếu giữ $x_2 = 0$ và tăng $x_1$: $s_1 = 10.000 - 140x_1$; $s_2 = 100 - x_1$. Càng tăng $x_1$, các biến dư $s_1, s_2$ càng giảm — tăng quá mức thì một biến dư sẽ âm, nghĩa là dùng nhiều tài nguyên hơn lượng hiện có. Cụ thể: $x_1 \le \frac{10.000}{140} = 71{,}43$ và $x_1 \le \frac{100}{1} = 100$. Ràng buộc thứ nhất chạm giới hạn trước, tại $x_1 = 71{,}43,\; s_1 = 0$. Vì $s_1$ đã hết phần dư nên nó phải rời cơ sở: $\boxed{s_1 \text{ là biến ra}}$. Nếu không xác định biến ra, ta có thể tăng $x_1$ quá xa và tạo ra một nghiệm không khả thi.</p>
+                <p><b>③ Tại sao một biến vào thì phải có một biến ra?</b> Trong bài toán có hai phương trình ràng buộc, mỗi nghiệm cơ sở chỉ có thể có hai biến cơ sở. Ban đầu: $\text{Cơ sở} = \{s_1, s_2\}$. Khi $x_1$ được đưa vào mà không đưa biến nào ra thì sẽ có ba biến cơ sở $\{s_1, s_2, x_1\}$ — không phù hợp với cấu trúc nghiệm cơ sở của hệ hai phương trình. Vì vậy phải đổi chỗ: $\{s_1, s_2\} \;\longrightarrow\; \{x_1, s_2\}$. Có thể hiểu giống như một đội chỉ có hai vị trí chính thức: muốn đưa một người mới vào thì một người hiện tại phải ra.</p>
+                <p><b>④ Ý nghĩa hình học.</b> Với bài toán hai biến, miền nghiệm là một đa giác và Simplex chỉ xét các đỉnh của đa giác. Mỗi lần chọn biến vào và biến ra tương ứng với việc: $\text{Đỉnh hiện tại} \rightarrow \text{đi dọc theo một cạnh} \rightarrow \text{đỉnh kế tiếp tốt hơn}$. Biến vào xác định cạnh và hướng di chuyển; biến ra xác định điểm phải dừng trên cạnh đó; pivot thực hiện việc chuyển sang đỉnh mới. Trong hình của bạn: $(0,0) \rightarrow (71{,}43;\ 0) \rightarrow (50, 50)$ — chính là quá trình đi từ một đỉnh khả thi đến đỉnh có giá trị mục tiêu cao hơn.</p>
+            </div>
+        </div>
+
+        <div class="chart-card full">
             <h3>🗺️ Đi dọc cạnh — Biến vào = HƯỚNG đi, Biến ra = CHIỀU DÀI cạnh</h3>
             <div class="steps">
                 <p><b>① Biến vào = chọn HƯỚNG đi dọc cạnh:</b> tại một đỉnh bất kỳ luôn có nhiều cạnh tỏa ra — biến vào cho biết nên rẽ vào cạnh nào để Z tăng <i>nhanh nhất</i>. Bảng: chọn cột có hệ số âm nhất ở hàng Z (reduced cost lớn nhất). Hình học: nó xác định trục tọa độ (hướng vector) ta di chuyển. Lặp 1 tại $(0,0)$: $x_1$ có hệ số $-50$ (âm nhất) ⟹ đi dọc trục $x_1$ (cạnh nằm trên trục hoành, nơi $x_2 = 0$).</p>
