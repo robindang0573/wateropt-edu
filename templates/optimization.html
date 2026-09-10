@@ -107,15 +107,14 @@
         </div>
 
         <div class="chart-card full">
-            <h3>🗺️ Di chuyển dọc cạnh tìm Z tối ưu — khác xa phương pháp đồ giải</h3>
+            <h3>🗺️ Đi dọc cạnh — Biến vào = HƯỚNG đi, Biến ra = CHIỀU DÀI cạnh</h3>
             <div class="steps">
-                <p><b>Đồ giải (bảng đỉnh):</b> <i>liệt kê và tính Z ở mọi đỉnh</i> rồi chọn Z lớn nhất — làm được chỉ với 2–3 biến, không mở rộng được cho bài toán lớn.</p>
-                <p><b>Simplex:</b> từ đỉnh hiện tại <i>chỉ xét các cạnh kề</i>, không cần biết các đỉnh khác trong miền.</p>
-                <p><b>Bước 1 — chọn biến vào:</b> biến có reduced cost âm nhất (−50 của $x_1$) ⟹ đi dọc cạnh theo hướng x₁ tăng thì Z tăng nhanh nhất.</p>
-                <p><b>Bước 2 — tỷ số tối thiểu (biến ra):</b> biến vào $x_1$ bị chặn bởi ràng buộc nào trước? RHS/cột: $10.000/140 = 71{,}43$ và $100/1 = 100$ ⟹ chọn $71{,}43$ (nhỏ hơn) ⟹ $s_1$ ra — điểm mới là giao của trục 0 <span style="white-space:nowrap">(cạnh $x_2 = 0$)</span> với biên ràng buộc 1: đỉnh $(71{,}43; 0)$.</p>
-                <p><b>Bước 3 — pivot:</b> chuẩn hóa hàng trục, khử các hệ số cùng cột ⟹ bảng mới cho đỉnh kề với cơ sở $\{x_1, s_2\}$, $Z = 3.571{,}43$.</p>
-                <p><b>Quay lại bước 1:</b> reduced cost −8{,}57 của $x_2$ ⟹ vào $x_2$; tỷ số: $71{,}43/0{,}4286 = 166{,}67$ và $28{,}57/0{,}5714 = 50$ ⟹ $s_2$ ra ⟹ đỉnh $(50, 50)$, $Z = 4.000$.</p>
-                <p><b>Dừng:</b> z-row không còn số âm ⟹ không cạnh nào làm Z tăng được nữa ⟹ $(50,50)$ tối ưu. <b>Lộ trình:</b> $(0,0) \to (71{,}43;0) \to (50,50)$ — <i>không bao giờ thăm</i> đỉnh $(0, 100)$ dù nó có $Z = 3.000$.</p>
+                <p><b>① Biến vào = chọn HƯỚNG đi dọc cạnh:</b> tại một đỉnh bất kỳ luôn có nhiều cạnh tỏa ra — biến vào cho biết nên rẽ vào cạnh nào để Z tăng <i>nhanh nhất</i>. Bảng: chọn cột có hệ số âm nhất ở hàng Z (reduced cost lớn nhất). Hình học: nó xác định trục tọa độ (hướng vector) ta di chuyển. Lặp 1 tại $(0,0)$: $x_1$ có hệ số $-50$ (âm nhất) ⟹ đi dọc trục $x_1$ (cạnh nằm trên trục hoành, nơi $x_2 = 0$).</p>
+                <p><b>② Biến ra = tính CHIỀU DÀI cạnh để tìm đỉnh mới:</b> có hướng rồi nhưng không thể đi mãi — phải dừng khi chạm "bức tường" (một ràng buộc khác). Bảng: phép thử tỷ số tối thiểu $\frac{\text{RHS}}{\text{cột biến vào}}$. Hình học: tỷ số nhỏ nhất chính là <b>chiều dài đoạn thẳng</b> (khoảng cách đại số) từ đỉnh cũ đến đỉnh mới dọc theo cạnh đó; biến cơ sở ở hàng có tỷ số nhỏ nhất là "bức tường" ta đâm vào.</p>
+                <p><b>Lặp 1 — tại $(0,0)$: đi dọc trục $x_1$.</b> Đâm vào tường $s_1$ (ràng buộc 1) sau $10.000/140 = 71{,}43$ bước; đâm vào tường $s_2$ (ràng buộc 2) sau $100/1 = 100$ bước ⟹ chọn $71{,}43$ (nhỏ nhất). Chiều dài cạnh = $71{,}43$, tới đỉnh $(71{,}43; 0)$; $s_1$ bị loại vì đã chạm đúng biên ($s_1 = 0$).</p>
+                <p><b>🏃 Lặp 2 — tại $(71{,}43; 0)$:</b> đang nằm trên biên ràng buộc 1 ($s_1 = 0$). Biến vào $x_2$ (hệ số $-8{,}57$) ⟹ hướng đi lên; vì đang trên biên $s_1 = 0$, khi $x_2$ tăng thì $x_1$ <i>phải giảm</i> để giữ $140x_1 + 60x_2 = 10.000$ — chính là đoạn thẳng màu xanh đậm trên đồ thị. Biến ra $s_2$: $28{,}57/0{,}5714 = 50$ bước thì chạm biên $x_1 + x_2 = 100$ ⟹ đỉnh mới $(50, 50)$.</p>
+                <p><b>🏆 Lặp 3 — dừng tại $(50, 50)$:</b> hàng Z không còn số âm ⟹ không còn cạnh nào "đi lên" được nữa ⟹ đã leo tới đỉnh cao nhất của ngọn núi đa diện, $Z = 4.000$. So với đồ giải (đánh giá mọi đỉnh), Simplex <b>chỉ cần đi theo 2 cạnh liên tiếp</b> — không bao giờ thăm $(0, 100)$ dù nó có $Z = 3.000$.</p>
+                <p><b>💡 Tóm lại:</b> Simplex như một <b>chú robot mù leo núi</b>. Biến vào bảo robot: "Hãy sờ tay xung quanh và chọn hướng dốc nhất để bước!" (chọn hướng cạnh). Biến ra bảo robot: "Hãy bước theo hướng đó cho đến khi mũi chân chạm vào vách đá thì dừng lại!" (tính chiều dài cạnh và tìm đỉnh mới).</p>
             </div>
         </div>
 
@@ -293,5 +292,5 @@
     window.__NEWTON = {{ newton | tojson }};
     window.__DP = {{ dp | tojson }};
 </script>
-<script src="{{ url_for('static', filename='js/plotly_app.js') }}?v=8"></script>
+<script src="{{ url_for('static', filename='js/plotly_app.js') }}?v=9"></script>
 {% endblock %}
