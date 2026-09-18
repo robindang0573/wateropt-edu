@@ -252,6 +252,26 @@ tfoot td { font-weight: 700; background: var(--subtle); }
 .governance-page .concept-box strong {
     display: block; color: var(--primary); font-size: 1.02em; line-height: 1.45;
 }
+.governance-page .geometry-flow {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px; margin: 18px 0;
+}
+.governance-page .flow-card {
+    min-width: 0; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 16px 14px; position: relative;
+}
+.governance-page .flow-card h3 {
+    margin: 0 0 8px; color: var(--primary); font-size: 1.02em; padding-right: 42px;
+}
+.governance-page .flow-card p {
+    margin: 8px 0 0; line-height: 1.58;
+}
+.governance-page .flow-index {
+    position: absolute; top: 12px; right: 12px; min-width: 34px; height: 34px;
+    padding: 0 8px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
+    background: var(--primary); color: var(--on-primary); font-weight: 800; font-size: 0.82em;
+}
+.governance-page .geometry-summary { margin-top: 8px; }
 
 /* ===== Bố cục từng chỉ số kinh tế (hàng ngang full-width) ===== */
 .kpi-section {

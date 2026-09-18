@@ -6,6 +6,7 @@
 <p class="page-desc">Mô phỏng động hồ chứa, lọc ràng buộc Governance, xây dựng Pareto front và chọn phương án theo trọng số ra quyết định.</p>
 
 <div class="jumpbar">
+    <a href="#geometry-map" class="chip">Bản đồ bài toán</a>
     <a href="#decision" class="chip">① Ωᴰ · Governance</a>
     <a href="#state" class="chip">② Ωˢ · Planning</a>
     <a href="#objectives" class="chip">③ Ωᴶ · Management</a>
@@ -48,10 +49,65 @@
 <div class="alert" style="background:var(--panel);border:1px solid var(--border)">Governance đặt mục tiêu + ràng buộc; Planning chọn cấu trúc <b>X</b>; Management chọn chính sách <b>U</b>; quỹ đạo trạng thái được ánh xạ sang không gian mục tiêu và lọc Pareto.</div>
 
 <div class="concept-strip">
+    <div class="concept-box"><span>Governance</span><strong>\(\text{vẽ sân chơi}\)</strong></div>
     <div class="concept-box"><span>Planning</span><strong>\(\text{xây cấu trúc của sân chơi}\)</strong></div>
     <div class="concept-box"><span>Management</span><strong>\(\text{chọn đường đi trong sân chơi}\)</strong></div>
     <div class="concept-box"><span>Pareto</span><strong>\(\text{xác định các đường đi hiệu quả nhất}\)</strong></div>
 </div>
+
+<section class="card" id="geometry-map">
+    <h2 class="card-title">Bản đồ hình học của bài toán</h2>
+    <p class="note">Toàn bộ mô hình được đọc như một chuỗi biến đổi hình học: từ luật chơi do Governance đặt ra, qua phương án Planning/Management, thành quỹ đạo trạng thái, rồi thành điểm trong không gian mục tiêu để Pareto lọc các lựa chọn hiệu quả.</p>
+    <div class="geometry-flow">
+        <div class="flow-card">
+            <div class="flow-index">G</div>
+            <h3>Governance vẽ sân chơi</h3>
+            <div class="formula">\(\Theta_G\Rightarrow g_D,g_S,V_G\)</div>
+            <p>Governance xác định biên được phép: hồ không được xuống dưới \(V^{critical}\), dòng chảy không được thấp hơn \(Q_{eco}^{min}\), và trọng số nào quan trọng hơn khi đánh đổi.</p>
+            <p>Ý nghĩa hình học: Governance cắt bỏ vùng cấm và xác định hướng ưu tiên trong không gian mục tiêu.</p>
+        </div>
+        <div class="flow-card">
+            <div class="flow-index">P</div>
+            <h3>Planning xây cấu trúc sân chơi</h3>
+            <div class="formula">\(X=K\)</div>
+            <p>Planning chọn cấu trúc dài hạn, ví dụ dung tích hồ \(K\). Khi \(K\) tăng, miền trữ lượng khả thi rộng hơn; khi \(K\) nhỏ, quỹ đạo dễ chạm biên rủi ro.</p>
+            <p>Ý nghĩa hình học: Planning làm thay đổi kích thước và hình dạng của miền trạng thái khả thi.</p>
+        </div>
+        <div class="flow-card">
+            <div class="flow-index">M</div>
+            <h3>Management chọn đường đi</h3>
+            <div class="formula">\(U_t=(R_t,W_t)\)</div>
+            <p>Management chọn cách xả hồ và cấp nước ở từng bước thời gian. Mỗi quyết định tạo một vector chuyển động từ \(S_t\) sang \(S_{t+1}\).</p>
+            <p>Ý nghĩa hình học: Management chọn quỹ đạo đi qua sân chơi mà Governance và Planning đã tạo.</p>
+        </div>
+        <div class="flow-card">
+            <div class="flow-index">S</div>
+            <h3>Mô hình trạng thái mô phỏng đường đi</h3>
+            <div class="formula">\(S_{t+1}=F(S_t,U_t,X,\xi_t)\)</div>
+            <p>Với mỗi phương án \((X,U)\), hệ thống tạo ra một đường \(S_0\rightarrow S_1\rightarrow\cdots\rightarrow S_T\) trong mặt phẳng \((V,Q)\).</p>
+            <p>Ý nghĩa hình học: một phương án không còn là con số rời rạc mà trở thành một quỹ đạo có thể quan sát được.</p>
+        </div>
+        <div class="flow-card">
+            <div class="flow-index">J</div>
+            <h3>Không gian mục tiêu đánh giá đường đi</h3>
+            <div class="formula">\(J=[J_{econ},J_{soc},J_{env},J_{risk}]\)</div>
+            <p>Quỹ đạo được nén thành các chỉ tiêu: chi phí, thiếu nước, thiếu hụt môi trường và rủi ro. Mỗi quỹ đạo trở thành một điểm trong \(\Omega_J\).</p>
+            <p>Ý nghĩa hình học: các đường đi khác nhau được so sánh trong cùng một hệ trục mục tiêu.</p>
+        </div>
+        <div class="flow-card">
+            <div class="flow-index">PF</div>
+            <h3>Pareto xác định đường đi hiệu quả nhất</h3>
+            <div class="formula">\(\mathcal P=ND(\Omega_J)\)</div>
+            <p>Pareto loại các phương án bị trội: nếu một phương án tệ hơn phương án khác ở mọi mục tiêu thì không cần giữ lại.</p>
+            <p>Ý nghĩa hình học: Pareto front là biên hiệu quả; muốn tốt hơn ở một mục tiêu thì phải chấp nhận đánh đổi ở mục tiêu khác.</p>
+        </div>
+    </div>
+    <div class="metric-details geometry-summary">
+        <h3>Chuỗi logic cần nhớ</h3>
+        <div class="formula">\(\Theta_G\rightarrow\Omega_D\rightarrow(X,U)\rightarrow\Omega_S\rightarrow\Omega_J\rightarrow\mathcal P\rightarrow J^*\)</div>
+        <p><b>Governance</b> vẽ sân chơi và hướng ưu tiên; <b>Planning</b> xây cấu trúc sân chơi; <b>Management</b> chọn đường đi; <b>Pareto</b> giữ lại các đường đi hiệu quả nhất; cuối cùng Governance chọn một điểm phù hợp với hệ giá trị đang đặt.</p>
+    </div>
+</section>
 
 <section class="card" id="decision">
     <h2 class="card-title">1. Không gian quyết định khả thi \(\Omega_D\) — tầng Governance</h2>
