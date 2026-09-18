@@ -4,6 +4,7 @@ import math
 import numpy as np
 from flask import Flask, jsonify, render_template, request
 from scipy.optimize import brentq, linprog
+from governance import GovernanceConfig, config_from_mapping, run_governance
 
 app = Flask(__name__)
 
@@ -838,6 +839,21 @@ def optimization():
                            lp=lp, gd=gd, newton=nw, dp=dp)
 
 
+@app.route("/governance", methods=["GET", "POST"])
+def governance():
+    """Module 4: Governance → Planning → Management → Pareto decision."""
+    source = request.form if request.method == "POST" else request.args
+    error = None
+    try:
+        config = config_from_mapping(source)
+    except (TypeError, ValueError):
+        config = GovernanceConfig()
+        error = "Dữ liệu Governance không hợp lệ; đã dùng cấu hình mặc định."
+    result = run_governance(config)
+    return render_template("governance.html", active="governance", config=config,
+                           result=result, error=error)
+
+
 # ============ REST API ============
 @app.route("/api/economic", methods=["POST"])
 def api_economic():
@@ -916,6 +932,15 @@ def api_ipm():
 @app.route("/api/optimize/dp")
 def api_dp():
     return jsonify(solve_dp(DEFAULT_INFLOWS))
+
+
+@app.route("/api/governance", methods=["GET", "POST"])
+def api_governance():
+    source = request.get_json(silent=True) or request.values
+    try:
+        return jsonify(run_governance(config_from_mapping(source)))
+    except (TypeError, ValueError):
+        return jsonify({"error": "invalid governance parameters"}), 400
 
 
 if __name__ == "__main__":

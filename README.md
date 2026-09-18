@@ -5,6 +5,9 @@ Nền tảng học tập tương tác giúp sinh viên Thủy lợi & Tài nguy�
 1. **📊 Phân tích kinh tế dự án** — NPV, B/C, IRR, AW, Payback (Chương 3).
 2. **🌾 Cơ chế giá nước nông nghiệp** — chi phí cho phép (准许成本), quy tắc 60%, giá lũy tiến, tham chiếu Hồ Nam 0,038 CNY/m³ (Chương 6, cơ chế Trung Quốc).
 3. **🧠 Tối ưu hóa** — Quy hoạch tuyến tính 2 biến (vùng khả thi + hoạt ảnh Simplex/Interior Point), Gradient Descent & Newton trên bề mặt 3D, Quy hoạch động vận hành hồ chứa (truy hồi ngược).
+4. **💧 Governance hệ thống nước** — mô phỏng trạng thái hồ chứa, ràng buộc dòng chảy môi trường, Pareto front và lựa chọn Planning/Management theo trọng số Governance.
+
+> Module Governance dùng `Qeco=25` làm mặc định để luôn có phương án minh họa. Tăng `Qeco` lên 30 hoặc cao hơn để xem trường hợp miền khả thi bị loại hết.
 
 ## Tính năng
 - 4 theme giao diện (Sáng / Tối / Hồ / Đồng ruộng), lưu theo trình duyệt.
@@ -40,6 +43,7 @@ python app.py
 | `/api/optimize/newton` | GET | Bước nhảy Newton (query: x0, y0) |
 | `/api/optimize/ipm` | POST | Interior Point / Barrier (form giống `/api/optimize/lp`) |
 | `/api/optimize/dp` | GET | Quy hoạch động vận hành hồ chứa (dữ liệu mẫu) |
+| `/api/governance` | GET/POST | Mô phỏng Governance–Planning–Management và chọn nghiệm Pareto (vcrit, qeco, periods, v0, q0, w_econ, w_soc, w_env, w_risk) |
 
 ## Đơn vị
 - Module 1: triệu USD. Module 2: triệu CNY / triệu m³ / CNY per m³ (quy đổi ₫ với tỉ giá tham chiếu 3.550 đ/CNY). Module 3: ha, tỷ m³, tỷ đồng.

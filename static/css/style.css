@@ -214,6 +214,31 @@ tfoot td { font-weight: 700; background: var(--subtle); }
 .chart-grid .chart-card.full { grid-column: 1 / -1; }
 .lp-plot { height: 480px; }
 
+/* Governance: large, full-width educational charts. */
+.governance-page { min-width: 0; overflow-x: hidden; }
+.governance-page .chart-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; min-width: 0; }
+.governance-page .chart-grid > * { min-width: 0; width: 100%; }
+.governance-page .card { min-width: 0; overflow: hidden; padding-bottom: clamp(22px, 2.5vw, 30px); }
+.governance-page .governance-chart {
+    width: 100%; min-width: 0; height: 840px; overflow: hidden; clear: both; position: relative;
+    margin: 18px 0 22px; border: 1px solid var(--border); border-radius: 12px; background: var(--card);
+}
+.governance-page .governance-chart.small { height: 800px; }
+.governance-page .governance-chart.small .plot { height: 720px; }
+.governance-page .governance-chart .plot { width: 100%; max-width: 100%; height: 100%; overflow: hidden; }
+.governance-page .js-plotly-plot, .governance-page .plotly { max-width: 100%; }
+.governance-page .governance-explain-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; align-items: stretch;
+}
+.governance-page .metric-details { height: 100%; margin-bottom: 0; }
+.governance-page .intro-card {
+    background: var(--panel); border: 1px solid var(--border); border-left: 4px solid var(--accent);
+    border-radius: 10px; padding: 14px 16px; min-width: 0;
+}
+.governance-page .intro-card h3 { margin: 0 0 8px; font-size: 1em; color: var(--primary); }
+.governance-page .intro-card p { margin: 0; color: var(--text); line-height: 1.55; }
+.governance-page .note { margin: 0 0 10px; color: var(--muted); line-height: 1.6; }
+
 /* ===== Bố cục từng chỉ số kinh tế (hàng ngang full-width) ===== */
 .kpi-section {
     background: var(--surface); border: 1px solid var(--border); border-radius: 14px;

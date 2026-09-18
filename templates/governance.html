@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}Governance hệ thống nước — WaterOpt Edu{% endblock %}
+{% block content %}
+<div class="governance-page">
+<h1 class="page-title">💧 Module 4 · Governance – Planning – Management</h1>
+<p class="page-desc">Mô phỏng động hồ chứa, lọc ràng buộc Governance, xây dựng Pareto front và chọn phương án theo trọng số ra quyết định.</p>
+
+<div class="jumpbar">
+    <a href="#decision" class="chip">① Ωᴰ · Governance</a>
+    <a href="#state" class="chip">② Ωˢ · Planning</a>
+    <a href="#objectives" class="chip">③ Ωᴶ · Management</a>
+    <a href="#pareto" class="chip">④ Pareto front</a>
+    <a href="#settings" class="chip">⚙️ Thiết lập</a>
+</div>
+
+<section class="card" id="settings">
+    <h2 class="card-title">1. Ràng buộc, trọng số và điều kiện mô phỏng</h2>
+    <form method="post" action="{{ url_for('governance') }}">
+        <div class="form-row">
+            <div><label for="vcrit">Vcrit <span class="unit">Mm³</span></label><input id="vcrit" name="vcrit" type="number" min="0" step="10" value="{{ config.vcrit }}"></div>
+            <div><label for="qeco">Qeco <span class="unit">m³/s</span></label><input id="qeco" name="qeco" type="number" min="0" step="2" value="{{ config.qeco }}"></div>
+            <div><label for="periods">Số bước thời gian</label><input id="periods" name="periods" type="number" min="12" max="60" step="12" value="{{ config.periods }}"></div>
+            <div><label for="v0">V₀ <span class="unit">Mm³</span></label><input id="v0" name="v0" type="number" min="0" step="20" value="{{ config.v0 }}"></div>
+            <div><label for="q0">Q₀ <span class="unit">m³/s</span></label><input id="q0" name="q0" type="number" min="0" step="5" value="{{ config.q0 }}"></div>
+        </div>
+        <div class="form-row">
+            <div><label for="w_econ">Trọng số kinh tế</label><input id="w_econ" name="w_econ" type="number" min="0" max="1" step="0.05" value="{{ config.w_econ }}"></div>
+            <div><label for="w_soc">Trọng số xã hội</label><input id="w_soc" name="w_soc" type="number" min="0" max="1" step="0.05" value="{{ config.w_soc }}"></div>
+            <div><label for="w_env">Trọng số môi trường</label><input id="w_env" name="w_env" type="number" min="0" max="1" step="0.05" value="{{ config.w_env }}"></div>
+            <div><label for="w_risk">Trọng số rủi ro</label><input id="w_risk" name="w_risk" type="number" min="0" max="1" step="0.05" value="{{ config.w_risk }}"></div>
+        </div>
+        <div class="btn-row"><button class="btn primary" type="submit">▶ Chạy mô phỏng và chọn phương án</button></div>
+    </form>
+</section>
+
+{% if error %}
+<div class="alert error">⚠️ {{ error }}</div>
+{% elif result.error %}
+<div class="alert error">⚠️ {{ result.error }} Hãy nới Vcrit/Qeco hoặc điều chỉnh điều kiện đầu vào.</div>
+{% else %}
+<div class="kpi-grid">
+    <div class="kpi-box positive"><span>Planning X*: K</span><strong>{{ '%.0f'|format(result.selected.K) }} Mm³</strong></div>
+    <div class="kpi-box positive"><span>Management U*: release</span><strong>{{ '%.0f'|format(result.selected.release_bias) }}</strong></div>
+    <div class="kpi-box positive"><span>Management U*: supply</span><strong>{{ '%.0f'|format(result.selected.supply_fraction * 100) }}%</strong></div>
+    <div class="kpi-box"><span>Governance score</span><strong>{{ '%.3f'|format(result.selected.GovernanceScore) }}</strong></div>
+</div>
+
+<div class="alert" style="background:var(--panel);border:1px solid var(--border)">Governance đặt mục tiêu + ràng buộc; Planning chọn cấu trúc <b>X</b>; Management chọn chính sách <b>U</b>; quỹ đạo trạng thái được ánh xạ sang không gian mục tiêu và lọc Pareto.</div>
+
+<section class="card" id="decision">
+    <h2 class="card-title">1. Không gian quyết định khả thi \(\Omega_D\) — tầng Governance</h2>
+    <p class="note">Mỗi điểm là một bộ quyết định \((X,U)=(K,\;release\ bias,\;supply\ fraction)\). Hãy đọc hình từ trái sang phải: Planning chọn dung tích hồ, Management chọn chính sách xả/cấp nước, sau đó Governance kiểm tra phương án có giữ được hệ thống trong miền an toàn hay không.</p>
+    <div class="governance-chart"><div id="governanceDecisionPlot" class="plot"></div></div>
+    <div class="governance-explain-grid">
+        <div class="metric-details">
+            <h3>Governance đặt biên cho miền quyết định</h3>
+            <div class="formula">\(\Omega_D=\{(X,U):g_D(X,U)\leq0\}\)</div>
+            <p><b>Trục X:</b> Planning chọn \(K\) — dung tích hồ.</p>
+            <p><b>Trục Y:</b> Management chọn release bias — mức xả cơ sở.</p>
+            <p><b>Trục Z:</b> Management chọn supply fraction — tỷ lệ nhu cầu được cấp.</p>
+            <p><b>Chấm xám:</b> bị Governance loại; <b>chấm xanh:</b> khả thi; <b>hình thoi:</b> Pareto; <b>ngôi sao:</b> nghiệm được chọn.</p>
+        </div>
+        <div class="intro-card"><h3>① Planning tạo cấu trúc</h3><p>Tăng \(K\) làm trần trữ lượng tăng. Đây là thay đổi dài hạn, giống như mở rộng dung tích hồ.</p></div>
+        <div class="intro-card"><h3>② Management tìm đường</h3><p>Release và supply quyết định hệ thống di chuyển thế nào từ \(S_t\) đến \(S_{t+1}\).</p></div>
+        <div class="intro-card"><h3>③ Governance đặt biên</h3><p>Chỉ giữ phương án có độ tin cậy lưu trữ ≥ 80% và độ tin cậy môi trường ≥ 60%.</p></div>
+    </div>
+</section>
+
+<section class="card" id="state">
+    <h2 class="card-title">2. Không gian trạng thái khả thi \(\Omega_S\) — tầng Planning</h2>
+    <div class="governance-chart"><div id="governanceStatePlot" class="plot"></div></div>
+    <div class="governance-explain-grid">
+        <div class="metric-details">
+            <h3>Planning kiểm tra quỹ đạo trạng thái</h3>
+            <div class="formula">\(\Omega_S=\{S:S_{t+1}=F(S_t,U_t,X,\xi_t),\;g_S(S)\leq0\}\)</div>
+            <p>\(V_{t+1}=V_t+I_t-R_t-W_t\)</p>
+            <p>\(Q_{t+1}=0.7Q_t+0.3R_t\)</p>
+            <p><b>Planning</b> kiểm tra cấu trúc \(X=K\) có tạo đủ miền chứa quỹ đạo hay không. Vùng xanh là phần \(V\geq V^{critical}, Q\geq Q_{eco}^{min}\).</p>
+        </div>
+        <div class="intro-card"><h3>Điểm trạng thái</h3><p>Một điểm \((V,Q)\) cho biết hồ đang có bao nhiêu nước và hạ du đang nhận bao nhiêu dòng chảy.</p></div>
+        <div class="intro-card"><h3>Vector chuyển động</h3><p>Từ \(S_t\) sang \(S_{t+1}\), chính sách \(U_t\) quyết định hướng đi của hệ thống trong mặt phẳng trạng thái.</p></div>
+    </div>
+</section>
+
+<section class="card" id="trajectory">
+    <h2 class="card-title">2b. Quỹ đạo trạng thái theo thời gian</h2>
+    <div class="governance-chart"><div id="governanceTimePlot" class="plot"></div></div>
+</section>
+
+<section class="card" id="objectives">
+    <h2 class="card-title">3. Không gian mục tiêu khả thi \(\Omega_J\) — tầng Management</h2>
+    <div class="governance-chart"><div id="governanceObjectivePlot" class="plot"></div></div>
+    <div class="governance-chart"><div id="governanceObjective3d" class="plot"></div></div>
+    <div class="metric-details" style="margin-top:18px">
+        <h3>Ý nghĩa hình học của Pareto</h3>
+        <div class="formula">\(\Omega_D \xrightarrow{F} \Omega_S \xrightarrow{J} \Omega_J\)</div>
+        <p>Mỗi phương án trong \(\Omega_D\) tạo ra một quỹ đạo \(S_0\rightarrow\cdots\rightarrow S_T\), rồi được đánh giá thành \(J=(J_{economic},J_{social},J_{environment},J_{risk})\).</p>
+        <p>Vì các chỉ tiêu đều cần <b>minimize</b>, hướng tốt hơn là về góc trái dưới. Một điểm bị điểm khác tốt hơn trên mọi mục tiêu sẽ bị loại; các điểm còn lại tạo thành <b>Pareto front</b> — biên của các đánh đổi có hiệu quả.</p>
+    </div>
+</section>
+
+<section class="card" id="pareto">
+    <h2 class="card-title">4. Pareto front — biên hiệu quả để Governance lựa chọn</h2>
+    <div class="governance-chart"><div id="governanceParetoPlot" class="plot"></div></div>
+    <div class="metric-details" style="margin-top:18px">
+        <h3>Cách đọc Pareto front</h3>
+        <p>Mỗi điểm trên hình là một phương án khả thi sau khi đi qua không gian trạng thái. Vì các mục tiêu đều cần giảm, điểm tốt hơn nằm về góc trái dưới.</p>
+        <p>Điểm bị một điểm khác trội trên mọi mục tiêu sẽ bị loại. Các điểm còn lại tạo thành <b>Pareto front</b>: muốn giảm thêm một mục tiêu, Governance phải chấp nhận đánh đổi ở mục tiêu khác.</p>
+        <div class="formula">\(\mathcal P=ND(\Omega_J),\qquad J^*=\arg\min_{J\in\mathcal P_G}V(J;\Theta_G)\)</div>
+    </div>
+</section>
+
+<section class="card" id="governance-choice">
+    <h2 class="card-title">5. Governance “đặt biên” và “chọn hướng”</h2>
+    <div class="governance-chart small"><div id="governancePreferencePlot" class="plot small"></div></div>
+    <p class="note">Đường màu tím là đường giá trị có cùng mức ưu tiên theo trọng số hiện tại. Di chuyển đường này về góc trái dưới cho đến khi chạm Pareto front sẽ cho nghiệm Governance chọn.</p>
+    <div class="governance-explain-grid">
+        <div class="metric-details">
+            <h3>Hai vai trò của Governance</h3>
+            <p><b>Đặt biên:</b> \(V_t\geq V^{critical}\), \(Q_t\geq Q_{eco}^{min}\) và các ngưỡng độ tin cậy tạo ra miền được chấp nhận.</p>
+            <p><b>Chọn hướng:</b> trọng số \(w\) tạo hàm giá trị:</p>
+            <div class="formula">\(V_G=w_1\hat J_{economic}+w_2\hat J_{social}+w_3\hat J_{environment}+w_4\hat J_{risk}\)</div>
+            <p>Thay đổi trọng số làm thay đổi độ ưu tiên và có thể làm nghiệm \((X^*,U^*)\) thay đổi.</p>
+        </div>
+        <div class="metric-details">
+            <h3>Chuỗi ánh xạ toàn hệ thống</h3>
+            <div class="formula">\(\Theta_G\rightarrow\Omega_D\rightarrow(X,U)\rightarrow S_0\rightarrow\cdots\rightarrow S_T\rightarrow J\rightarrow\mathcal P_G\rightarrow J^*\)</div>
+            <p><b>Quản lý</b> chọn hướng di chuyển \(S_t\rightarrow S_{t+1}\); <b>Planning</b> thay đổi kích thước/cấu trúc miền; <b>Pareto</b> giữ lại biên hiệu quả; <b>Governance</b> chọn điểm phù hợp hệ giá trị.</p>
+        </div>
+    </div>
+</section>
+
+<section class="card" id="pareto-table">
+    <h2 class="card-title">6. Quyết định Governance trên tập Pareto</h2>
+    <p class="note">Trọng số chuẩn hóa: {{ result.weights|map('round', 3)|join(', ') }} · {{ result.feasible_count }}/{{ result.candidate_count }} phương án khả thi · nghiệm được chọn ID = {{ result.selected_id }}.</p>
+    <div class="table-responsive"><table><thead><tr><th>ID</th><th>K</th><th>Release</th><th>Supply</th><th>Economic</th><th>Social</th><th>Environment</th><th>Risk</th><th>Score</th></tr></thead><tbody>
+    {% for row in result.pareto|sort(attribute='GovernanceScore') %}<tr{% if row.id == result.selected_id %} class="current"{% endif %}><td>{{ row.id }}</td><td>{{ '%.0f'|format(row.K) }}</td><td>{{ '%.0f'|format(row.release_bias) }}</td><td>{{ '%.0f'|format(row.supply_fraction * 100) }}%</td><td>{{ '%.2f'|format(row.J_economic) }}</td><td>{{ '%.2f'|format(row.J_social) }}</td><td>{{ '%.2f'|format(row.J_environment) }}</td><td>{{ '%.3f'|format(row.J_risk) }}</td><td><b>{{ '%.3f'|format(row.GovernanceScore) }}</b></td></tr>{% endfor %}
+    </tbody></table></div>
+</section>
+
+<section class="card" id="selected-data"><h2 class="card-title">7. Dữ liệu nghiệm được chọn</h2>
+    <details><summary>Trạng thái Sₜ</summary><div class="table-responsive"><table><thead><tr><th>t</th><th>V</th><th>Q</th></tr></thead><tbody>{% for row in result.states %}<tr><td>{{ row.t }}</td><td>{{ '%.2f'|format(row.V) }}</td><td>{{ '%.2f'|format(row.Q) }}</td></tr>{% endfor %}</tbody></table></div></details>
+    <details><summary>Điều khiển và ngoại sinh</summary><div class="table-responsive"><table><thead><tr><th>t</th><th>Inflow</th><th>Demand</th><th>Release</th><th>Supply</th><th>Shortage</th><th>Env deficit</th></tr></thead><tbody>{% for row in result.controls %}<tr><td>{{ row.t }}</td><td>{{ '%.2f'|format(row.Inflow) }}</td><td>{{ '%.2f'|format(row.Demand) }}</td><td>{{ '%.2f'|format(row.Release) }}</td><td>{{ '%.2f'|format(row.Supply) }}</td><td>{{ '%.2f'|format(row.Shortage) }}</td><td>{{ '%.2f'|format(row.EnvDeficit) }}</td></tr>{% endfor %}</tbody></table></div></details>
+</section>
+
+<script>window.WATER_GOVERNANCE = {{ result|tojson }};</script>
+<script src="{{ url_for('static', filename='js/governance.js') }}?v=9"></script>
+{% endif %}
+</div>
+{% endblock %}
