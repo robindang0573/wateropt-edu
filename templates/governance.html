@@ -129,7 +129,7 @@
     <p class="lesson-definition">A, B, C còn lại là ví dụ đơn giản của Pareto front: <b>muốn cải thiện thêm một mục tiêu thì phải chấp nhận xấu đi ở mục tiêu khác.</b></p>
     <div class="value-box">
         <p>Nhưng cơ quan quản lý phải chọn điểm nào?</p>
-        <div class="formula">\(w_{economic}=0.3,\quad w_{social}=0.4,\quad w_{environment}=0.2,\quad w_{security}=0.1\)</div>
+        <div class="formula">\(w_{economic}=0.3,\quad w_{social}=0.4,\quad w_{environment}=0.3\)</div>
         <div class="formula formula-large">\(\boxed{V_G=\sum_k w_k\hat J_k}\qquad \boxed{P^*=\arg\min V_G}\)</div>
         <p>Chuẩn hóa các mục tiêu, áp trọng số quản trị, rồi chọn phương án phù hợp với hệ giá trị đang đặt.</p>
     </div>
@@ -163,7 +163,6 @@
             <div><label for="w_econ">Trọng số kinh tế</label><input id="w_econ" name="w_econ" type="number" min="0" max="1" step="0.05" value="{{ config.w_econ }}"></div>
             <div><label for="w_soc">Trọng số xã hội</label><input id="w_soc" name="w_soc" type="number" min="0" max="1" step="0.05" value="{{ config.w_soc }}"></div>
             <div><label for="w_env">Trọng số môi trường</label><input id="w_env" name="w_env" type="number" min="0" max="1" step="0.05" value="{{ config.w_env }}"></div>
-            <div><label for="w_risk">Trọng số rủi ro</label><input id="w_risk" name="w_risk" type="number" min="0" max="1" step="0.05" value="{{ config.w_risk }}"></div>
         </div>
         <div class="btn-row"><button class="btn primary" type="submit">▶ Chạy mô phỏng và chọn phương án</button></div>
     </form>
@@ -225,8 +224,8 @@
         <div class="flow-card">
             <div class="flow-index">J</div>
             <h3>Không gian mục tiêu đánh giá đường đi</h3>
-            <div class="formula">\(J=[J_{econ},J_{soc},J_{env},J_{risk}]\)</div>
-            <p>Quỹ đạo được nén thành các chỉ tiêu: chi phí, thiếu nước, thiếu hụt môi trường và rủi ro. Mỗi quỹ đạo trở thành một điểm trong \(\Omega_J\).</p>
+            <div class="formula">\(J=[J_{eco},J_{soc},J_{env}]\)</div>
+            <p>Quỹ đạo được nén thành ba chỉ tiêu: chi phí, thiếu nước và thiếu hụt môi trường. Mỗi quỹ đạo trở thành một điểm trong \(\Omega_J\); rủi ro hồ được giữ làm chỉ số kiểm tra ràng buộc.</p>
             <p>Ý nghĩa hình học: các đường đi khác nhau được so sánh trong cùng một hệ trục mục tiêu.</p>
         </div>
         <div class="flow-card">
@@ -252,7 +251,7 @@
     <div class="governance-explain-grid">
         <div class="metric-details">
             <h3>Quản trị đặt biên và hướng ưu tiên</h3>
-            <div class="formula">\(J=[J_{economic},J_{social},J_{environment},J_{risk}]\)</div>
+            <div class="formula">\(J=[J_{economic},J_{social},J_{environment}]\)</div>
             <p>Đây là <b>không gian mục tiêu</b>: mỗi phương án sau mô phỏng trở thành một điểm được đánh giá bằng chi phí, thiếu nước, môi trường và rủi ro.</p>
             <p>Ràng buộc tạo miền được chấp nhận; trọng số tạo hướng ưu tiên trong miền đó.</p>
         </div>
@@ -307,47 +306,170 @@
     <div class="metric-details" style="margin-top:18px">
         <h3>Chuỗi ánh xạ đúng thứ tự</h3>
         <div class="formula">\(\Omega_D \xrightarrow{F} \Omega_S \xrightarrow{J} \Omega_J\)</div>
-        <p>Mỗi phương án trong \(\Omega_D\) tạo ra một quỹ đạo \(S_0\rightarrow\cdots\rightarrow S_T\), rồi được đánh giá thành \(J=(J_{economic},J_{social},J_{environment},J_{risk})\).</p>
-        <p>Đây là lúc kết quả của Vận hành quay trở lại không gian mục tiêu để Quản trị so sánh.</p>
+        <p>Mỗi phương án trong \(\Omega_D\) tạo ra một quỹ đạo \(S_0\rightarrow\cdots\rightarrow S_T\), rồi được đánh giá thành \(\mathbf J=(J_{eco},J_{soc},J_{env})\).</p>
+        <p>Đây là lúc kết quả của Vận hành quay trở lại không gian mục tiêu để Quản trị so sánh. Một phương án không phải là một điểm có sẵn trong \(\Omega_J\); nó <b>được mô phỏng, đo lường và biến thành</b> một điểm trong \(\Omega_J\).</p>
+    </div>
+    <div class="objective-definition-grid">
+        <div class="intro-card">
+            <h3>Economic → chi phí</h3>
+            <div class="formula">\(J_{eco}=C_{total}\)</div>
+            <p>Gồm đầu tư, vận hành, bảo trì, chi phí thiếu nước và thiệt hại. Đơn vị của mô hình là <b>tỷ VND</b>; cần <b>minimize</b>.</p>
+        </div>
+        <div class="intro-card">
+            <h3>Social → tỷ lệ thiếu nước</h3>
+            <div class="formula">\(J_{soc}=100\times\frac{\sum_t(D_t-W_t)_+}{\sum_tD_t}\)</div>
+            <p>Đây là phần trăm nhu cầu chưa được đáp ứng. Tỷ lệ đáp ứng càng cao thì \(J_{soc}\) càng nhỏ.</p>
+        </div>
+        <div class="intro-card">
+            <h3>Environmental → thiếu hụt dòng chảy</h3>
+            <div class="formula">\(J_{env}=100\times\frac{\sum_t(Q_{eco}^{min}-Q_t)_+}{\sum_tQ_{eco}^{min}}\)</div>
+            <p>Đây là phần trăm thiếu hụt so với dòng chảy sinh thái yêu cầu; cần <b>minimize</b>. Tỷ lệ tuân thủ là cách nhìn ngược lại.</p>
+        </div>
+    </div>
+    <div class="mapping-flow" aria-label="Các bước chuyển từ phương án đến kết quả">
+        <div class="mapping-step">
+            <span class="mapping-index">1</span>
+            <h3>Chọn phương án</h3>
+            <div class="formula">\(d=(X,U)=(K,b_R,\alpha)\)</div>
+            <p><b>Quy hoạch</b> chọn \(X=K\), dung tích hồ. <b>Vận hành</b> chọn \(U=(b_R,\alpha)\): mức xả cơ sở và tỷ lệ nhu cầu được cấp.</p>
+        </div>
+        <div class="mapping-arrow">→</div>
+        <div class="mapping-step">
+            <span class="mapping-index">2</span>
+            <h3>Mô phỏng quỹ đạo</h3>
+            <div class="formula">\(S_t=(V_t,Q_t)\)</div>
+            <p>Với dòng vào \(I_t\) và nhu cầu \(D_t\), phương án quyết định lượng xả, lượng cấp nước và trạng thái hồ–hạ du ở bước kế tiếp.</p>
+        </div>
+        <div class="mapping-arrow">→</div>
+        <div class="mapping-step">
+            <span class="mapping-index">3</span>
+            <h3>Tính các chỉ tiêu</h3>
+            <div class="formula">\(\mathbf J=J(S_{0:T},U_{0:T-1},X)\)</div>
+            <p>Quỹ đạo được tóm tắt thành ba chỉ tiêu có đơn vị rõ ràng: tỷ VND, % thiếu nước và % thiếu hụt môi trường.</p>
+        </div>
+        <div class="mapping-arrow">→</div>
+        <div class="mapping-step result-step">
+            <span class="mapping-index">4</span>
+            <h3>Một điểm trong \(\Omega_J\)</h3>
+            <div class="formula">\(d\mapsto J(d)\)</div>
+            <p>Điểm này cho biết phương án tạo ra kết quả tốt hay xấu ở từng mục tiêu; Pareto sẽ so sánh các điểm như vậy.</p>
+        </div>
+    </div>
+
+    <div class="governance-explain-grid objective-calculation-grid">
+        <div class="metric-details">
+            <h3>Bước 1–2: phương án tạo ra trạng thái</h3>
+            <div class="formula">\(R_t=b_R\,\operatorname{clip}\left(0.35+0.90\frac{V_t}{K},\,0.25,\,1.20\right)\)</div>
+            <p><b>Rₜ</b> là lượng xả; khi hồ đầy hơn, chính sách cho phép xả nhiều hơn. Lượng cấp cho nhu cầu là:</p>
+            <div class="formula">\(W_t=\min\left(\alpha D_t,\,\max(0,V_t+I_t-R_t)\right)\)</div>
+            <p>Những đại lượng này làm trạng thái thay đổi:</p>
+            <div class="formula">\(V_{t+1}=\operatorname{clip}(V_t+I_t-R_t-W_t,0,K)\)</div>
+            <div class="formula">\(Q_{t+1}=0.70Q_t+0.30R_t\)</div>
+        </div>
+        <div class="metric-details">
+            <h3>Bước 3: cộng dồn thành kết quả</h3>
+            <p>Trong mô hình này, tất cả mục tiêu đều được hiểu là <b>càng nhỏ càng tốt</b>:</p>
+            <div class="formula">\(C_{total}=C_{investment}+C_{operation}+C_{maintenance}+C_{shortage}+C_{damage}\)</div>
+            <div class="formula">\(C_{investment}=0.18K,\quad C_{operation}=0.80\sum_tR_t\)</div>
+            <div class="formula">\(C_{maintenance}=0.02K\frac{T}{12},\quad C_{shortage}=0.40\sum_t(D_t-W_t)_+\)</div>
+            <div class="formula">\(C_{damage}=0.20\sum_t\left((D_t-W_t)_+\right)^2\)</div>
+            <div class="formula">\(J_{economic}=C_{total}\) <span class="formula-unit">[tỷ VND]</span></div>
+            <div class="formula">\(J_{social}=100\times\frac{\sum_t(D_t-W_t)_+}{\sum_tD_t}\quad[\%]\)</div>
+            <div class="formula">\(J_{environment}=100\times\frac{\sum_t(Q_{eco}-Q_{t+1})_+}{\sum_tQ_{eco}}\quad[\%]\)</div>
+            <p class="formula-caption">Các hệ số chi phí là hệ số minh họa để sinh viên thấy cách quy đổi về tỷ VND. Chỉ số an toàn hồ vẫn được theo dõi như ràng buộc: \(Risk=\frac{1}{T}\sum_t\mathbf{1}(V_{t+1}<V^{critical})\).</p>
+        </div>
+    </div>
+
+    <div class="objective-example">
+        <h3>Ví dụ đọc kết quả của phương án đang được chọn</h3>
+        <p>Hệ thống lấy một phương án cụ thể, chạy qua toàn bộ các bước thời gian, sau đó ghi lại một hàng kết quả. Các con số dưới đây thay đổi khi thay đổi ràng buộc, thời gian mô phỏng hoặc trọng số quản trị.</p>
+        <div class="table-responsive"><table class="objective-calculation-table">
+            <thead><tr><th>Thành phần</th><th>Giá trị của phương án</th><th>Ý nghĩa</th></tr></thead>
+            <tbody>
+                <tr><td>Quy hoạch \(X=K\)</td><td>{{ '%.0f'|format(result.selected.K) }} Mm³</td><td>Dung tích cấu trúc của hồ</td></tr>
+                <tr><td>Vận hành \(U=(b_R,\alpha)\)</td><td>{{ '%.0f'|format(result.selected.release_bias) }}; {{ '%.0f'|format(result.selected.supply_fraction * 100) }}%</td><td>Mức xả cơ sở; tỷ lệ nhu cầu đăng ký cấp</td></tr>
+                <tr><td>Chi phí đầu tư \(C_{investment}\)</td><td>{{ '%.2f'|format(result.selected.C_investment) }} tỷ VND</td><td>Chi phí cấu trúc hồ theo phương án \(K\)</td></tr>
+                <tr><td>Chi phí vận hành \(C_{operation}\)</td><td>{{ '%.2f'|format(result.selected.C_operation) }} tỷ VND</td><td>Chi phí gắn với lượng xả</td></tr>
+                <tr><td>Chi phí bảo trì \(C_{maintenance}\)</td><td>{{ '%.2f'|format(result.selected.C_maintenance) }} tỷ VND</td><td>Chi phí duy trì cấu trúc theo thời gian</td></tr>
+                <tr><td>Chi phí thiếu nước + thiệt hại</td><td>{{ '%.2f'|format(result.selected.C_shortage + result.selected.C_damage) }} tỷ VND</td><td>Hậu quả kinh tế của phần nhu cầu chưa được cấp</td></tr>
+                <tr class="current"><td>Tổng kinh tế \(J_{economic}\)</td><td>{{ '%.2f'|format(result.selected.J_economic) }} tỷ VND</td><td>\(C_{total}\), mục tiêu cần giảm</td></tr>
+                <tr><td>Thiếu nước \(J_{social}\)</td><td>{{ '%.2f'|format(result.selected.J_social) }}%</td><td>Phần trăm tổng nhu cầu chưa được đáp ứng</td></tr>
+                <tr><td>Thiếu hụt môi trường \(J_{environment}\)</td><td>{{ '%.2f'|format(result.selected.J_environment) }}%</td><td>Phần trăm thiếu hụt so với ngưỡng dòng chảy sinh thái</td></tr>
+                <tr><td>An toàn hồ (kiểm tra)</td><td>{{ '%.1f'|format(result.selected.J_risk * 100) }}%</td><td>Thời gian hồ dưới \(V^{critical}\); không phải trục của \(\Omega_J\)</td></tr>
+            </tbody>
+        </table></div>
+        <p class="objective-takeaway"><b>Ý nghĩa cốt lõi:</b> hai phương án có thể rất khác nhau trong không gian quyết định \(\Omega_D\), nhưng sau mô phỏng lại cho các điểm gần nhau trong \(\Omega_J\). Ngược lại, một thay đổi nhỏ trong \(K\), chính sách xả hoặc tỷ lệ cấp nước có thể làm quỹ đạo thay đổi và đẩy điểm kết quả sang vùng khác. Quản trị chỉ so sánh các điểm kết quả sau cùng này.</p>
     </div>
 </section>
 
 <section class="card" id="pareto">
     <h2 class="card-title">5. Pareto front trong không gian mục tiêu</h2>
+    <div class="chart-interaction-guide"><b>Tương tác:</b> rê chuột để xem số liệu · kéo để phóng to · dùng thanh công cụ để đặt lại · bấm một điểm Pareto để xem phương án.</div>
     <div class="governance-chart"><div id="governanceParetoPlot" class="plot"></div></div>
+    <div id="pareto-point-detail" class="chart-selection-card" aria-live="polite">
+        <h3>Điểm đang chọn</h3>
+        <p>Bấm vào một điểm trên Pareto front để xem phương án và ba giá trị mục tiêu tương ứng.</p>
+    </div>
     <div class="metric-details" style="margin-top:18px">
-        <h3>Cách đọc Pareto front</h3>
-        <p>Mỗi điểm trên hình là một phương án khả thi sau khi đi qua không gian trạng thái. Vì các mục tiêu đều cần giảm, điểm tốt hơn nằm về góc trái dưới.</p>
-        <p>Điểm bị một điểm khác trội trên mọi mục tiêu sẽ bị loại. Các điểm còn lại tạo thành <b>Pareto front</b>: muốn giảm thêm một mục tiêu, Quản trị phải chấp nhận đánh đổi ở mục tiêu khác.</p>
-        <div class="formula">\(\mathcal P=ND(\Omega_J),\qquad J^*=\arg\min_{J\in\mathcal P_G}V(J;\Theta_G)\)</div>
+        <h3>Cách đọc Pareto front trong \(\Omega_J\)</h3>
+        <p>Mỗi điểm trên hình là một phương án khả thi sau khi đi qua không gian trạng thái. Ba trục có đơn vị khác nhau nhưng đều đã được định nghĩa theo chiều <b>càng nhỏ càng tốt</b>: tỷ VND, % thiếu nước và % thiếu hụt môi trường.</p>
+        <p>Điểm bị một điểm khác trội trên cả ba mục tiêu sẽ bị loại. Các điểm còn lại tạo thành <b>Pareto front</b>: muốn giảm thêm một mục tiêu thì phải chấp nhận đánh đổi ở mục tiêu khác.</p>
+        <div class="formula">\(\mathcal P=ND(\Omega_J)\)</div>
+    </div>
+    <div class="objective-example pareto-example">
+        <h3>Ví dụ ba phương án sau mô phỏng</h3>
+        <p>Bảng dưới đây là ví dụ giảng dạy độc lập với các điểm đang chạy trên biểu đồ. Mỗi hàng đã là một điểm trong \(\Omega_J\), không còn là biến quyết định \((X,U)\).</p>
+        <div class="table-responsive"><table class="objective-calculation-table">
+            <thead><tr><th>Phương án</th><th>\(J_{eco}\)<br>tỷ VND</th><th>\(J_{soc}\)<br>% thiếu nước</th><th>\(J_{env}\)<br>% thiếu hụt môi trường</th><th>Ý nghĩa</th></tr></thead>
+            <tbody>
+                <tr><td>A</td><td>800</td><td>20</td><td>30</td><td>Rẻ hơn nhưng thiếu nước và thiếu hụt môi trường cao</td></tr>
+                <tr class="current"><td>B</td><td>1.000</td><td>8</td><td>10</td><td>Cân bằng giữa chi phí, xã hội và môi trường</td></tr>
+                <tr><td>C</td><td>1.300</td><td>2</td><td>3</td><td>Đắt hơn nhưng kết quả xã hội và môi trường tốt hơn</td></tr>
+            </tbody>
+        </table></div>
+        <p class="objective-takeaway"><b>Ý nghĩa hình học:</b> A, B và C đều có thể thuộc Pareto front vì không điểm nào tốt hơn điểm kia trên cả ba trục. Pareto không tự chọn A, B hay C; nó chỉ loại phương án bị trội và giữ lại các đánh đổi đáng xem xét.</p>
     </div>
 </section>
 
 <section class="card" id="governance-choice">
-    <h2 class="card-title">6. Quản trị quay lại: đặt biên và chọn hướng</h2>
+    <h2 class="card-title">6. Chuẩn hóa và tính giá trị Governance \(V_G\)</h2>
+    <div class="chart-interaction-guide"><b>Tương tác:</b> bấm điểm Pareto để xem mức đóng góp của từng mục tiêu vào \(V_G\); đường nét đứt là đường giá trị cùng mức ưu tiên.</div>
     <div class="governance-chart small"><div id="governancePreferencePlot" class="plot small"></div></div>
-    <p class="note">Đường giá trị có cùng mức ưu tiên theo trọng số hiện tại. Di chuyển đường này về góc trái dưới cho đến khi chạm Pareto front sẽ cho nghiệm Quản trị chọn.</p>
+    <div id="governance-choice-detail" class="chart-selection-card" aria-live="polite">
+        <h3>Phân rã giá trị Governance</h3>
+        <p>Bấm vào một điểm Pareto để xem các mục tiêu sau chuẩn hóa và tổng điểm \(V_G\).</p>
+    </div>
+    <p class="note">Vì tỷ VND và phần trăm không thể cộng trực tiếp, mọi mục tiêu phải được chuẩn hóa trước. Đường giá trị trên hình biểu diễn các điểm có cùng mức ưu tiên theo trọng số hiện tại.</p>
     <div class="governance-explain-grid">
         <div class="metric-details">
-            <h3>Hai vai trò của Quản trị</h3>
-            <p><b>Đặt biên:</b> \(V_t\geq V^{critical}\), \(Q_t\geq Q_{eco}^{min}\) và các ngưỡng độ tin cậy tạo ra miền được chấp nhận.</p>
-            <p><b>Chọn hướng:</b> trọng số \(w\) tạo hàm giá trị:</p>
-            <div class="formula">\(V_G=w_1\hat J_{economic}+w_2\hat J_{social}+w_3\hat J_{environment}+w_4\hat J_{risk}\)</div>
-            <p>Thay đổi trọng số làm thay đổi độ ưu tiên và có thể làm nghiệm \((X^*,U^*)\) thay đổi.</p>
+            <h3>Chuẩn hóa các mục tiêu</h3>
+            <div class="formula">\(\hat J_{k,i}=\frac{J_{k,i}-J_k^{min}}{J_k^{max}-J_k^{min}}\)</div>
+            <p>Với mỗi mục tiêu, phương án tốt nhất trong tập đang xét có giá trị gần 0, phương án xấu nhất có giá trị gần 1. Nhờ vậy tỷ VND và % trở thành các đại lượng có thể so sánh.</p>
+            <p><b>Ví dụ phương án B:</b> \(\hat J_{eco}=0.4\), \(\hat J_{soc}=0.333\), \(\hat J_{env}=0.259\).</p>
         </div>
         <div class="metric-details">
-            <h3>Chuỗi ánh xạ toàn hệ thống</h3>
-            <div class="formula">\(\Theta_G\rightarrow\Omega_D\rightarrow(X,U)\rightarrow S_0\rightarrow\cdots\rightarrow S_T\rightarrow J\rightarrow\mathcal P_G\rightarrow J^*\)</div>
-            <p><b>Vận hành</b> chọn hướng di chuyển \(S_t\rightarrow S_{t+1}\); <b>Quy hoạch</b> thay đổi kích thước/cấu trúc miền; <b>Pareto</b> giữ lại biên hiệu quả; <b>Quản trị</b> chọn điểm phù hợp hệ giá trị.</p>
+            <h3>Trọng số và giá trị Governance</h3>
+            <div class="formula">\(w_{eco}={{ '%.2f'|format(result.weights[0]) }},\quad w_{soc}={{ '%.2f'|format(result.weights[1]) }},\quad w_{env}={{ '%.2f'|format(result.weights[2]) }}\)</div>
+            <div class="formula">\(V_G=w_{eco}\hat J_{eco}+w_{soc}\hat J_{soc}+w_{env}\hat J_{env}\)</div>
+            <p>Với ví dụ B và trọng số \((0.3,0.4,0.3)\):</p>
+            <div class="formula">\(V_G(B)=0.3(0.4)+0.4(0.333)+0.3(0.259)\approx0.331\)</div>
+            <p>Cuối cùng chọn:</p>
+            <div class="formula">\(P^*=\arg\min_{P\in\mathcal P}V_G(P)\)</div>
         </div>
+    </div>
+    <div class="metric-details geometry-summary">
+        <h3>Quản trị quay lại với hai vai trò</h3>
+        <p><b>Đặt biên:</b> \(V_t\geq V^{critical}\), \(Q_t\geq Q_{eco}^{min}\) và các ngưỡng độ tin cậy tạo ra miền được chấp nhận. <b>Chọn hướng:</b> trọng số biến tập Pareto thành một thứ tự ưu tiên cụ thể.</p>
+        <div class="formula">\(\Theta_G\rightarrow\Omega_D\rightarrow(X,U)\rightarrow S_{0:T}\rightarrow\mathbf J\rightarrow\Omega_J\rightarrow\mathcal P\rightarrow V_G\rightarrow P^*\)</div>
+        <p>Thay đổi trọng số có thể làm phương án được chọn \((X^*,U^*)\) thay đổi, dù các phương án và quỹ đạo mô phỏng không đổi.</p>
     </div>
 </section>
 
 <section class="card" id="pareto-table">
     <h2 class="card-title">7. Quyết định quản trị trên tập Pareto</h2>
     <p class="note">Trọng số chuẩn hóa: {{ result.weights|map('round', 3)|join(', ') }} · {{ result.feasible_count }}/{{ result.candidate_count }} phương án khả thi · nghiệm được chọn ID = {{ result.selected_id }}.</p>
-    <div class="table-responsive"><table><thead><tr><th>ID</th><th>K</th><th>Release</th><th>Supply</th><th>Kinh tế</th><th>Xã hội</th><th>Môi trường</th><th>Rủi ro</th><th>Điểm</th></tr></thead><tbody>
-    {% for row in result.pareto|sort(attribute='GovernanceScore') %}<tr{% if row.id == result.selected_id %} class="current"{% endif %}><td>{{ row.id }}</td><td>{{ '%.0f'|format(row.K) }}</td><td>{{ '%.0f'|format(row.release_bias) }}</td><td>{{ '%.0f'|format(row.supply_fraction * 100) }}%</td><td>{{ '%.2f'|format(row.J_economic) }}</td><td>{{ '%.2f'|format(row.J_social) }}</td><td>{{ '%.2f'|format(row.J_environment) }}</td><td>{{ '%.3f'|format(row.J_risk) }}</td><td><b>{{ '%.3f'|format(row.GovernanceScore) }}</b></td></tr>{% endfor %}
+    <div class="table-responsive"><table><thead><tr><th>ID</th><th>K</th><th>Release</th><th>Supply</th><th>Kinh tế<br>(tỷ VND)</th><th>Xã hội<br>(% thiếu)</th><th>Môi trường<br>(% thiếu)</th><th>An toàn hồ<br>(kiểm tra)</th><th>Điểm \(V_G\)</th></tr></thead><tbody>
+    {% for row in result.pareto|sort(attribute='GovernanceScore') %}<tr{% if row.id == result.selected_id %} class="current"{% endif %}><td>{{ row.id }}</td><td>{{ '%.0f'|format(row.K) }}</td><td>{{ '%.0f'|format(row.release_bias) }}</td><td>{{ '%.0f'|format(row.supply_fraction * 100) }}%</td><td>{{ '%.2f'|format(row.J_economic) }}</td><td>{{ '%.2f'|format(row.J_social) }}%</td><td>{{ '%.2f'|format(row.J_environment) }}%</td><td>{{ '%.1f'|format(row.J_risk * 100) }}%</td><td><b>{{ '%.3f'|format(row.GovernanceScore) }}</b></td></tr>{% endfor %}
     </tbody></table></div>
 </section>
 
@@ -357,7 +479,7 @@
 </section>
 
 <script>window.WATER_GOVERNANCE = {{ result|tojson }};</script>
-<script src="{{ url_for('static', filename='js/governance.js') }}?v=11"></script>
+<script src="{{ url_for('static', filename='js/governance.js') }}?v=13"></script>
 {% endif %}
 </div>
 {% endblock %}

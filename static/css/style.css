@@ -1039,6 +1039,191 @@ tfoot td { font-weight: 700; background: var(--subtle); }
     font-size: 1rem;
 }
 
+.governance-page .mapping-flow {
+    align-items: stretch;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+    margin: 22px 0;
+}
+
+.governance-page .objective-definition-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 18px 0;
+}
+
+.governance-page .objective-definition-grid .intro-card {
+    height: 100%;
+}
+
+.governance-page .objective-definition-grid .formula {
+    font-size: clamp(1.08rem, 1.55vw, 1.45rem);
+}
+
+.governance-page .formula-unit {
+    color: var(--gov-muted);
+    font-family: "Segoe UI", Roboto, system-ui, sans-serif;
+    font-size: 0.72em;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.governance-page .formula-caption {
+    color: var(--gov-muted);
+    font-size: 0.96rem;
+    line-height: 1.55;
+}
+
+.governance-page .mapping-step {
+    background: var(--gov-panel);
+    border: 1px solid var(--gov-border);
+    border-top: 5px solid var(--gov-primary);
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.governance-page .mapping-step.result-step {
+    border-top-color: var(--gov-accent);
+}
+
+.governance-page .mapping-step h3 {
+    margin: 0 0 8px;
+    padding-left: 38px;
+}
+
+.governance-page .mapping-step p {
+    line-height: 1.62;
+    margin-bottom: 0;
+}
+
+.governance-page .mapping-index {
+    align-items: center;
+    background: var(--gov-primary);
+    border-radius: 50%;
+    color: #fff;
+    display: flex;
+    float: left;
+    font-size: 1rem;
+    font-weight: 800;
+    height: 28px;
+    justify-content: center;
+    margin-right: 10px;
+    width: 28px;
+}
+
+.governance-page .mapping-arrow {
+    align-self: center;
+    color: var(--gov-muted);
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+.governance-page .objective-calculation-grid {
+    align-items: start;
+    margin-top: 18px;
+}
+
+.governance-page .objective-calculation-grid .metric-details {
+    height: 100%;
+}
+
+.governance-page .objective-calculation-grid .formula {
+    font-size: clamp(1.22rem, 1.8vw, 1.72rem);
+    text-align: left;
+}
+
+.governance-page .objective-example {
+    background: #f7faf9;
+    border: 1px solid var(--gov-border);
+    border-left: 5px solid var(--gov-accent);
+    border-radius: 8px;
+    margin-top: 18px;
+    padding: 18px;
+}
+
+.governance-page .chart-interaction-guide {
+    background: #eef5f3;
+    border: 1px solid var(--gov-border);
+    border-left: 5px solid var(--gov-primary-2);
+    border-radius: 8px;
+    color: var(--gov-muted);
+    font-size: 0.98rem;
+    line-height: 1.55;
+    margin: 14px 0 10px;
+    padding: 11px 14px;
+}
+
+.governance-page .chart-selection-card {
+    background: #f7faf9;
+    border: 1px solid var(--gov-border);
+    border-left: 5px solid var(--gov-accent);
+    border-radius: 8px;
+    margin: 12px 0 18px;
+    padding: 16px 18px;
+}
+
+.governance-page .chart-selection-card h3 {
+    margin: 0 0 10px;
+}
+
+.governance-page .chart-selection-card p {
+    margin-bottom: 0;
+}
+
+.governance-page .selection-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+}
+
+.governance-page .selection-grid > div {
+    background: #fff;
+    border: 1px solid var(--gov-border);
+    border-radius: 6px;
+    padding: 9px 11px;
+}
+
+.governance-page .selection-grid span {
+    color: var(--gov-muted);
+    display: block;
+    font-size: 0.86rem;
+    margin-bottom: 4px;
+}
+
+.governance-page .selection-grid strong {
+    color: var(--gov-primary);
+    display: block;
+    font-size: 1rem;
+}
+
+.governance-page .selection-value {
+    border-color: var(--gov-accent) !important;
+}
+
+.governance-page .objective-example h3 {
+    margin-top: 0;
+}
+
+.governance-page .objective-calculation-table td:first-child {
+    color: var(--gov-primary);
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+.governance-page .objective-example .objective-calculation-table td:first-child {
+    min-width: 190px;
+    white-space: normal;
+}
+
+.governance-page .objective-takeaway {
+    background: #fff;
+    border-top: 1px solid var(--gov-border);
+    margin: 16px 0 0;
+    padding-top: 14px;
+}
+
 .governance-page .intro-card {
     border-left: 5px solid var(--gov-primary-2);
 }
@@ -1288,6 +1473,20 @@ tfoot td { font-weight: 700; background: var(--subtle); }
     .governance-page .lesson-loop-formula {
         font-size: 1.28rem;
         text-align: left;
+    }
+
+    .governance-page .mapping-flow {
+        grid-template-columns: 1fr;
+    }
+
+    .governance-page .objective-definition-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .governance-page .mapping-arrow {
+        justify-self: center;
+        line-height: 1;
+        transform: rotate(90deg);
     }
 
     .learning-page .psplit,

@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 
-OBJECTIVE_COLS = ["J_economic", "J_social", "J_environment", "J_risk"]
+OBJECTIVE_COLS = ["J_economic", "J_social", "J_environment"]
 
 
 @dataclass
@@ -17,17 +17,16 @@ class GovernanceConfig:
     # 25 keeps the educational default feasible; users can raise it to 30+
     # to demonstrate how Governance can eliminate the entire decision set.
     qeco: float = 25.0
-    # Educational default: economy 0.3, society 0.4, environment 0.2, risk 0.1.
+    # Educational default: economy 0.3, society 0.4, environment 0.3.
     w_econ: float = 0.30
     w_soc: float = 0.40
-    w_env: float = 0.20
-    w_risk: float = 0.10
+    w_env: float = 0.30
     periods: int = 36
     v0: float = 320.0
     q0: float = 35.0
 
     def normalized_weights(self):
-        raw = np.array([self.w_econ, self.w_soc, self.w_env, self.w_risk], dtype=float)
+        raw = np.array([self.w_econ, self.w_soc, self.w_env], dtype=float)
         return np.ones(4) / 4 if np.isclose(raw.sum(), 0) else raw / raw.sum()
 
 
@@ -41,7 +40,7 @@ def config_from_mapping(mapping) -> GovernanceConfig:
     config = GovernanceConfig(
         vcrit=number("vcrit", defaults.vcrit), qeco=number("qeco", defaults.qeco),
         w_econ=number("w_econ", defaults.w_econ), w_soc=number("w_soc", defaults.w_soc),
-        w_env=number("w_env", defaults.w_env), w_risk=number("w_risk", defaults.w_risk),
+        w_env=number("w_env", defaults.w_env),
         periods=number("periods", defaults.periods, int), v0=number("v0", defaults.v0),
         q0=number("q0", defaults.q0),
     )
@@ -49,7 +48,7 @@ def config_from_mapping(mapping) -> GovernanceConfig:
         raise ValueError("Số bước thời gian phải nằm trong khoảng 12–60.")
     if config.v0 < 0 or config.q0 < 0 or config.vcrit < 0 or config.qeco < 0:
         raise ValueError("Điều kiện và ràng buộc không được âm.")
-    if any(value < 0 or value > 1 for value in (config.w_econ, config.w_soc, config.w_env, config.w_risk)):
+    if any(value < 0 or value > 1 for value in (config.w_econ, config.w_soc, config.w_env)):
         raise ValueError("Trọng số Governance phải nằm trong khoảng 0–1.")
     return config
 
@@ -87,11 +86,27 @@ def simulate_system(T, K, release_bias, supply_fraction, V0, Q0, Vcrit, Qeco, se
         "Release": release, "Supply": supply, "Shortage": shortage,
         "EnvDeficit": env_deficit,
     })
+    # Các hệ số chi phí là hệ số minh họa cho bài học, quy đổi kết quả về tỷ VND.
+    # Mục tiêu xã hội và môi trường được biểu diễn thành tỷ lệ thiếu hụt (%),
+    # để các mục tiêu có ý nghĩa rõ ràng trước khi chuẩn hóa trong Governance.
+    c_investment = 0.18 * K
+    c_operation = 0.80 * np.sum(release)
+    c_maintenance = 0.02 * K * T / 12.0
+    c_shortage = 0.40 * np.sum(shortage)
+    c_damage = 0.20 * np.sum(shortage ** 2)
+    demand_total = max(float(np.sum(demand)), 1e-9)
+    environmental_target = max(float(Qeco * T), 1e-9)
     objectives = {
-        "J_economic": float(0.18 * K + 0.8 * np.sum(release) + 0.5 * np.sum(supply)),
-        "J_social": float(np.sum(shortage)),
-        "J_environment": float(np.sum(env_deficit)),
+        "J_economic": float(c_investment + c_operation + c_maintenance + c_shortage + c_damage),
+        "J_social": float(100.0 * np.sum(shortage) / demand_total),
+        "J_environment": float(100.0 * np.sum(env_deficit) / environmental_target),
+        # Rủi ro là chỉ số kiểm tra an toàn, không phải trục mục tiêu của ΩJ.
         "J_risk": float(np.mean(V[1:] < Vcrit)),
+        "C_investment": float(c_investment),
+        "C_operation": float(c_operation),
+        "C_maintenance": float(c_maintenance),
+        "C_shortage": float(c_shortage),
+        "C_damage": float(c_damage),
     }
     return states, controls, objectives
 
