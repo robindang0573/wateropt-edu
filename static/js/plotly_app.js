@@ -48,11 +48,11 @@
                 const xs = [0, X * 1.15];
                 const ys = xs.map(x => (r.b - r.a1 * x) / r.a2);
                 traces.push({ x: xs, y: ys, type: 'scatter', mode: 'lines',
-                    line: { color: '#e76f51', width: 1.5, dash: 'dot' }, hoverinfo: 'skip', showlegend: false });
+                    line: { color: '#b85c38', width: 1.5, dash: 'dot' }, hoverinfo: 'skip', showlegend: false });
             } else if (Math.abs(r.a1) > 1e-9) {
                 const xv = r.b / r.a1;
                 traces.push({ x: [xv, xv], y: [0, ymax] , type: 'scatter', mode: 'lines',
-                    line: { color: '#e76f51', width: 1.5, dash: 'dot' }, hoverinfo: 'skip', showlegend: false });
+                    line: { color: '#b85c38', width: 1.5, dash: 'dot' }, hoverinfo: 'skip', showlegend: false });
             }
         });
 
@@ -172,15 +172,15 @@
                 const foot = [p[0] + (slack / na) * r.a1, p[1] + (slack / na) * r.a2];
                 traces.push({
                     x: [p[0], foot[0]], y: [p[1], foot[1]], type: 'scatter', mode: 'lines',
-                    line: { color: '#9d4edd', width: 2, dash: 'dot' },
+                    line: { color: '#8a7a48', width: 2, dash: 'dot' },
                     showlegend: false, hoverinfo: 'skip'
                 });
                 annotations.push({
                     x: (p[0] + foot[0]) / 2, y: (p[1] + foot[1]) / 2,
                     text: 's' + (j + 1) + '=' + fmt(slack),
                     xref: 'x', yref: 'y', showarrow: false,
-                    font: { size: 10, color: '#9d4edd' },
-                    bgcolor: 'rgba(255,255,255,0.75)', bordercolor: '#9d4edd', borderwidth: 0.5
+                    font: { size: 10, color: '#8a7a48' },
+                    bgcolor: 'rgba(255,255,255,0.75)', bordercolor: '#8a7a48', borderwidth: 0.5
                 });
             });
             const X = Math.max(data.xmax, data.ymax);
@@ -195,8 +195,8 @@
             annotations.push({
                 x: lx, y: ly, text: 's' + (j + 1) + ' = 0 (biên)',
                 xref: 'x', yref: 'y', showarrow: false,
-                font: { size: 10, color: '#e76f51' },
-                bgcolor: 'rgba(255,255,255,0.75)', bordercolor: '#e76f51', borderwidth: 0.5
+                font: { size: 10, color: '#b85c38' },
+                bgcolor: 'rgba(255,255,255,0.75)', bordercolor: '#b85c38', borderwidth: 0.5
             });
         });
 
@@ -268,7 +268,7 @@
             names.forEach(function (nm, j) {
                 hdr += (j === enterIdx) ? '<th class="enter-col">' + nm + ' →</th>' : '<th>' + nm + '</th>';
             });
-            hdr += '<th>RHS</th><th>Tỷ số</th></tr>';
+            hdr += '<th>Vế phải</th><th>Tỷ số</th></tr>';
             tbody.insertAdjacentHTML('beforeend', hdr);
 
             rows.forEach(function (row, i) {
@@ -300,7 +300,7 @@
             }
             const optTag = it.optimal ? '  ★ Nghiệm tối ưu' : '';
             tbody.insertAdjacentHTML('beforeend',
-                '<tr class="itr-sum"><td colspan="' + cols + '">🎯 Nghiệm hiện tại: ' +
+                '<tr class="itr-sum"><td colspan="' + cols + '">Nghiệm hiện tại: ' +
                 solParts.join('; ') + '  →  Z = <b>' + fmt(it.z) + '</b>' + optTag + '</td></tr>');
         });
     }
@@ -318,7 +318,7 @@
             fd.append('a1_' + (i + 1), r.a1); fd.append('a2_' + (i + 1), r.a2); fd.append('b_' + (i + 1), r.b);
         });
         document.getElementById('ipmContent').classList.remove('hidden');
-        document.getElementById('ipmStatus').textContent = '⏳ Đang chạy Interior Point...';
+        document.getElementById('ipmStatus').textContent = 'Đang chạy phương pháp điểm trong...';
         document.getElementById('ipmStatus').classList.remove('hidden');
         try {
             const res = await fetch('/api/optimize/ipm', { method: 'POST', body: fd });
@@ -327,11 +327,11 @@
             const ipm = data.ipm;
             const o = data.optimal;
             const st = document.getElementById('ipmStatus');
-            st.textContent = '✅ Interior Point: x₁ = ' + fmt(o[0]) + ', x₂ = ' + fmt(o[1]) +
+            st.textContent = 'Phương pháp điểm trong: x₁ = ' + fmt(o[0]) + ', x₂ = ' + fmt(o[1]) +
                 '  ·  Z* = ' + fmt(data.z_star) + '  (sau ' + ipm.iterations + ' bước barrier)';
             populateIpmTable(ipm);
             if (ipm.path && ipm.path.length > 1) {
-                await animateLP(ipm.path, 'Interior Point', '#9d4edd');
+                await animateLP(ipm.path, 'Điểm trong', '#075e5f');
             }
             drawIpmConvergence(ipm.convergence || []);
         } catch (e) {
@@ -368,7 +368,7 @@
                 x: conv.map(function (c) { return c.iter; }),
                 y: conv.map(function (c) { return c.z; }),
                 type: 'scatter', mode: 'lines+markers',
-                line: { color: '#9d4edd', width: 3 }, marker: { size: 6 },
+                line: { color: '#075e5f', width: 3 }, marker: { size: 6 },
                 name: 'Z(μ)', hovertemplate: 'Bước %{x}<br>Z=%{y}<extra></extra>'
             },
             {
@@ -377,7 +377,7 @@
                     return z + (conv[i].mu > 0.01 ? conv[i].mu * 10 : 0);
                 }),
                 type: 'scatter', mode: 'markers',
-                marker: { size: 4, color: '#e76f51', symbol: 'triangle-up' },
+                marker: { size: 4, color: '#b85c38', symbol: 'triangle-up' },
                 name: 'Giới trên (Z + μ·10)', hoverinfo: 'skip', showlegend: false
             }
         ];
@@ -445,14 +445,14 @@
         const traces = [{
             type: 'surface', x: surf.x, y: surf.y, z: surf.z,
             colorscale: 'Viridis', opacity: 0.86, showscale: false,
-            contours: { z: { show: true, usecolormap: true, highlightcolor: '#e9c46a', project: { z: true } } },
+            contours: { z: { show: true, usecolormap: true, highlightcolor: '#8a7a48', project: { z: true } } },
             hoverinfo: 'skip'
         }];
         if (traj && traj.length) {
             traces.push({
                 type: 'scatter3d', mode: 'lines', x: traj.map(p => p[0]),
                 y: traj.map(p => p[1]), z: traj.map(p => GD_K * (Math.pow(p[0] - 40, 2) + Math.pow(p[1] - 60, 2))),
-                line: { color: '#e76f51', width: 6 }, hoverinfo: 'skip', name: 'Gradient Descent'
+                line: { color: '#b85c38', width: 6 }, hoverinfo: 'skip', name: 'Hạ dốc'
             });
         }
         if (nwp) {
@@ -460,7 +460,7 @@
                 type: 'scatter3d', mode: 'lines+markers',
                 x: [nwp.from[0], target[0]], y: [nwp.from[1], target[1]],
                 z: [GD_K * (Math.pow(nwp.from[0] - 40, 2) + Math.pow(nwp.from[1] - 60, 2)), 0],
-                line: { color: '#9d4edd', width: 7, dash: 'dot' }, marker: { size: 5, color: '#9d4edd' },
+                line: { color: '#8a7a48', width: 7, dash: 'dot' }, marker: { size: 5, color: '#8a7a48' },
                 name: 'Newton (1 bước)', hoverinfo: 'skip'
             });
         }
@@ -546,7 +546,7 @@
         plotGDSurface([], { from: from, to: t });
         document.getElementById('gdStatus').classList.remove('hidden');
         document.getElementById('gdStatus').innerHTML =
-            '🚁 Newton dùng <b>xấp xỉ bậc 2 (Hessian)</b>: chỉ cần <b>1 bước</b> để về đáy ' +
+            'Newton dùng <b>xấp xỉ bậc 2 (Hessian)</b>: chỉ cần <b>1 bước</b> để về đáy ' +
             '(' + fmt(from[0]) + ', ' + fmt(from[1]) + ') → (' + fmt(t[0]) + ', ' + fmt(t[1]) + '). Đây chính là "cái bát giả định" hoàn hảo vì f(x,y) là hàm toàn phương.';
         document.getElementById('gdWarn').classList.add('hidden');
         const fv = GD_K * (Math.pow(from[0] - 40, 2) + Math.pow(from[1] - 60, 2));
@@ -647,7 +647,7 @@
         dpStop = true;
         document.querySelectorAll('#dpTimeline button').forEach(b => b.classList.remove('active'));
         document.querySelector('#dpTable tbody').innerHTML = '';
-        document.getElementById('dpReadout').textContent = 'Sẵn sàng. Bấm ▶ Play Backward.';
+        document.getElementById('dpReadout').textContent = 'Sẵn sàng. Bấm “Chạy truy hồi ngược”.';
         drawDP();
     }
 
@@ -661,7 +661,7 @@
             },
             {
                 x: months, y: d.sample.map(r => r.inflow), type: 'scatter', mode: 'lines+markers',
-                line: { color: '#e9c46a', width: 3 }, name: 'Dòng vào I', yaxis: 'y2'
+                line: { color: '#8a7a48', width: 3 }, name: 'Dòng vào I', yaxis: 'y2'
             },
             {
                 x: months, y: d.sample.map(r => r.storage), type: 'scatter', mode: 'lines+markers',
@@ -669,7 +669,7 @@
             },
             {
                 x: months, y: d.sample.map(r => r.benefit), type: 'scatter', mode: 'markers',
-                marker: { size: 11, color: '#e76f51' }, name: 'Lợi ích B(R)', yaxis: 'y2'
+                marker: { size: 11, color: '#b85c38' }, name: 'Lợi ích B(R)', yaxis: 'y2'
             }
         ], {
             margin: { t: 12, b: 50, l: 55, r: 55 },

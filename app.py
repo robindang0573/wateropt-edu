@@ -8,9 +8,6 @@ from governance import GovernanceConfig, config_from_mapping, run_governance
 
 app = Flask(__name__)
 
-VND_PER_CNY = 3550.0  # tỷ giá tham chiếu
-
-
 def money(x, unit="triệu USD"):
     if x is None:
         return "—"
@@ -278,10 +275,10 @@ def build_economic_details(v, cf_with_list, cf_without_list, cash_flows, npv_ter
 
 
 # ============================================================
-# MODULE 2 — GIÁ NƯỚC NÔNG NGHIỆP (Cơ chế Trung Quốc, Chương 6)
+# MODULE 2 — GIÁ NƯỚC NÔNG NGHIỆP
 # ============================================================
 def compute_pricing(form):
-    invest = float(form.get("invest", 100))            # triệu CNY — vốn đầu tư ban đầu
+    invest = float(form.get("invest", 100000))         # triệu đồng — vốn đầu tư ban đầu
     dep_life = float(form.get("dep_life", 5))          # năm — thời gian khấu hao
     mode = form.get("mode", "static")                  # static | dynamic
     disc_rate = float(form.get("disc_rate", 6)) / 100.0  # tỉ suất chiết khấu xã hội (6–8%)
@@ -291,10 +288,10 @@ def compute_pricing(form):
         if disc_rate > 1e-12 else 1.0 / n_years        # (A/P, i, n) — niên kim hóa
     dep_dynamic = invest * crf
     dep = dep_dynamic if mode == "dynamic" else dep_static
-    om_lab = float(form.get("om_labor", 0))
-    om_en = float(form.get("om_energy", 0))
-    om_rep = float(form.get("om_repair", 0))
-    om_mg = float(form.get("om_mgmt", 0))
+    om_lab = float(form.get("om_labor", 10000))
+    om_en = float(form.get("om_energy", 8000))
+    om_rep = float(form.get("om_repair", 4000))
+    om_mg = float(form.get("om_mgmt", 3000))
     profit = float(form.get("profit", 5)) / 100.0
     tax = float(form.get("tax", 3)) / 100.0
     dq = float(form.get("design_q", 100))
@@ -328,14 +325,16 @@ def compute_pricing(form):
     tax_amt = C * tax
     R = C + profit_amt + tax_amt
 
-    # Quy tắc 60%: Q_pricing = max(Actual_Q, 0.6 × Design_Q)
+    # Quy tắc 60%: Q_pricing = max(Actual_Q, 0.6 × Design_Q).
+    # Vì R tính bằng triệu đồng/năm và Q_pricing tính bằng triệu m³/năm,
+    # R / Q_pricing có đơn vị đồng/m³.
     rule60 = dq > 0 and aq < 0.6 * dq
     q_pricing = max(aq, 0.6 * dq) if dq > 0 else aq
 
     price = None
     if q_pricing > 0:
-        price = R / q_pricing          # CNY/m³
-    price_vnd = price * VND_PER_CNY if price is not None else None
+        price = R / q_pricing          # đồng/m³
+    price_vnd = price
 
     # So sánh hai phương pháp khấu hao (Tĩnh ↔ Động)
     def _rev_for(d):
@@ -406,7 +405,7 @@ def compute_pricing(form):
         "profit_pct": profit * 100, "tax_pct": tax * 100, "R": R,
         "design_q": dq, "actual_q": aq, "q_pricing": q_pricing,
         "rule60": rule60,
-        "price_cny": price, "price_vnd": price_vnd,
+        "price_vnd": price_vnd,
         "quota": quota, "use": use, "area_ha": area_ha,
         "tiers": tiers, "bill": bill,
         "total_ha_use": total_ha_use, "total_ha_quota": total_ha_quota,
@@ -497,7 +496,7 @@ def solve_lp(c1, c2, rows):
         if path[-1] != optimal:
             path.append(optimal)
 
-    # ========== Interior Point Method (barrier) ==========
+    # ========== Phương pháp điểm trong với hàm rào cản ==========
     ipm_result = _solve_ipm(c1, c2, rows, optimal, z_star)
 
     # ========== Đánh giá Z tại từng đỉnh (đồ giải) ==========
@@ -595,7 +594,7 @@ def simplex_tableau(c1, c2, rows):
 
 
 def _solve_ipm(c1, c2, rows, optimal, z_star):
-    """Barrier Interior Point Method — trả về lịch sử các bước lặp."""
+    """Phương pháp điểm trong với hàm rào cản, trả về lịch sử các bước lặp."""
     A = np.array([[r["a1"], r["a2"]] for r in rows], dtype=float)
     b = np.array([r["b"] for r in rows], dtype=float)
     n = 2
@@ -841,7 +840,7 @@ def optimization():
 
 @app.route("/governance", methods=["GET", "POST"])
 def governance():
-    """Module 4: Governance → Planning → Management → Pareto decision."""
+    """Mô đun 4: Quản trị → Quy hoạch → Vận hành → Pareto."""
     source = request.form if request.method == "POST" else request.args
     error = None
     try:

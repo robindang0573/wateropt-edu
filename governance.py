@@ -17,10 +17,11 @@ class GovernanceConfig:
     # 25 keeps the educational default feasible; users can raise it to 30+
     # to demonstrate how Governance can eliminate the entire decision set.
     qeco: float = 25.0
-    w_econ: float = 0.25
-    w_soc: float = 0.30
-    w_env: float = 0.30
-    w_risk: float = 0.15
+    # Educational default: economy 0.3, society 0.4, environment 0.2, risk 0.1.
+    w_econ: float = 0.30
+    w_soc: float = 0.40
+    w_env: float = 0.20
+    w_risk: float = 0.10
     periods: int = 36
     v0: float = 320.0
     q0: float = 35.0

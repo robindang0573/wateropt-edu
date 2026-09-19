@@ -10,7 +10,7 @@
             document.documentElement.setAttribute('data-theme', t);
         })();
     </script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=9">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=13">
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
@@ -31,7 +31,7 @@
             <a class="menu-item {{ 'active' if active == 'home' }}" href="{{ url_for('index') }}">
                 <span class="icon">🏠</span><span>Dashboard</span>
             </a>
-            <div class="menu-label">Các Module</div>
+            <div class="menu-label">Các mô đun</div>
             <a class="menu-item {{ 'active' if active == 'economic' }}" href="{{ url_for('economic') }}">
                 <span class="icon">📊</span><span>1. Kinh tế dự án</span>
             </a>
@@ -42,7 +42,7 @@
                 <span class="icon">🧠</span><span>3. Tối ưu hóa</span>
             </a>
             <a class="menu-item {{ 'active' if active == 'governance' }}" href="{{ url_for('governance') }}">
-                <span class="icon">💧</span><span>4. Governance nước</span>
+                <span class="icon">💧</span><span>4. Quản trị TNN</span>
             </a>
         </nav>
 

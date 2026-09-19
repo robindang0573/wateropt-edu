@@ -1,30 +1,31 @@
 {% extends "base.html" %}
 {% block title %}Tối ưu hóa & Thuật toán — WaterOpt Edu{% endblock %}
 {% block content %}
+<div class="governance-page learning-page module-optimization">
 
-<h1 class="page-title">🧠 Module 3 · Trực quan hóa Thuật toán Tối ưu</h1>
+<h1 class="page-title">Mô đun 3 · Trực quan hóa thuật toán tối ưu</h1>
 <p class="page-desc">
-    Ba thuật toán kinh điển: <b>Quy hoạch tuyến tính</b> (miền khả thi + Simplex), <b>Gradient Descent &amp; Newton</b> (bề mặt 3D), <b>Quy hoạch động</b> (truy hồi ngược hồ chứa).
+    Ba thuật toán kinh điển: <b>Quy hoạch tuyến tính</b> (miền khả thi + Simplex), <b>Hạ dốc và Newton</b> (bề mặt 3D), <b>Quy hoạch động</b> (truy hồi ngược hồ chứa).
 </p>
 
 <div class="jumpbar">
     <a href="#lp" class="chip">3.1 Quy hoạch tuyến tính</a>
-    <a href="#gd" class="chip">3.2 Gradient & Newton</a>
+    <a href="#gd" class="chip">3.2 Hạ dốc & Newton</a>
     <a href="#dp" class="chip">3.3 Quy hoạch động</a>
 </div>
 
 <!-- ============ 3.1 LP ============ -->
 <section class="card" id="lp">
-    <h2>3.1 🎯 Quy hoạch tuyến tính — Phương pháp đồ thị</h2>
+    <h2 class="card-title">3.1 Quy hoạch tuyến tính: phương pháp đồ thị</h2>
     <p class="note">
-        Phân bổ nước tưới: tối đa lợi ích $Z = c_1 x_1 + c_2 x_2$ (nghìn CNY) với $x_1$ (ha trồng <i>lúa</i>), $x_2$ (ha trồng <i>rau màu</i>), dưới các ràng buộc về nước, đất, lao động.
+        Phân bổ nước tưới: tối đa lợi ích $Z = c_1 x_1 + c_2 x_2$ (triệu đồng) với $x_1$ (ha trồng <i>lúa</i>), $x_2$ (ha trồng <i>rau màu</i>), dưới các ràng buộc về nước, đất, lao động.
         <span class="hint" data-tip="Nghiệm tối ưu của bài toán tuyến tính luôn nằm ở một đỉnh (vertex) của đa diện lồi.">Đỉnh tối ưu?<sup>ⓘ</sup></span>
     </p>
 
     <div class="psplit">
         <div>
             <div class="form-group">
-                <div class="group-label">🎯 Hàm mục tiêu (Max Z)</div>
+                <div class="group-label">Hàm mục tiêu: tối đa hóa Z</div>
                 <div class="form-row small">
                     <div><label>c₁</label><input type="number" step="any" id="lp_c1" value="{{ lp.obj[0] }}"></div>
                     <div><label>c₂</label><input type="number" step="any" id="lp_c2" value="{{ lp.obj[1] }}"></div>
@@ -32,7 +33,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <div class="group-label">🔗 Ràng buộc (a₁·x₁ + a₂·x₂ ≤ b; x₁, x₂ ≥ 0)</div>
+                <div class="group-label">Ràng buộc: a₁·x₁ + a₂·x₂ ≤ b; x₁, x₂ ≥ 0</div>
                 {% for r in lp.rows %}
                 <div class="form-row small cons-row">
                     <input type="number" step="any" class="con_a1" value="{{ r.a1 }}">
@@ -48,9 +49,9 @@
                 <p class="note" style="font-size:0.8em">Mỗi hàng = 1 ràng buộc. Hàng trống sẽ bị bỏ qua.</p>
             </div>
             <div class="btn-row">
-                <button type="button" class="btn primary" id="lpRun">Giải &amp; Vẽ</button>
+                <button type="button" class="btn primary" id="lpRun">Giải và vẽ</button>
                 <button type="button" class="btn ghost" id="lpSimplex">▶ Chạy Simplex</button>
-                <button type="button" class="btn ghost" id="lpInterior">▶ Chạy Interior Point</button>
+                <button type="button" class="btn ghost" id="lpInterior">▶ Chạy điểm trong</button>
             </div>
             <div id="lpStatus" class="sim-readout hidden">…</div>
             <div id="ipmStatus" class="sim-readout hidden">…</div>
@@ -60,7 +61,7 @@
             <div id="lpPlot" class="plot lp-plot"></div>
             <p class="note">
                 <b>Miền xanh</b> = miền khả thi. <b>Đường đứt ngang</b> = đường đồng mức lợi ích Z.
-                <b>Simplex</b> nhảy theo cạnh đa diện; <b>Interior Point</b> đi xuyên qua trong.
+                <b>Simplex</b> nhảy theo cạnh đa diện; <b>phương pháp điểm trong</b> đi xuyên qua miền khả thi.
             </p>
         </div>
     </div>
@@ -68,7 +69,7 @@
     <!-- Kết quả đồ giải + Simplex: hiện khi bấm "Giải & Vẽ" -->
     <div id="lpContent" class="chart-grid hidden" style="margin-top:18px">
         <div class="chart-card full">
-            <h3>📖 Cách giải — Phương pháp đồ giải &amp; Simplex (Max Z = 50x₁ + 30x₂)</h3>
+            <h3>Cách giải: phương pháp đồ thị và Simplex (tối đa Z = 50x₁ + 30x₂)</h3>
             <div class="steps">
                 <p><b>① Vẽ miền khả thi:</b> giao của các nửa mặt phẳng ràng buộc (các đường đỏ chấm trên đồ thị).</p>
                 <p><b>② Xác định đỉnh (corner points):</b> giao điểm từng cặp đường biên, giữ lại điểm nằm trong miền khả thi.</p>
@@ -79,7 +80,7 @@
         </div>
 
         <div class="chart-card">
-            <h3>🏔 Bảng đánh giá Z tại các đỉnh</h3>
+            <h3>Bảng đánh giá Z tại các đỉnh</h3>
             <div class="table-responsive" style="max-height:340px; overflow:auto">
                 <table id="lpVertexTable" class="dp-table" style="font-size:0.80em; min-width:460px">
                     <thead>
@@ -95,19 +96,19 @@
     <!-- Lý thuyết + Bảng lặp Simplex: hiện khi bấm "Chạy Simplex" -->
     <div id="lpSimplexContent" class="chart-grid hidden" style="margin-top:18px">
         <div class="chart-card full">
-            <h3>📖 Bảng Simplex &mdash; từ hệ bất phương trình sang hệ phương trình (s₁, s₂, RHS)</h3>
+            <h3>Bảng Simplex: từ hệ bất phương trình sang hệ phương trình (s₁, s₂, vế phải)</h3>
             <div class="steps">
                 <p><b>① Simplex giải hệ <u>phương trình</u> (dạng ma trận), không phải hệ bất phương trình:</b> hệ $Ax \le b$ không có "nghiệm cơ bản" để khởi tạo vòng lặp. Simplex chỉ thao tác trên đẳng thức $Ax = b$ với ma trận hệ số &mdash; nên bước đầu tiên bắt buộc phải chuyển bất đẳng thức thành đẳng thức.</p>
                 <p><b>② Chuyển đổi bằng biến bù (slack):</b> $140x_1 + 60x_2 \le 10.000 \Rightarrow 140x_1 + 60x_2 + s_1 = 10.000$; &nbsp;$x_1 + x_2 \le 100 \Rightarrow x_1 + x_2 + s_2 = 100$, với điều kiện $s_1, s_2 \ge 0$. Chính điều kiện $s \ge 0$ giữ cho hệ đẳng thức <i>tương đương</i> với bất đẳng thức gốc.</p>
                 <p><b>③ Điểm xuất phát (Initial Basic Feasible Solution):</b> đặt các biến quyết định $x_1 = x_2 = 0$ ⟹ biến bù tự động nhận đúng giá trị vế phải: $s_1 = 10.000$, $s_2 = 100$. Về ma trận, các biến bù tạo thành <b>Ma trận đơn vị (Identity Matrix)</b> &mdash; nhờ có ma trận đơn vị này, Simplex khởi tạo được bảng đầu tiên mà <i>không cần giải hệ phương trình phức tạp</i>.</p>
                 <p><b>④ Ý nghĩa hình học &mdash; khoảng cách đến biên:</b> đường $140x_1 + 60x_2 = 10.000$ là một <i>mặt biên</i> của đa diện khả thi; giá trị $s_1 = 10.000 - 140x_1 - 60x_2$ chính là <b>khoảng cách đại số</b> từ điểm hiện tại $(x_1, x_2)$ đến biên đó (tương tự $s_2$ với biên $x_1 + x_2 = 100$).</p>
                 <p><b>⑤ Đọc dấu của biến bù:</b> $s_1 > 0$ ⟹ điểm nằm <i>bên trong</i> miền khả thi (chưa dùng hết giới hạn); $s_1 = 0$ ⟹ điểm nằm <i>trên biên</i> (đã dùng hết tài nguyên); $s_1 < 0$ ⟹ điểm nằm <i>ngoài</i> miền khả thi &mdash; bị cấm bởi $s \ge 0$.</p>
-                <p><b>⑥ Cột RHS &amp; hàng Z:</b> sau mỗi pivot, RHS ghi giá trị hiện tại của biến cơ sở trong hàng đó (khởi tạo: $s_1 = 10.000$, $s_2 = 100$). Hàng Z cuối bảng chứa <i>reduced cost</i>: hệ số âm nhất (−50 của $x_1$) là biến vào.</p>
+                <p><b>⑥ Cột vế phải và hàng Z:</b> sau mỗi phép xoay trục, cột vế phải ghi giá trị hiện tại của biến cơ sở trong hàng đó (khởi tạo: $s_1 = 10.000$, $s_2 = 100$). Hàng Z cuối bảng chứa <i>chi phí giảm</i>: hệ số âm nhất (−50 của $x_1$) là biến vào.</p>
             </div>
         </div>
 
         <div class="chart-card full">
-            <h3>❓ Tại sao cần Biến vào &amp; Biến ra?</h3>
+            <h3>Tại sao cần biến vào và biến ra?</h3>
             <div class="steps">
                 <p><b>① Tại sao cần biến vào?</b> Ban đầu, bảng của bạn có nghiệm $x_1 = x_2 = 0,\; s_1 = 10.000,\; s_2 = 100,\; Z = 0$. Trong đó $x_1, x_2$ là các hoạt động tạo lợi ích — nếu cả hai đều bằng 0 thì chưa tạo ra giá trị nào. Hàng $Z$ cho thấy $Z = 50x_1 + 30x_2$, vì vậy muốn tăng $Z$ ta phải cho ít nhất một trong hai biến $x_1, x_2$ tăng lên. Biến được chọn tăng và đưa vào nhóm biến cơ sở gọi là <b>biến vào</b>. Trong hình, $x_1$ được chọn vì nó có khả năng cải thiện $Z$ nhanh nhất: $50 &gt; 30$. Do đó $\boxed{x_1 \text{ vào cơ sở}}$. Nếu không chọn biến vào, Simplex không biết nên di chuyển theo hướng nào để làm nghiệm tốt hơn.</p>
                 <p><b>② Tại sao cần biến ra?</b> Ta không thể tăng $x_1$ vô hạn vì các nguồn lực có giới hạn. Từ bảng: $140x_1 + 60x_2 + s_1 = 10.000$; $x_1 + x_2 + s_2 = 100$. Nếu giữ $x_2 = 0$ và tăng $x_1$: $s_1 = 10.000 - 140x_1$; $s_2 = 100 - x_1$. Càng tăng $x_1$, các biến dư $s_1, s_2$ càng giảm — tăng quá mức thì một biến dư sẽ âm, nghĩa là dùng nhiều tài nguyên hơn lượng hiện có. Cụ thể: $x_1 \le \frac{10.000}{140} = 71{,}43$ và $x_1 \le \frac{100}{1} = 100$. Ràng buộc thứ nhất chạm giới hạn trước, tại $x_1 = 71{,}43,\; s_1 = 0$. Vì $s_1$ đã hết phần dư nên nó phải rời cơ sở: $\boxed{s_1 \text{ là biến ra}}$. Nếu không xác định biến ra, ta có thể tăng $x_1$ quá xa và tạo ra một nghiệm không khả thi.</p>
@@ -117,52 +118,52 @@
         </div>
 
         <div class="chart-card full">
-            <h3>🗺️ Đi dọc cạnh — Biến vào = HƯỚNG đi, Biến ra = CHIỀU DÀI cạnh</h3>
+            <h3>Đi dọc cạnh: biến vào là hướng đi, biến ra là chiều dài cạnh</h3>
             <div class="steps">
                 <p><b>① Biến vào = chọn HƯỚNG đi dọc cạnh:</b> tại một đỉnh bất kỳ luôn có nhiều cạnh tỏa ra — biến vào cho biết nên rẽ vào cạnh nào để Z tăng <i>nhanh nhất</i>. Bảng: chọn cột có hệ số âm nhất ở hàng Z (reduced cost lớn nhất). Hình học: nó xác định trục tọa độ (hướng vector) ta di chuyển. Lặp 1 tại $(0,0)$: $x_1$ có hệ số $-50$ (âm nhất) ⟹ đi dọc trục $x_1$ (cạnh nằm trên trục hoành, nơi $x_2 = 0$).</p>
-                <p><b>② Biến ra = tính CHIỀU DÀI cạnh để tìm đỉnh mới:</b> có hướng rồi nhưng không thể đi mãi — phải dừng khi chạm "bức tường" (một ràng buộc khác). Bảng: phép thử tỷ số tối thiểu $\frac{\text{RHS}}{\text{cột biến vào}}$. Hình học: tỷ số nhỏ nhất chính là <b>chiều dài đoạn thẳng</b> (khoảng cách đại số) từ đỉnh cũ đến đỉnh mới dọc theo cạnh đó; biến cơ sở ở hàng có tỷ số nhỏ nhất là "bức tường" ta đâm vào.</p>
+                <p><b>② Biến ra = tính chiều dài cạnh để tìm đỉnh mới:</b> có hướng rồi nhưng không thể đi mãi, phải dừng khi chạm một ràng buộc khác. Bảng dùng phép thử tỷ số tối thiểu $\frac{\text{vế phải}}{\text{cột biến vào}}$. Hình học: tỷ số nhỏ nhất chính là <b>chiều dài đoạn thẳng</b> từ đỉnh cũ đến đỉnh mới dọc theo cạnh đó.</p>
                 <p><b>Lặp 1 — tại $(0,0)$: đi dọc trục $x_1$.</b> Đâm vào tường $s_1$ (ràng buộc 1) sau $10.000/140 = 71{,}43$ bước; đâm vào tường $s_2$ (ràng buộc 2) sau $100/1 = 100$ bước ⟹ chọn $71{,}43$ (nhỏ nhất). Chiều dài cạnh = $71{,}43$, tới đỉnh $(71{,}43; 0)$; $s_1$ bị loại vì đã chạm đúng biên ($s_1 = 0$).</p>
                 <p><b>🏃 Lặp 2 — tại $(71{,}43; 0)$:</b> đang nằm trên biên ràng buộc 1 ($s_1 = 0$). Biến vào $x_2$ (hệ số $-8{,}57$) ⟹ hướng đi lên; vì đang trên biên $s_1 = 0$, khi $x_2$ tăng thì $x_1$ <i>phải giảm</i> để giữ $140x_1 + 60x_2 = 10.000$ — chính là đoạn thẳng màu xanh đậm trên đồ thị. Biến ra $s_2$: $28{,}57/0{,}5714 = 50$ bước thì chạm biên $x_1 + x_2 = 100$ ⟹ đỉnh mới $(50, 50)$.</p>
                 <p><b>🏆 Lặp 3 — dừng tại $(50, 50)$:</b> hàng Z không còn số âm ⟹ không còn cạnh nào "đi lên" được nữa ⟹ đã leo tới đỉnh cao nhất của ngọn núi đa diện, $Z = 4.000$. So với đồ giải (đánh giá mọi đỉnh), Simplex <b>chỉ cần đi theo 2 cạnh liên tiếp</b> — không bao giờ thăm $(0, 100)$ dù nó có $Z = 3.000$.</p>
-                <p><b>💡 Tóm lại:</b> Simplex như một <b>chú robot mù leo núi</b>. Biến vào bảo robot: "Hãy sờ tay xung quanh và chọn hướng dốc nhất để bước!" (chọn hướng cạnh). Biến ra bảo robot: "Hãy bước theo hướng đó cho đến khi mũi chân chạm vào vách đá thì dừng lại!" (tính chiều dài cạnh và tìm đỉnh mới).</p>
+                <p><b>Tóm lại:</b> Simplex luôn đứng tại một đỉnh khả thi. Biến vào xác định cạnh nên đi để tăng Z nhanh nhất; biến ra xác định điểm phải dừng để nghiệm vẫn khả thi.</p>
             </div>
         </div>
 
         <div class="chart-card full">
-            <h3>🎯 Biến cơ sở / không cơ sở — được chọn theo tiêu chí nào?</h3>
+            <h3>Biến cơ sở và không cơ sở được chọn theo tiêu chí nào?</h3>
             <div class="steps">
                 <p><b>① BƯỚC KHỞI TẠO (Lặp 1) — tìm "Ma trận đơn vị" (Identity Matrix):</b> sau khi thêm biến bù, các cột biến bù tạo thành ma trận đơn vị — cột $s_1 = \begin{bmatrix}1\\0\end{bmatrix}$, cột $s_2 = \begin{bmatrix}0\\1\end{bmatrix}$ (mỗi cột đúng một số 1, còn lại là 0). Cột nào có dạng "cột đơn vị" ⟹ biến đó <b>được chọn làm biến cơ sở</b>.</p>
-                <p><b>② Vì sao lại chọn như vậy?</b> Khi đặt biến còn lại là không cơ sở ($x_1 = x_2 = 0$), ta <i>đọc ngay giá trị biến cơ sở từ cột RHS</i> ($s_1 = 10.000$, $s_2 = 100$) <b>mà không cần giải hệ phương trình</b>. Áp dụng: chọn $\{s_1, s_2\}$ làm cơ sở; $\{x_1, x_2\}$ là không cơ sở (= 0).</p>
+                <p><b>② Vì sao lại chọn như vậy?</b> Khi đặt biến còn lại là không cơ sở ($x_1 = x_2 = 0$), ta <i>đọc ngay giá trị biến cơ sở từ cột vế phải</i> ($s_1 = 10.000$, $s_2 = 100$) <b>mà không cần giải hệ phương trình</b>. Áp dụng: chọn $\{s_1, s_2\}$ làm cơ sở; $\{x_1, x_2\}$ là không cơ sở (= 0).</p>
                 <p><b>③ CÁC BƯỚC LẶP SAU (Pivot) — 2 tiêu chí: tối ưu &amp; khả thi.</b></p>
                 <p><b>Chọn BIẾN VÀO (không cơ sở → cơ sở) — Optimality Condition:</b> nhìn hàng $Z$, chọn hệ số <b>âm nhất</b> đối với bài Max (dương nhất đối với Min). Hệ số đó là <i>reduced cost</i>: Áp dụng — Lặp 1 có $-50$ và $-30$; $-50$ âm nhất ⟹ $x_1$ vào (mỗi đơn vị $x_1$ làm Z tăng nhanh nhất: +50).</p>
-                <p><b>Chọn BIẾN RA (cơ sở → không cơ sở) — Feasibility Condition (tỷ số tối thiểu):</b> lấy RHS ÷ cột biến vào, chỉ xét hệ số <b>dương &gt; 0</b>. Hàng có tỷ số nhỏ nhất ⟹ biến cơ sở hàng đó bị "đá" ra (gán về 0). Ý nghĩa: khi tăng biến vào, <b>không biến cơ sở nào bị âm</b>. Áp dụng: $10.000/140 = 71{,}43$ và $100/1 = 100$ ⟹ $71{,}43$ nhỏ nhất ⟹ $s_1$ ra.</p>
+                <p><b>Chọn biến ra (cơ sở → không cơ sở):</b> lấy vế phải ÷ cột biến vào, chỉ xét hệ số <b>dương &gt; 0</b>. Hàng có tỷ số nhỏ nhất là hàng rời cơ sở. Ý nghĩa: khi tăng biến vào, <b>không biến cơ sở nào bị âm</b>. Áp dụng: $10.000/140 = 71{,}43$ và $100/1 = 100$ ⟹ $71{,}43$ nhỏ nhất ⟹ $s_1$ ra.</p>
                 <p><b>④ Kết quả Pivot:</b> $x_1$ thay thế vị trí $s_1$ trong cột "Biến cơ sở" ⟹ cơ sở mới $\{x_1, s_2\}$, không cơ sở $\{x_2, s_1\} = 0$.</p>
                 <p><b>⑤ Luật bất biến về số lượng:</b> với $m$ = số ràng buộc (số hàng, không tính hàng Z) và $n$ = tổng số biến (biến quyết định + biến bù) thì <b>luôn có đúng $m$ biến cơ sở và $n - m$ biến không cơ sở</b>. Bài này: $m = 2$, $n = 4$ $(x_1, x_2, s_1, s_2)$ ⟹ luôn 2 cơ sở và 2 không cơ sở tại mọi thời điểm.</p>
-                <p><b>💡 Tóm tắt quy trình ra quyết định:</b> Lần 1: cột nào là Ma trận đơn vị ⟹ gán làm cơ sở. Các lần sau: hàng $Z$ (chọn âm nhất) ⟹ biến vào; cột Tỷ số (chọn dương nhỏ nhất) ⟹ biến ra; biến vào thay thế biến ra trong cột cơ sở.</p>
+                <p><b>Tóm tắt quy trình ra quyết định:</b> Lần 1: cột nào là ma trận đơn vị thì gán làm cơ sở. Các lần sau: hàng $Z$ (chọn âm nhất) cho biến vào; cột tỷ số (chọn dương nhỏ nhất) cho biến ra; biến vào thay thế biến ra trong cột cơ sở.</p>
             </div>
         </div>
 
         <div class="chart-card">
-            <h3>🛰️ Minh họa biến bù s₁, s₂ — khoảng cách đến biên</h3>
+            <h3>Minh họa biến bù s₁, s₂: khoảng cách đến biên</h3>
             <div id="lpSimplexChart" class="plot small"></div>
             <p class="note" style="font-size:0.82em"><b>Đường tím chấm</b> = khoảng cách đại số từ đỉnh hiện tại đến biên (chính là biến bù s). Điểm trên biên có s = 0; đụng biên = đã dùng hết giới hạn. Mũi tên xanh = đường đi Simplex qua các đỉnh.</p>
         </div>
 
         <div class="chart-card">
-            <h3>🧮 Bảng lặp Simplex (tableaus)</h3>
+            <h3>Bảng lặp Simplex</h3>
             <div class="table-responsive" style="max-height:340px; overflow:auto">
                 <table id="lpSimplexTable" class="dp-table" style="font-size:0.80em; min-width:760px">
                     <tbody></tbody>
                 </table>
             </div>
-            <p class="note" style="font-size:0.82em"><b>→ x₁</b> = cột biến vào; <b>s₁ ←</b> = hàng biến ra; ô nền cam viền trắng = phần tử trục (pivot). Tỷ số = RHS ÷ hệ số biến vào, chọn nhỏ nhất. Hàng "🎯 Nghiệm hiện tại" tóm tắt nghiệm sau mỗi lần lặp; dừng khi z-row không còn số âm.</p>
+            <p class="note" style="font-size:0.82em"><b>→ x₁</b> = cột biến vào; <b>s₁ ←</b> = hàng biến ra; ô được nhấn mạnh = phần tử trục. Tỷ số = vế phải ÷ hệ số biến vào, chọn nhỏ nhất. Hàng “Nghiệm hiện tại” tóm tắt nghiệm sau mỗi lần lặp; dừng khi hàng Z không còn số âm.</p>
         </div>
     </div>
 
-    <!-- Kết quả Interior Point: hiện khi bấm nút (bố trí theo hàng) -->
+    <!-- Kết quả phương pháp điểm trong: hiện khi bấm nút -->
     <div id="ipmContent" class="chart-grid hidden" style="margin-top:18px">
         <div class="chart-card full">
-            <h3>📖 Lý thuyết Interior Point (Barrier Method) — ví dụ Max Z = 50x₁ + 30x₂</h3>
+            <h3>Lý thuyết điểm trong (hàm rào cản): ví dụ tối đa Z = 50x₁ + 30x₂</h3>
             <div class="steps">
                 <p><b>① Bài toán:</b> Max $Z = 50x_1 + 30x_2$ với $140x_1 + 60x_2 \le 10.000$, $x_1 + x_2 \le 100$, $x_1, x_2 \ge 0$. Nghiệm tối ưu: $x_1^* = 50$, $x_2^* = 50$, $Z^* = 4.000$.</p>
                 <p><b>② Hàm rào cản (Barrier Function):</b> $Z_\mu = 50x_1 + 30x_2 + \mu\big[\ln x_1 + \ln x_2 + \ln(100 - x_1 - x_2) + \ln(10.000 - 140x_1 - 60x_2)\big]$. Khi điểm chạm biên: $\ln\to -\infty$ → «bức tường vô hình» chặn đường ra ngoài miền khả thi.</p>
@@ -174,13 +175,13 @@
         </div>
 
         <div class="chart-card">
-            <h3>📊 Đồ thị hội tụ Z theo bước barrier (Z* = 4.000)</h3>
+            <h3>Đồ thị hội tụ Z theo bước rào cản (Z* = 4.000)</h3>
             <div id="ipmConvChart" class="plot small"></div>
             <p class="note" style="font-size:0.82em">Z(μ) tăng dần và tiến sát đường Z* đứt nét khi μ → 0. Điểm cuối chuỗi hội tụ về (50, 50).</p>
         </div>
 
         <div class="chart-card">
-            <h3>🧾 Bảng tính các bước lặp Interior Point</h3>
+            <h3>Bảng tính các bước lặp phương pháp điểm trong</h3>
             <div class="table-responsive" style="max-height:340px; overflow:auto">
                 <table id="ipmTable" class="dp-table" style="font-size:0.80em; min-width:520px">
                     <thead>
@@ -197,7 +198,7 @@
 
 <!-- ============ 3.2 GD / Newton ============ -->
 <section class="card" id="gd">
-    <h2>3.2 📉 Gradient Descent &amp; Newton (NLP)</h2>
+    <h2 class="card-title">3.2 Hạ dốc và Newton: tối ưu phi tuyến</h2>
     <p class="note">
         Hàm chi phí $f(x,y) = 3\big[(x-40)^2 + (y-60)^2\big]$ — đáy bát tại <b>(40, 60)</b>.
         Quả bóng lăn theo hướng ngược gradient với bước nhảy $\alpha$. <span class="hint" data-tip="Với hệ số f = 3×(...)², hội tụ khi α ≤ 0,33; ngược lại (vd α = 0,5) quả bóng nhảy văng ra ngoài 'bát' và phân kỳ.">α quá lớn?<sup>ⓘ</sup></span>
@@ -216,8 +217,8 @@
             </div>
             <div id="gdWarn" class="alert warning hidden"></div>
             <div class="btn-row">
-                <button type="button" class="btn primary" id="gdRun">▶ Chạy Gradient Descent</button>
-                <button type="button" class="btn ghost" id="gdNewton">🚁 Bật Drone (Newton — 1 bước)</button>
+                <button type="button" class="btn primary" id="gdRun">▶ Chạy hạ dốc</button>
+                <button type="button" class="btn ghost" id="gdNewton">▶ Chạy Newton: một bước</button>
             </div>
             <div id="gdStatus" class="sim-readout hidden"></div>
         </div>
@@ -226,10 +227,10 @@
         </div>
     </div>
 
-    <!-- Kết quả Gradient Descent / Newton: hiện khi bấm nút (bố trí theo hàng) -->
+    <!-- Kết quả hạ dốc / Newton: hiện khi bấm nút -->
     <div id="gdContent" class="chart-grid hidden" style="margin-top:18px">
         <div class="chart-card full">
-            <h3>🚁 Lý thuyết Ma trận Hessian & Bước Newton — ví dụ f(x,y) = 3[(x−40)² + (y−60)²]</h3>
+            <h3>Ma trận Hessian và bước Newton: ví dụ f(x,y) = 3[(x−40)² + (y−60)²]</h3>
             <div id="gdTheory" class="steps">
                 <p><b>① Hàm mục tiêu:</b> $f(x,y) = 3\big[(x-40)^2 + (y-60)^2\big]$ — đáy bát tại $(40, 60)$.</p>
                 <p><b>② Gradient (độ dốc bậc 1):</b> $\nabla f = \begin{bmatrix}\partial f/\partial x\\ \partial f/\partial y\end{bmatrix} = \begin{bmatrix}6(x-40)\\ 6(y-60)\end{bmatrix}$ — cho biết hướng dốc nhất.</p>
@@ -241,13 +242,13 @@
         </div>
 
         <div class="chart-card gd-result">
-            <h3>📊 Đồ thị hội tụ f(x,y) theo bước lặp</h3>
+            <h3>Đồ thị hội tụ f(x,y) theo bước lặp</h3>
             <div id="gdConvChart" class="plot small"></div>
-            <p class="note" style="font-size:0.82em">Gradient Descent giảm f dần; Newton (màu tím) nhảy thẳng về 0 sau đúng 1 bước.</p>
+            <p class="note" style="font-size:0.82em">Hạ dốc giảm f dần; Newton đi thẳng về 0 sau đúng 1 bước trong ví dụ hàm toàn phương.</p>
         </div>
 
         <div class="chart-card gd-result">
-            <h3>🧾 Bảng tính Gradient Descent / Newton</h3>
+            <h3>Bảng tính hạ dốc và Newton</h3>
             <div class="table-responsive" style="max-height:340px; overflow:auto">
                 <table id="gdTable" class="dp-table" style="font-size:0.80em; min-width:520px">
                     <thead>
@@ -262,7 +263,7 @@
 
 <!-- ============ 3.3 DP ============ -->
 <section class="card" id="dp">
-    <h2>3.3 🔁 Quy hoạch động — Vận hành hồ chứa (Backward Recursion)</h2>
+    <h2 class="card-title">3.3 Quy hoạch động: vận hành hồ chứa bằng truy hồi ngược</h2>
     <p class="note">
         Quyết định <b>xả bao nhiêu nước mỗi tháng</b> để tối đa tổng lợi ích - năng lượng/tưới 12 tháng.
         <span class="hint" data-tip="Giải từ tháng 12 về tháng 1: mỗi bước nhớ 'giá trị tốt nhất từ tháng t đến hết kỳ' (hàm Bellman).">Truy hồi ngược?<sup>ⓘ</sup></span>
@@ -272,13 +273,13 @@
     <div class="psplit">
         <div>
             <div class="btn-row">
-                <button type="button" class="btn primary" id="dpPlay">▶ Play Backward</button>
-                <button type="button" class="btn ghost" id="dpReset">↺ Reset</button>
+                <button type="button" class="btn primary" id="dpPlay">▶ Chạy truy hồi ngược</button>
+                <button type="button" class="btn ghost" id="dpReset">↺ Làm lại</button>
             </div>
             <div class="dp-timeline" id="dpTimeline"></div>
             <div id="dpReadout" class="sim-readout"></div>
             <div class="card">
-                <h3>🧾 Bảng State → Decision → Reward</h3>
+                <h3>Bảng Trạng thái → Quyết định → Lợi ích</h3>
                 <div class="table-responsive">
                     <table id="dpTable" class="dp-table">
                         <thead><tr><th>Tháng</th><th>Dòng vào Iₜ</th><th>Mực nước Sₜ</th><th>Xả R*ₜ</th><th>Lợi ích B(R)</th><th>Fₜ(Sₜ)</th></tr></thead>
@@ -293,6 +294,7 @@
     </div>
 </section>
 
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -302,5 +304,5 @@
     window.__NEWTON = {{ newton | tojson }};
     window.__DP = {{ dp | tojson }};
 </script>
-<script src="{{ url_for('static', filename='js/plotly_app.js') }}?v=9"></script>
+<script src="{{ url_for('static', filename='js/plotly_app.js') }}?v=10"></script>
 {% endblock %}

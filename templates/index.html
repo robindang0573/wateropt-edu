@@ -1,38 +1,38 @@
 {% extends "base.html" %}
-{% block title %}WaterOpt Edu — Dashboard{% endblock %}
+{% block title %}WaterOpt Edu — Bảng điều khiển{% endblock %}
 {% block content %}
-<h1 class="page-title">🗂️ Dashboard</h1>
-<p class="page-desc">Nền tảng tương tác giúp trực quan hóa kinh tế, giá nước và các thuật toán tối ưu trong quản lý tài nguyên nước. <em>"No Math Wall"</em> — mọi công thức đều có chú thích đời thường & hình minh họa.</p>
+<h1 class="page-title">Bảng điều khiển WaterOpt Edu</h1>
+<p class="page-desc">Nền tảng tương tác giúp trực quan hóa kinh tế, giá nước và các thuật toán tối ưu trong quản lý tài nguyên nước. Tinh thần chung: công thức phải đi cùng giải thích đời thường và hình minh họa.</p>
 
 <div class="module-grid">
     <a class="module-card" href="{{ url_for('economic') }}">
         <div class="module-icon">📊</div>
-        <h2>Module 1 · Kinh tế dự án</h2>
+        <h2>Mô đun 1 · Kinh tế dự án</h2>
         <p>NPV, B/C, IRR, AW và thời gian hoàn vốn cho dự án TNN. Biểu đồ dòng tiền, đường chiết khấu lũy tích.</p>
-        <div class="module-tags"><span>NPV</span><span>B/C</span><span>IRR</span><span>Payback</span></div>
+        <div class="module-tags"><span>NPV</span><span>B/C</span><span>IRR</span><span>Hoàn vốn</span></div>
     </a>
     <a class="module-card" href="{{ url_for('pricing') }}">
         <div class="module-icon">🌾</div>
-        <h2>Module 2 · Giá nước nông nghiệp</h2>
-        <p>Cơ chế Trung Quốc: chi phí cho phép, quy tắc 60%, giá hai thành phần, giá lũy tiến.</p>
-        <div class="module-tags"><span>Quy tắc 60%</span><span>Lũy tiến</span><span>CNY/m³</span></div>
+        <h2>Mô đun 2 · Giá nước nông nghiệp</h2>
+        <p>Chi phí cho phép, doanh thu cho phép, quy tắc 60%, giá hai thành phần và giá lũy tiến theo đồng Việt Nam.</p>
+        <div class="module-tags"><span>Quy tắc 60%</span><span>Lũy tiến</span><span>đồng/m³</span></div>
     </a>
     <a class="module-card" href="{{ url_for('optimization') }}">
         <div class="module-icon">🧠</div>
-        <h2>Module 3 · Tối ưu hóa & Thuật toán</h2>
-        <p>Trực quan hóa Quy hoạch tuyến tính (Simplex/Interior Point), Gradient Descent & Newton, Quy hoạch động vận hành hồ chứa.</p>
-        <div class="module-tags"><span>LP</span><span>Gradient</span><span>Newton</span><span>DP</span></div>
+        <h2>Mô đun 3 · Tối ưu hóa và thuật toán</h2>
+        <p>Trực quan hóa quy hoạch tuyến tính, Simplex, điểm trong, hạ dốc, Newton và quy hoạch động vận hành hồ chứa.</p>
+        <div class="module-tags"><span>Tuyến tính</span><span>Hạ dốc</span><span>Newton</span><span>Quy hoạch động</span></div>
     </a>
     <a class="module-card" href="{{ url_for('governance') }}">
         <div class="module-icon">💧</div>
-        <h2>Module 4 · Governance hệ thống nước</h2>
-        <p>Mô phỏng hồ chứa, ràng buộc môi trường, lựa chọn Planning/Management và ra quyết định trên Pareto front.</p>
-        <div class="module-tags"><span>State Space</span><span>Pareto</span><span>Governance</span></div>
+        <h2>Mô đun 4 · Quản trị TNN</h2>
+        <p>Mô phỏng hồ chứa, ràng buộc môi trường, lựa chọn quy hoạch/vận hành và ra quyết định trên Pareto front.</p>
+        <div class="module-tags"><span>Không gian trạng thái</span><span>Pareto</span><span>Quản trị</span></div>
     </a>
 </div>
 
 <div class="card">
-    <h2>🎓 Dùng thế nào?</h2>
+    <h2>Dùng thế nào?</h2>
     <div class="intro-grid">
         <div class="intro-card">
             <h3>Với sinh viên</h3>

@@ -273,6 +273,157 @@ tfoot td { font-weight: 700; background: var(--subtle); }
 }
 .governance-page .geometry-summary { margin-top: 8px; }
 
+/* ===================== GOVERNANCE LESSON ===================== */
+.governance-page .lesson-hero {
+    background: linear-gradient(135deg, var(--card) 0%, var(--panel) 100%);
+    border-top: 5px solid var(--primary);
+}
+.governance-page .lesson-kicker {
+    color: var(--secondary); font-size: 0.76em; font-weight: 800;
+    letter-spacing: 0.14em; margin-bottom: 8px;
+}
+.governance-page .lesson-lead { font-size: 1.08em; line-height: 1.7; max-width: 900px; margin: 0; }
+.governance-page .lesson-arc {
+    display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+    gap: 10px; margin-top: 20px; color: var(--primary); font-weight: 800;
+}
+.governance-page .lesson-arc span {
+    background: var(--card); border: 1px solid var(--border); border-radius: 999px;
+    padding: 8px 13px; box-shadow: var(--shadow); font-size: 0.9em;
+}
+.governance-page .lesson-arc b { color: var(--accent); font-size: 1.2em; }
+.governance-page .lesson-story-grid {
+    display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 12px 16px; align-items: center;
+}
+.governance-page .story-number {
+    color: var(--primary); font-size: clamp(2.2rem, 6vw, 4rem); line-height: 1; font-weight: 900;
+}
+.governance-page .story-number.danger { color: var(--danger); }
+.governance-page .lesson-story-grid h3 { margin: 0 0 5px; color: var(--primary); font-size: 1em; }
+.governance-page .lesson-story-grid p { margin: 0; line-height: 1.55; }
+.governance-page .teaching-note {
+    margin-top: 18px; padding: 14px 16px; border-left: 4px solid var(--accent);
+    background: var(--panel); border-radius: 8px; line-height: 1.6;
+}
+.governance-page .lesson-steps-table td:first-child { width: 70px; font-weight: 900; color: var(--primary); }
+.governance-page .lesson-steps-table td:nth-child(2) { text-align: left; }
+.governance-page .lesson-steps-table td:nth-child(3) { text-align: left; color: var(--primary); }
+.governance-page .lesson-steps-table tr:nth-child(even),
+.governance-page .lesson-options-table tr:nth-child(even) { background: var(--panel); }
+.governance-page .lesson-concept-grid {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px;
+}
+.governance-page .lesson-concept {
+    position: relative; min-width: 0; padding: 18px 18px 16px;
+    border: 1px solid var(--border); border-top: 5px solid var(--secondary);
+    border-radius: 12px; background: var(--panel);
+}
+.governance-page .lesson-concept.planning { border-top-color: var(--accent); }
+.governance-page .lesson-concept.management { border-top-color: var(--danger); }
+.governance-page .lesson-concept h3 { margin: 0 0 10px; color: var(--primary); padding-right: 36px; }
+.governance-page .lesson-concept p { line-height: 1.6; margin: 8px 0 0; }
+.governance-page .lesson-badge {
+    position: absolute; right: 14px; top: 13px; width: 30px; height: 30px; border-radius: 50%;
+    display: grid; place-items: center; background: var(--primary); color: var(--on-primary); font-weight: 900;
+}
+.governance-page .lesson-equation-box {
+    margin-top: 16px; padding: 16px 18px; border: 1px dashed var(--secondary);
+    border-radius: 12px; background: var(--card);
+}
+.governance-page .lesson-equation-box > p { margin: 0; color: var(--muted); font-weight: 700; }
+.governance-page .formula-large { font-size: clamp(1.1rem, 2.1vw, 1.45rem); text-align: center; margin: 14px 0; }
+.governance-page .question-grid {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
+}
+.governance-page .question-grid div {
+    padding: 12px; border-radius: 8px; background: var(--panel); line-height: 1.5;
+}
+.governance-page .question-grid b, .governance-page .question-grid span { display: block; }
+.governance-page .question-grid span { color: var(--muted); margin-top: 4px; }
+.governance-page .lesson-flow-vertical {
+    display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px;
+    margin: 18px 0 24px;
+}
+.governance-page .flow-step {
+    display: flex; flex-direction: column; gap: 4px; min-width: 145px; padding: 14px 16px;
+    text-align: center; border: 1px solid var(--border); border-radius: 10px; background: var(--panel);
+}
+.governance-page .flow-step strong { color: var(--primary); }
+.governance-page .flow-step span { color: var(--muted); font-size: 0.88em; }
+.governance-page .flow-step.governance { border-bottom: 4px solid var(--secondary); }
+.governance-page .flow-step.planning { border-bottom: 4px solid var(--accent); }
+.governance-page .flow-step.management { border-bottom: 4px solid var(--danger); }
+.governance-page .flow-step.state { border-bottom: 4px solid var(--primary); }
+.governance-page .flow-step.result { border-bottom: 4px solid var(--success); }
+.governance-page .flow-arrow { color: var(--accent); font-size: 1.5em; font-weight: 900; }
+.governance-page .state-symbol-grid {
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: 12px 0;
+}
+.governance-page .state-symbol-grid div {
+    padding: 12px 10px; text-align: center; border-radius: 8px; background: var(--panel); border: 1px solid var(--border);
+}
+.governance-page .state-symbol-grid b, .governance-page .state-symbol-grid span { display: block; }
+.governance-page .state-symbol-grid b { color: var(--primary); font-size: 1.1em; }
+.governance-page .state-symbol-grid span { color: var(--muted); font-size: 0.84em; margin-top: 5px; line-height: 1.35; }
+.governance-page .objective-pair {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px;
+}
+.governance-page .objective-pair div {
+    padding: 14px; text-align: center; background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+}
+.governance-page .objective-pair b, .governance-page .objective-pair span { display: block; }
+.governance-page .objective-pair b { color: var(--primary); font-size: 1.2em; }
+.governance-page .objective-pair span { color: var(--muted); margin-top: 4px; }
+.governance-page .lesson-options-table td { text-align: center; }
+.governance-page .lesson-options-table td:first-child { font-weight: 900; color: var(--primary); }
+.governance-page .lesson-options-table .good { color: var(--success); font-weight: 800; }
+.governance-page .lesson-options-table .dominated { color: var(--muted); text-decoration: line-through; }
+.governance-page .lesson-options-table .dominated td:last-child { text-decoration: none; color: var(--danger); }
+.governance-page .dominance-callout {
+    margin: 16px 0; padding: 13px 16px; background: rgba(231, 111, 81, 0.12);
+    border: 1px solid var(--danger); border-radius: 9px; line-height: 1.6;
+}
+.governance-page .lesson-definition {
+    padding: 14px 16px; margin: 0; background: var(--panel); border-radius: 9px; line-height: 1.65;
+}
+.governance-page .value-box {
+    margin-top: 18px; padding: 16px 18px; background: var(--card); border: 1px solid var(--secondary); border-radius: 12px;
+}
+.governance-page .value-box p { line-height: 1.6; }
+.governance-page .feedback-loop {
+    display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; gap: 10px;
+}
+.governance-page .feedback-card {
+    min-height: 135px; padding: 15px; border: 1px solid var(--border); border-radius: 11px; background: var(--panel);
+}
+.governance-page .feedback-card strong, .governance-page .feedback-card span, .governance-page .feedback-card small { display: block; }
+.governance-page .feedback-card strong { color: var(--primary); font-size: 1.15em; }
+.governance-page .feedback-card span { font-weight: 800; margin: 7px 0 5px; }
+.governance-page .feedback-card small { color: var(--muted); line-height: 1.45; }
+.governance-page .feedback-arrow { color: var(--accent); font-size: 1.6em; font-weight: 900; }
+.governance-page .lesson-loop-formula {
+    margin: 18px 0 0; padding: 14px; text-align: center; background: var(--panel);
+    border-radius: 9px; color: var(--primary); overflow-x: auto;
+}
+
+/* Governance readability: the lesson's logic and equations are meant to be read from a distance. */
+.governance-page .alert {
+    font-size: 1.88em;
+    line-height: 1.55;
+}
+.governance-page .formula {
+    font-size: 2.1em;
+    line-height: 1.7;
+}
+.governance-page .formula-large {
+    font-size: clamp(2.2rem, 4.2vw, 2.9rem);
+    line-height: 1.55;
+}
+.governance-page .lesson-loop-formula {
+    font-size: 2em;
+    line-height: 1.8;
+}
+
 /* ===== Bố cục từng chỉ số kinh tế (hàng ngang full-width) ===== */
 .kpi-section {
     background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
@@ -461,10 +612,659 @@ tfoot td { font-weight: 700; background: var(--subtle); }
     .intro-grid { grid-template-columns: 1fr; }
     .plot { height: 340px; }
     .lp-plot, .gd-plot, .dp-plot { height: 380px; }
+    .governance-page .lesson-concept-grid { grid-template-columns: 1fr; }
+    .governance-page .state-symbol-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .governance-page .feedback-loop { grid-template-columns: 1fr; }
+    .governance-page .feedback-arrow { transform: rotate(90deg); justify-self: center; }
 }
 @media (max-width: 480px) {
     .main-inner { padding: 0; }
     .kpi-grid { grid-template-columns: 1fr 1fr; }
     .form-row { grid-template-columns: 1fr; }
     .hint[data-tip]:hover::after { width: 180px; }
+    .governance-page .lesson-story-grid { grid-template-columns: auto 1fr; }
+    .governance-page .question-grid, .governance-page .objective-pair { grid-template-columns: 1fr; }
+    .governance-page .state-symbol-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .governance-page .lesson-flow-vertical { flex-direction: column; }
+    .governance-page .flow-arrow { transform: none; }
+}
+
+/* ===================== MODULE 4: QUAN TRI TNN ===================== */
+.governance-page {
+    --gov-bg: #f6f8f7;
+    --gov-card: #ffffff;
+    --gov-panel: #f0f4f3;
+    --gov-panel-2: #e8efed;
+    --gov-text: #1f2f2f;
+    --gov-muted: #60706d;
+    --gov-border: #d4dfdc;
+    --gov-primary: #075e5f;
+    --gov-primary-2: #0b7a75;
+    --gov-accent: #b8860b;
+    --gov-warn: #b85c38;
+    --gov-good: #2f7d5c;
+    color: var(--gov-text);
+    font-size: 18px;
+    line-height: 1.65;
+}
+
+.governance-page .page-title {
+    color: var(--gov-primary);
+    font-size: clamp(2rem, 3vw, 3rem);
+    line-height: 1.2;
+    letter-spacing: 0;
+    margin-bottom: 8px;
+}
+
+.governance-page .page-desc {
+    max-width: 940px;
+    color: var(--gov-muted);
+    font-size: 1.08rem;
+    margin-bottom: 24px;
+}
+
+.governance-page .jumpbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 24px;
+}
+
+.governance-page .chip {
+    background: var(--gov-card);
+    color: var(--gov-primary);
+    border: 1px solid var(--gov-border);
+    border-radius: 6px;
+    box-shadow: none;
+    font-size: 0.96rem;
+    font-weight: 700;
+    padding: 9px 12px;
+}
+
+.governance-page .chip:hover {
+    background: var(--gov-panel);
+    border-color: var(--gov-primary-2);
+}
+
+.governance-page .card {
+    background: var(--gov-card);
+    border: 1px solid var(--gov-border);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(20, 45, 45, 0.06);
+    margin-bottom: 22px;
+    padding: clamp(22px, 3vw, 34px);
+}
+
+.governance-page .card-title {
+    color: var(--gov-primary);
+    font-size: clamp(1.45rem, 2vw, 2rem);
+    line-height: 1.3;
+    margin: 0 0 18px;
+}
+
+.governance-page h3 {
+    color: var(--gov-primary);
+    font-size: 1.16rem;
+    line-height: 1.35;
+}
+
+.governance-page p,
+.governance-page li {
+    font-size: 1.02rem;
+}
+
+.governance-page .lesson-hero {
+    background: linear-gradient(180deg, #ffffff 0%, #f1f6f5 100%);
+    border-top: 6px solid var(--gov-primary);
+}
+
+.governance-page .lesson-kicker {
+    color: var(--gov-muted);
+    font-size: 0.88rem;
+    letter-spacing: 0.08em;
+}
+
+.governance-page .lesson-lead {
+    font-size: 1.28rem;
+    line-height: 1.65;
+    max-width: 1050px;
+}
+
+.governance-page .lesson-arc {
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+.governance-page .lesson-arc span,
+.governance-page .concept-box,
+.governance-page .intro-card,
+.governance-page .metric-details,
+.governance-page .flow-card,
+.governance-page .lesson-concept,
+.governance-page .flow-step,
+.governance-page .state-symbol-grid div,
+.governance-page .objective-pair div,
+.governance-page .question-grid div,
+.governance-page .feedback-card,
+.governance-page .value-box {
+    background: var(--gov-panel);
+    border: 1px solid var(--gov-border);
+    border-radius: 8px;
+    box-shadow: none;
+}
+
+.governance-page .lesson-arc span {
+    padding: 9px 12px;
+}
+
+.governance-page .lesson-arc b,
+.governance-page .flow-arrow,
+.governance-page .feedback-arrow {
+    color: var(--gov-muted);
+}
+
+.governance-page .story-number {
+    color: var(--gov-primary);
+    font-size: clamp(3rem, 7vw, 5.4rem);
+}
+
+.governance-page .story-number.danger,
+.governance-page .lesson-options-table .dominated td:last-child {
+    color: var(--gov-warn);
+}
+
+.governance-page .teaching-note,
+.governance-page .dominance-callout,
+.governance-page .lesson-definition,
+.governance-page .lesson-summary {
+    background: var(--gov-panel);
+    border: 1px solid var(--gov-border);
+    border-left: 5px solid var(--gov-primary);
+    border-radius: 8px;
+    color: var(--gov-text);
+    font-size: 1.08rem;
+    line-height: 1.7;
+    font-weight: 600;
+}
+
+.governance-page .lesson-concept {
+    border-top: 5px solid var(--gov-primary);
+}
+
+.governance-page .lesson-concept.planning {
+    border-top-color: var(--gov-primary-2);
+}
+
+.governance-page .lesson-concept.management {
+    border-top-color: var(--gov-accent);
+}
+
+.governance-page .lesson-badge,
+.governance-page .flow-index {
+    background: var(--gov-primary);
+    color: #fff;
+    border-radius: 6px;
+}
+
+.governance-page .concept-box {
+    border-top: none;
+    border-left: 5px solid var(--gov-primary);
+}
+
+.governance-page .concept-box span,
+.governance-page .kpi-box span {
+    color: var(--gov-muted);
+    font-size: 0.95rem;
+}
+
+.governance-page .concept-box strong,
+.governance-page .kpi-box strong {
+    color: var(--gov-primary);
+    font-size: 1.16rem;
+}
+
+.governance-page .formula,
+.governance-page .big-formula {
+    color: var(--gov-primary);
+    background: #fbfdfc;
+    border: 1px solid var(--gov-border);
+    border-radius: 8px;
+    font-size: clamp(1.45rem, 2.2vw, 2.05rem);
+    line-height: 1.55;
+    margin: 12px 0;
+    overflow-x: auto;
+    padding: 12px 16px;
+    text-align: center;
+}
+
+.governance-page .formula-large,
+.governance-page .lesson-loop-formula {
+    color: var(--gov-primary);
+    font-size: clamp(1.8rem, 3vw, 2.55rem);
+    line-height: 1.55;
+    padding: 16px 18px;
+    text-align: center;
+}
+
+.governance-page .katex {
+    font-size: 1.05em;
+}
+
+.governance-page .katex-display {
+    margin: 0.35em 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.governance-page .note {
+    color: var(--gov-muted);
+    font-size: 1.06rem;
+    line-height: 1.7;
+    max-width: 1050px;
+}
+
+.governance-page .form-row {
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+}
+
+.governance-page label {
+    color: var(--gov-text);
+    font-size: 1rem;
+}
+
+.governance-page input {
+    background: #fff;
+    border-color: var(--gov-border);
+    border-radius: 6px;
+    font-size: 1.08rem;
+    min-height: 44px;
+}
+
+.governance-page select {
+    width: 100%;
+    min-height: 44px;
+    padding: 9px 11px;
+    border: 1px solid var(--gov-border);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--gov-text);
+    font: inherit;
+}
+
+.governance-page input:focus {
+    border-color: var(--gov-primary-2);
+    box-shadow: 0 0 0 3px rgba(11, 122, 117, 0.16);
+}
+
+.governance-page .btn {
+    border-radius: 6px;
+    font-size: 1.04rem;
+    min-height: 46px;
+}
+
+.governance-page .btn.primary {
+    background: var(--gov-primary);
+    border-color: var(--gov-primary);
+}
+
+.governance-page .btn.primary:hover {
+    background: var(--gov-primary-2);
+    border-color: var(--gov-primary-2);
+}
+
+.governance-page .kpi-grid {
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.governance-page .kpi-box {
+    background: var(--gov-card);
+    border: 1px solid var(--gov-border);
+    border-left: 5px solid var(--gov-primary);
+    border-radius: 8px;
+    box-shadow: none;
+    cursor: default;
+    padding: 18px;
+}
+
+.governance-page .kpi-box.positive {
+    border-left-color: var(--gov-primary);
+}
+
+.governance-page table {
+    background: var(--gov-card);
+    border: 1px solid var(--gov-border);
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 8px;
+    font-size: 1rem;
+    overflow: hidden;
+}
+
+.governance-page th,
+.governance-page td {
+    border-bottom: 1px solid var(--gov-border);
+    padding: 12px 14px;
+}
+
+.governance-page th {
+    background: var(--gov-primary);
+    color: #fff;
+    font-weight: 800;
+}
+
+.governance-page td {
+    background: #fff;
+    color: var(--gov-text);
+}
+
+.governance-page tbody tr:nth-child(even) td,
+.governance-page .lesson-steps-table tr:nth-child(even) td,
+.governance-page .lesson-options-table tr:nth-child(even) td {
+    background: #f7faf9;
+}
+
+.governance-page tr.current td {
+    background: #e5f1ef;
+    color: var(--gov-primary);
+    font-weight: 800;
+}
+
+.governance-page .lesson-options-table .good {
+    color: var(--gov-good);
+}
+
+.governance-page .lesson-options-table .dominated {
+    color: var(--gov-muted);
+    text-decoration: line-through;
+}
+
+.governance-page .governance-chart {
+    background: #fff;
+    border: 1px solid var(--gov-border);
+    border-radius: 8px;
+    box-shadow: none;
+    height: 660px;
+    margin: 18px 0 24px;
+}
+
+.governance-page .governance-chart.small {
+    height: 620px;
+}
+
+.governance-page .governance-chart.small .plot {
+    height: 100%;
+}
+
+.governance-page .governance-explain-grid {
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.governance-page .metric-details {
+    border-left: 5px solid var(--gov-primary);
+    font-size: 1rem;
+}
+
+.governance-page .intro-card {
+    border-left: 5px solid var(--gov-primary-2);
+}
+
+.governance-page .feedback-loop {
+    gap: 14px;
+}
+
+.governance-page details {
+    background: var(--gov-panel);
+    border: 1px solid var(--gov-border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    padding: 12px;
+}
+
+.learning-page .psplit {
+    grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.6fr);
+    gap: 20px;
+}
+
+.learning-page .form-group {
+    background: var(--gov-panel);
+    border: 1px solid var(--gov-border);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    padding: 16px;
+}
+
+.learning-page .group-label {
+    border-bottom: 1px solid var(--gov-border);
+    color: var(--gov-primary);
+    font-size: 1.04rem;
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+}
+
+.learning-page .kpi-section {
+    background: var(--gov-card);
+    border: 1px solid var(--gov-border);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(20, 45, 45, 0.06);
+    margin-bottom: 22px;
+    overflow: hidden;
+}
+
+.learning-page .kpi-section .kpi-head {
+    background: var(--gov-panel);
+    border-bottom: 1px solid var(--gov-border);
+    padding: 18px 20px;
+}
+
+.learning-page .kpi-section h2 {
+    color: var(--gov-primary);
+    font-size: 1.32rem;
+}
+
+.learning-page .kpi-section .num {
+    background: var(--gov-primary);
+    border-radius: 6px;
+}
+
+.learning-page .hero.pos,
+.learning-page .hero.neg {
+    background: #fff;
+    border: 1px solid var(--gov-border);
+    color: var(--gov-primary);
+}
+
+.learning-page .kpi-body {
+    grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.6fr);
+}
+
+.learning-page .formula-col {
+    border-right: 1px solid var(--gov-border);
+    padding: 20px;
+}
+
+.learning-page .data-col {
+    padding: 20px;
+}
+
+.learning-page .chart-card,
+.learning-page .table-wrap.card {
+    background: var(--gov-card);
+    border: 1px solid var(--gov-border);
+    border-radius: 8px;
+    box-shadow: none;
+    padding: 18px;
+}
+
+.learning-page .chart-wrap h3,
+.learning-page .table-wrap h3,
+.learning-page .chart-card h3,
+.learning-page .card > h3 {
+    color: var(--gov-primary);
+    font-size: 1.14rem;
+    line-height: 1.35;
+    margin: 0 0 12px;
+}
+
+.learning-page .plot {
+    height: 480px;
+}
+
+.learning-page .plot.small {
+    height: 390px;
+}
+
+.learning-page .lp-plot,
+.learning-page .gd-plot,
+.learning-page .dp-plot {
+    height: 560px;
+}
+
+.learning-page .sim-readout {
+    background: var(--gov-panel);
+    border: 1px solid var(--gov-border);
+    border-left: 5px solid var(--gov-primary);
+    border-radius: 8px;
+    color: var(--gov-text);
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 14px 0;
+    padding: 12px 14px;
+}
+
+.learning-page .steps p {
+    background: #fff;
+    border-left: 4px solid var(--gov-primary-2);
+    border-radius: 6px;
+    margin: 10px 0;
+    padding: 10px 12px;
+}
+
+.learning-page .dp-timeline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 14px 0;
+}
+
+.learning-page .dp-timeline button {
+    background: #fff;
+    border: 1px solid var(--gov-border);
+    border-radius: 6px;
+    color: var(--gov-primary);
+    cursor: pointer;
+    font-weight: 700;
+    min-height: 36px;
+    padding: 7px 10px;
+}
+
+.learning-page .dp-timeline button.active,
+.learning-page .active-row td {
+    background: #e5f1ef;
+    color: var(--gov-primary);
+    font-weight: 800;
+}
+
+.learning-page .chain {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 0;
+}
+
+.learning-page .chain-step {
+    background: #fff;
+    border: 1px solid var(--gov-border);
+    border-radius: 6px;
+    color: var(--gov-text);
+    padding: 9px 10px;
+}
+
+.learning-page .chain-step.final {
+    border-color: var(--gov-primary);
+    color: var(--gov-primary);
+    font-weight: 800;
+}
+
+.learning-page .chain-arrow {
+    align-self: center;
+    color: var(--gov-muted);
+    font-weight: 800;
+}
+
+.learning-page .sharebar {
+    background: var(--gov-panel-2);
+    border-radius: 999px;
+    height: 10px;
+    overflow: hidden;
+}
+
+.learning-page .sharebar-fill {
+    background: var(--gov-primary);
+    height: 100%;
+}
+
+.learning-page .itr-hdr td,
+.learning-page .itr-colhdr th,
+.learning-page .itr-sum td {
+    background: var(--gov-panel);
+    color: var(--gov-primary);
+    font-weight: 800;
+}
+
+.learning-page .enter-col,
+.learning-page .pivot-cell {
+    background: #e5f1ef !important;
+    color: var(--gov-primary);
+}
+
+.learning-page .pos {
+    color: var(--gov-good);
+    font-weight: 800;
+}
+
+.learning-page .neg {
+    color: var(--gov-warn);
+    font-weight: 800;
+}
+
+.governance-page summary {
+    color: var(--gov-primary);
+    cursor: pointer;
+    font-size: 1.08rem;
+    font-weight: 800;
+}
+
+@media (max-width: 768px) {
+    .governance-page {
+        font-size: 16px;
+    }
+
+    .governance-page .card {
+        padding: 18px;
+    }
+
+    .governance-page .governance-chart,
+    .governance-page .governance-chart.small {
+        height: 520px;
+    }
+
+    .governance-page .formula,
+    .governance-page .formula-large,
+    .governance-page .lesson-loop-formula {
+        font-size: 1.28rem;
+        text-align: left;
+    }
+
+    .learning-page .psplit,
+    .learning-page .kpi-body {
+        grid-template-columns: 1fr;
+    }
+
+    .learning-page .formula-col {
+        border-right: none;
+        border-bottom: 1px solid var(--gov-border);
+    }
 }

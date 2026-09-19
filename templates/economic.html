@@ -1,10 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Kinh tế dự án — WaterOpt Edu{% endblock %}
 {% block content %}
+<div class="governance-page learning-page module-economic">
 
-<h1 class="page-title">📊 Module 1 · Phân tích Kinh tế Dự án TNN</h1>
+<h1 class="page-title">Mô đun 1 · Phân tích kinh tế dự án TNN</h1>
 <p class="page-desc">
-    Nguyên tắc <b>With–Without</b>: các chỉ số tính trên <b>dòng tiền chênh lệch</b>
+    Nguyên tắc <b>Có dự án – Không dự án</b>: các chỉ số tính trên <b>dòng tiền chênh lệch</b>
     $\Delta CF_t = CF_t(\text{có dự án}) - CF_t(\text{không dự án})$ rồi chiết khấu về năm gốc với tỉ suất $r$.
     NPV &gt; 0, B/C &gt; 1 → dự án khả thi.
 </p>
@@ -46,7 +47,7 @@
             </div>
 
             <div class="form-group">
-                <div class="group-label">🏁 Nhóm Kịch bản cơ sở (Without-project)</div>
+                <div class="group-label">Nhóm kịch bản cơ sở: Không dự án</div>
                 <p class="note" style="margin-top:0">Nếu để trống: ΔCF = CF(có dự án) — tương đương cách tính cổ điển.</p>
                 <div class="form-row">
                     <div>
@@ -80,7 +81,7 @@
 
             <div class="btn-row">
                 <button type="submit" class="btn primary">Tính toán</button>
-                <button type="button" class="btn ghost" id="loadExample">⚡ Load Example</button>
+                <button type="button" class="btn ghost" id="loadExample">Nạp ví dụ mẫu</button>
             </div>
         </form>
 
@@ -131,7 +132,7 @@
                 </div>
                 <div class="data-col">
                     <div class="chart-wrap">
-                        <h3>Hai kịch bản (With–Without) — diện tích chênh = ΔNPV</h3>
+                        <h3>Hai kịch bản Có dự án – Không dự án: diện tích chênh = ΔNPV</h3>
                         <div id="scenarioChart" class="plot"></div>
                     </div>
                     <div class="chart-wrap">
@@ -282,10 +283,11 @@
         </section>
         {% else %}
         <div class="card placeholder">
-            <h3>📤 Kết quả sẽ hiển thị tại đây</h3>
-            <p>Nhập số liệu rồi bấm <b>Tính toán</b>, hoặc bấm <b>Load Example</b> (I=120, B=24, OM=6, r=8%, n=20). Nhập thêm <b>Kịch bản cơ sở</b> để so sánh với nguyên tắc With–Without.</p>
+            <h3>Kết quả sẽ hiển thị tại đây</h3>
+            <p>Nhập số liệu rồi bấm <b>Tính toán</b>, hoặc bấm <b>Nạp ví dụ mẫu</b> (I=120, B=24, OM=6, r=8%, n=20). Nhập thêm <b>Kịch bản cơ sở</b> để so sánh theo nguyên tắc Có dự án – Không dự án.</p>
         </div>
         {% endif %}
+</div>
 </div>
 {% endblock %}
 
@@ -306,38 +308,38 @@ document.addEventListener('DOMContentLoaded', function () {
 
     {# 1 · NPV: 2 kịch bản + NPV lũy tích #}
     Plotly.newPlot('scenarioChart', [
-        { x: years, y: {{ result.cf_with | tojson }}, type: 'scatter', mode: 'lines+markers', name: 'Có dự án', line: { color: '#005f73', width: 3 }, fill: 'tozeroy', fillcolor: 'rgba(0,95,115,0.08)' },
-        { x: years, y: {{ result.cf_without | tojson }}, type: 'scatter', mode: 'lines+markers', name: 'Không dự án (cơ sở)', line: { color: '#e9c46a', width: 3, dash: 'dot' }, fill: 'tozeroy', fillcolor: 'rgba(233,196,106,0.18)' }
+        { x: years, y: {{ result.cf_with | tojson }}, type: 'scatter', mode: 'lines+markers', name: 'Có dự án', line: { color: '#075e5f', width: 3 }, fill: 'tozeroy', fillcolor: 'rgba(7,94,95,0.08)' },
+        { x: years, y: {{ result.cf_without | tojson }}, type: 'scatter', mode: 'lines+markers', name: 'Không dự án (cơ sở)', line: { color: '#8a7a48', width: 3, dash: 'dot' }, fill: 'tozeroy', fillcolor: 'rgba(138,122,72,0.12)' }
     ], Object.assign({}, L, { xaxis: { title: 'Năm' }, yaxis: { title: 'Triệu USD' } }));
 
     const cumTraces = [
-        { x: years, y: cum, type: 'scatter', mode: 'lines+markers', name: 'ΔNPV lũy tích', line: { color: '#005f73', width: 3 } },
-        { x: years, y: cum.map(() => 0), type: 'scatter', mode: 'lines', name: 'mức 0', line: { color: '#e76f51', width: 1, dash: 'dash' }, hoverinfo: 'skip' }
+        { x: years, y: cum, type: 'scatter', mode: 'lines+markers', name: 'ΔNPV lũy tích', line: { color: '#075e5f', width: 3 } },
+        { x: years, y: cum.map(() => 0), type: 'scatter', mode: 'lines', name: 'mức 0', line: { color: '#b85c38', width: 1, dash: 'dash' }, hoverinfo: 'skip' }
     ];
     {% if result.payback is not none %}
-    cumTraces.push({ x: [years[payback]], y: [cum[payback]], type: 'scatter', mode: 'markers+text', marker: { size: 13, color: '#e76f51' }, text: ['Hoàn vốn: ' + payback + ' năm'], textposition: 'top center', name: 'Payback', textfont: { size: 12 } });
+    cumTraces.push({ x: [years[payback]], y: [cum[payback]], type: 'scatter', mode: 'markers+text', marker: { size: 13, color: '#b85c38' }, text: ['Hoàn vốn: ' + payback + ' năm'], textposition: 'top center', name: 'Hoàn vốn', textfont: { size: 12 } });
     {% endif %}
     Plotly.newPlot('cumChart', cumTraces, Object.assign({}, L, { xaxis: { title: 'Năm' }, yaxis: { title: 'Triệu USD' } }));
 
     {# 2 · B/C: thanh PW(B) vs PW(C) #}
     Plotly.newPlot('bcChart', [
-        { x: ['Có dự án', 'Không dự án', 'Chênh lệch'], y: [{{ result.pw_b_with }}, {{ result.pw_b_without }}, {{ result.pw_b_inc }}], type: 'bar', name: 'PW(B) — Lợi ích', marker: { color: '#0a9396' }, text: [{{ result.pw_b_with }}, {{ result.pw_b_without }}, {{ result.pw_b_inc }}].map(v => v.toFixed(2)), textposition: 'outside', textfont: { size: 12 } },
-        { x: ['Có dự án', 'Không dự án', 'Chênh lệch'], y: [{{ result.pw_c_with }}, {{ result.pw_c_without }}, {{ result.pw_c_inc }}], type: 'bar', name: 'PW(C) — Chi phí', marker: { color: '#e76f51' }, text: [{{ result.pw_c_with }}, {{ result.pw_c_without }}, {{ result.pw_c_inc }}].map(v => v.toFixed(2)), textposition: 'outside', textfont: { size: 12 } }
+        { x: ['Có dự án', 'Không dự án', 'Chênh lệch'], y: [{{ result.pw_b_with }}, {{ result.pw_b_without }}, {{ result.pw_b_inc }}], type: 'bar', name: 'PW(B) — Lợi ích', marker: { color: '#075e5f' }, text: [{{ result.pw_b_with }}, {{ result.pw_b_without }}, {{ result.pw_b_inc }}].map(v => v.toFixed(2)), textposition: 'outside', textfont: { size: 12 } },
+        { x: ['Có dự án', 'Không dự án', 'Chênh lệch'], y: [{{ result.pw_c_with }}, {{ result.pw_c_without }}, {{ result.pw_c_inc }}], type: 'bar', name: 'PW(C) — Chi phí', marker: { color: '#b85c38' }, text: [{{ result.pw_c_with }}, {{ result.pw_c_without }}, {{ result.pw_c_inc }}].map(v => v.toFixed(2)), textposition: 'outside', textfont: { size: 12 } }
     ], Object.assign({}, L, { barmode: 'group', xaxis: { title: 'Kịch bản' }, yaxis: { title: 'Hiện giá (triệu USD)' } }));
 
     {# 3 · IRR: NPV theo r + giao điểm #}
     const sweep = {{ result.npv_sweep | tojson }};
     Plotly.newPlot('irrChart', [
-        { x: sweep.map(d => d.r), y: sweep.map(d => d.npv), type: 'scatter', mode: 'lines+markers', name: 'NPV(r)', line: { color: '#00a896', width: 3 }, marker: { size: 5 } },
-        { x: sweep.map(d => d.r), y: sweep.map(() => 0), type: 'scatter', mode: 'lines', name: 'mức 0', line: { color: '#e76f51', width: 1, dash: 'dash' }, hoverinfo: 'skip' }
+        { x: sweep.map(d => d.r), y: sweep.map(d => d.npv), type: 'scatter', mode: 'lines+markers', name: 'NPV(r)', line: { color: '#075e5f', width: 3 }, marker: { size: 5 } },
+        { x: sweep.map(d => d.r), y: sweep.map(() => 0), type: 'scatter', mode: 'lines', name: 'mức 0', line: { color: '#b85c38', width: 1, dash: 'dash' }, hoverinfo: 'skip' }
         {% if result.irr is not none %}
-        , { x: [{{ result.irr * 100 }}], y: [0], type: 'scatter', mode: 'markers+text', marker: { size: 16, color: '#e76f51', symbol: 'star' }, text: ['IRR = {{ '{:.2f}'.format(result.irr * 100) }}%'], textposition: 'top center', name: 'IRR', textfont: { size: 13 } }
+        , { x: [{{ result.irr * 100 }}], y: [0], type: 'scatter', mode: 'markers+text', marker: { size: 16, color: '#b85c38', symbol: 'star' }, text: ['IRR = {{ '{:.2f}'.format(result.irr * 100) }}%'], textposition: 'top center', name: 'IRR', textfont: { size: 13 } }
         {% endif %}
     ], Object.assign({}, L, { xaxis: { title: 'Tỉ suất chiết khấu r (%)' }, yaxis: { title: 'NPV (triệu USD)' } }));
 
     {# 4 · AW: lợi ích vs chi phí năm hóa #}
     Plotly.newPlot('awChart', [
-        { x: ['Lợi ích năm hóa', 'Chi phí năm hóa', 'AW = chênh lệch'], y: [{{ result.aw_ben }}, {{ result.aw_cost }}, {{ result.aw_ben - result.aw_cost }}], type: 'bar', marker: { color: ['#0a9396', '#e76f51', '#005f73'] }, text: [{{ result.aw_ben }}, {{ result.aw_cost }}, {{ result.aw_ben - result.aw_cost }}].map(v => v.toFixed(2)), textposition: 'outside', textfont: { size: 13 } }
+        { x: ['Lợi ích năm hóa', 'Chi phí năm hóa', 'AW = chênh lệch'], y: [{{ result.aw_ben }}, {{ result.aw_cost }}, {{ result.aw_ben - result.aw_cost }}], type: 'bar', marker: { color: ['#075e5f', '#b85c38', '#0b7a75'] }, text: [{{ result.aw_ben }}, {{ result.aw_cost }}, {{ result.aw_ben - result.aw_cost }}].map(v => v.toFixed(2)), textposition: 'outside', textfont: { size: 13 } }
     ], Object.assign({}, L, { xaxis: { title: 'Thành phần' }, yaxis: { title: 'Triệu USD/năm' } }));
 
     const ids = ['scenarioChart', 'cumChart', 'bcChart', 'irrChart', 'awChart'];
