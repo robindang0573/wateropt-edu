@@ -6,7 +6,6 @@
 <p class="page-desc">Bài học đi từ tình huống thực tế đến khái niệm, hình học, phương trình và tối ưu hóa.</p>
 
 <div class="jumpbar">
-    <a href="#lesson" class="chip">Bài học 90 phút</a>
     <a href="#six-steps" class="chip">Sáu bước</a>
     <a href="#concepts" class="chip">Quản trị–Quy hoạch–Vận hành</a>
     <a href="#governance-space" class="chip">Quản trị: \(\Omega_J\)</a>
@@ -15,15 +14,6 @@
     <a href="#pareto" class="chip">Pareto + \(V_G\)</a>
     <a href="#settings" class="chip">Phòng thí nghiệm</a>
 </div>
-
-<section class="card lesson-hero" id="lesson">
-    <div class="lesson-kicker">BÀI HỌC DẪN NHẬP · 90 PHÚT</div>
-    <h2 class="card-title">Từ một hồ chứa đến toàn bộ logic ra quyết định</h2>
-    <p class="lesson-lead">Đừng bắt đầu bằng phương trình. Hãy bắt đầu bằng câu hỏi: <b>“Chúng ta phải phân bổ 100 đơn vị nước cho nhu cầu 130 như thế nào?”</b></p>
-    <div class="lesson-arc">
-        <span>Tình huống thực tế</span><b>→</b><span>Khái niệm</span><b>→</b><span>Hình học</span><b>→</b><span>Phương trình</span><b>→</b><span>Tối ưu</span>
-    </div>
-</section>
 
 <section class="card" id="opening">
     <h2 class="card-title">Mở đầu: 100 đơn vị nước nhưng nhu cầu là 130</h2>
@@ -71,7 +61,11 @@
         <article class="lesson-concept planning">
             <div class="lesson-badge">P</div>
             <h3>Quy hoạch · thiết kế cấu trúc</h3>
-            <div class="formula">\(X_1=50\quad X_2=80\quad X_3=60+20\text{ tái sử dụng}\)</div>
+            <div class="formula formula-inline-html">
+                <span class="math-lite">X<sub>1</sub> = 50</span>
+                <span class="math-lite">X<sub>2</sub> = 80</span>
+                <span class="math-lite">X<sub>3</sub> = 60 + 20 tái sử dụng</span>
+            </div>
             <p>Quy hoạch không quyết định hôm nay mở van bao nhiêu. Quy hoạch quyết định <b>sân chơi được xây như thế nào</b>.</p>
         </article>
         <article class="lesson-concept management">
@@ -85,7 +79,7 @@
         <p>Phương trình trạng thái đầu tiên:</p>
         <div class="formula formula-large">\(\boxed{V_{t+1}=V_t+I_t-R_t-W_{dom,t}-W_{agri,t}}\)</div>
         <div class="question-grid">
-            <div><b>Nếu xả nhiều cho nông nghiệp?</b><span>\(V_{t+1}\) giảm nhanh hơn.</span></div>
+            <div><b>Nếu xả nhiều cho nông nghiệp?</b><span><span class="math-lite">V<sub>t+1</sub></span> giảm nhanh hơn.</span></div>
             <div><b>Nếu giữ nhiều nước trong hồ?</b><span>Hạ du có thể nhận ít nước hơn.</span></div>
         </div>
     </div>
@@ -100,16 +94,16 @@
         <div class="flow-arrow">↓</div>
         <div class="flow-step management"><strong>Vận hành</strong><span>“hôm nay làm gì?”</span></div>
         <div class="flow-arrow">↓</div>
-        <div class="flow-step state"><strong>\(S_t\rightarrow S_{t+1}\)</strong><span>hệ thống di chuyển</span></div>
+        <div class="flow-step state"><strong><span class="math-lite">S<sub>t</sub> → S<sub>t+1</sub></span></strong><span>hệ thống di chuyển</span></div>
         <div class="flow-arrow">↓</div>
         <div class="flow-step result"><strong>Kết quả</strong><span>được đo bằng các mục tiêu (J)</span></div>
     </div>
     <div class="state-symbol-grid">
-        <div><b>\(S_t\)</b><span>hệ thống đang ở đâu</span></div>
-        <div><b>\(U_t\)</b><span>ta đang làm gì</span></div>
-        <div><b>\(X\)</b><span>hệ thống được thiết kế ra sao</span></div>
-        <div><b>\(\xi_t\)</b><span>tự nhiên bên ngoài xảy ra gì</span></div>
-        <div><b>\(S_{t+1}\)</b><span>hệ thống sẽ đi đến đâu</span></div>
+        <div><b><span class="math-lite">S<sub>t</sub></span></b><span>hệ thống đang ở đâu</span></div>
+        <div><b><span class="math-lite">U<sub>t</sub></span></b><span>ta đang làm gì</span></div>
+        <div><b><span class="math-lite">X</span></b><span>hệ thống được thiết kế ra sao</span></div>
+        <div><b><span class="math-lite">ξ<sub>t</sub></span></b><span>tự nhiên bên ngoài xảy ra gì</span></div>
+        <div><b><span class="math-lite">S<sub>t+1</sub></span></b><span>hệ thống sẽ đi đến đâu</span></div>
     </div>
     <div class="formula formula-large">\(\boxed{S_{t+1}=F(S_t,U_t,X,\xi_t)}\)</div>
 </section>
@@ -117,8 +111,8 @@
 <section class="card" id="pareto-lesson">
     <h2 class="card-title">Từ kết quả đến Pareto: không phải phương án tốt nhất duy nhất</h2>
     <div class="objective-pair">
-        <div><b>\(J_1\)</b><span>chi phí</span></div>
-        <div><b>\(J_2\)</b><span>thiếu nước</span></div>
+        <div><b><span class="math-lite">J<sub>1</sub></span></b><span>chi phí</span></div>
+        <div><b><span class="math-lite">J<sub>2</sub></span></b><span>thiếu nước</span></div>
     </div>
     <div class="table-responsive">
         <table class="lesson-options-table">
@@ -190,10 +184,10 @@
 <div class="alert lesson-summary">Quản trị TNN đặt mục tiêu + ràng buộc; Quy hoạch chọn cấu trúc <b>X</b>; Vận hành chọn chính sách <b>U</b>; quỹ đạo trạng thái được ánh xạ sang không gian mục tiêu và lọc Pareto.</div>
 
 <div class="concept-strip">
-    <div class="concept-box"><span>Quản trị TNN</span><strong>\(\text{vẽ sân chơi}\)</strong></div>
-    <div class="concept-box"><span>Quy hoạch</span><strong>\(\text{xây cấu trúc của sân chơi}\)</strong></div>
-    <div class="concept-box"><span>Vận hành</span><strong>\(\text{chọn đường đi trong sân chơi}\)</strong></div>
-    <div class="concept-box"><span>Pareto</span><strong>\(\text{xác định các đường đi hiệu quả nhất}\)</strong></div>
+    <div class="concept-box"><span>Quản trị TNN</span><strong class="concept-text">vẽ sân chơi</strong></div>
+    <div class="concept-box"><span>Quy hoạch</span><strong class="concept-text">xây cấu trúc của sân chơi</strong></div>
+    <div class="concept-box"><span>Vận hành</span><strong class="concept-text">chọn đường đi trong sân chơi</strong></div>
+    <div class="concept-box"><span>Pareto</span><strong class="concept-text">xác định các đường đi hiệu quả nhất</strong></div>
 </div>
 
 <section class="card" id="geometry-map">

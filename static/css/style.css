@@ -850,6 +850,38 @@ tfoot td { font-weight: 700; background: var(--subtle); }
     font-size: 1.05em;
 }
 
+.governance-page .katex .katex-mathml {
+    border: 0;
+    clip: rect(1px, 1px, 1px, 1px);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+}
+
+.governance-page .math-lite {
+    color: var(--gov-primary);
+    font-family: "Cambria Math", "Times New Roman", serif;
+    font-weight: 800;
+    letter-spacing: 0;
+    white-space: nowrap;
+}
+
+.governance-page .math-lite sub {
+    font-size: 0.72em;
+    line-height: 0;
+}
+
+.governance-page .formula-inline-html {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    justify-content: center;
+}
+
 .governance-page .katex-display {
     margin: 0.35em 0;
     overflow-x: auto;
