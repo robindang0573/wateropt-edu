@@ -503,18 +503,54 @@ tfoot td { font-weight: 700; background: var(--subtle); }
     background: var(--primary); color: var(--on-primary); font-weight: 700;
     padding: 6px 8px; font-size: 0.82em;
 }
-.itr-colhdr th { font-size: 0.82em; }
-.pivot-cell {
-    background: #ff922b; color: #fff; font-weight: 900;
-    box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 4px #d9480f;
+.itr-colhdr th { font-size: 0.82em; white-space: nowrap; }
+.itr-colhdr th small { display: block; font-size: 0.78em; font-weight: 500; white-space: normal; }
+.simplex-legend { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.simplex-legend span { border: 1px solid rgba(15, 23, 42, .16); border-radius: 6px; font-size: .78em; font-weight: 700; padding: 4px 8px; }
+.simplex-legend .key-basis, .basis-head, .basis-label-cell { background: #dbeafe; color: #123b64; }
+.simplex-legend .key-enter, .enter-col, .enter-selected { background: #dcfce7; color: #14532d; }
+.simplex-legend .key-leave, .leaving-basis, .leaving-label { background: #ffedd5; color: #7c2d12; }
+.simplex-legend .key-pivot, .pivot-cell { background: #5b21b6; color: #fff; }
+.simplex-legend .key-rhs, .rhs-head, .rhs-cell { background: #e2e8f0; color: #1e293b; }
+.simplex-legend .key-ratio, .ratio-head, .ratio-cell { background: #fef3c7; color: #713f12; }
+.simplex-legend .key-z, .z-basis { background: #f3e8ff; color: #581c87; }
+.itr-decision-row > td { background: var(--panel); border: 0; padding: 8px; }
+.simplex-decision-card {
+    background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--primary);
+    border-radius: 8px; display: grid; gap: 5px 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 10px 12px;
 }
-.enter-col { background: var(--subtle); }
-.itr-zrow td { border-top: 2px solid var(--border); font-weight: 700; }
+.simplex-decision-line { font-size: .84em; line-height: 1.45; min-width: 0; }
+.simplex-basis-chips { display: inline-flex; flex-wrap: wrap; gap: 4px; vertical-align: middle; }
+.simplex-basis-chip { background: #dbeafe; border: 1px solid #93c5fd; border-radius: 999px; color: #123b64; font-weight: 800; padding: 1px 8px; }
+.simplex-optimal-line { color: #14532d; font-weight: 700; }
+.basis-head, .rhs-head, .ratio-head, .enter-col { border-bottom: 2px solid currentColor; }
+.basis-label-cell { font-weight: 800; }
+.enter-col { font-weight: 800; }
+.itr-leave-row td { background: #ffedd5; color: #7c2d12; }
+.itr-leave-row td.enter-col { background: #dcfce7; color: #14532d; }
+.itr-leave-row td.pivot-cell { background: #5b21b6; color: #fff; }
+.itr-leave-row td.rhs-cell { background: #e2e8f0; color: #1e293b; }
+.itr-leave-row td.ratio-cell { background: #fef3c7; color: #713f12; }
+.itr-zrow td { background: #f3e8ff; border-top: 2px solid #a855f7; color: #581c87; font-weight: 700; }
+.itr-zrow td.enter-selected { background: #dcfce7; color: #14532d; }
+.itr-zrow td.rhs-cell { background: #e2e8f0; color: #1e293b; }
+.itr-zrow td.ratio-na { background: #fef3c7; color: #713f12; }
+.enter-selected, .pivot-cell { font-weight: 900; }
+.enter-selected small, .ratio-cell small { display: block; font-size: .76em; font-weight: 600; line-height: 1.3; }
+.pivot-cell { box-shadow: inset 0 0 0 3px #a78bfa; min-width: 110px; }
+.ratio-cell { min-width: 135px; }
+.ratio-selected { font-weight: 900; box-shadow: inset 0 0 0 2px #d97706; }
+.ratio-na { background: #f8fafc; color: #64748b; text-align: center; }
+.rhs-cell { font-weight: 700; }
+.itr-leave-row .leaving-basis { background: #ffedd5; }
 .itr-sum td {
     background: var(--subtle); font-weight: 600; border-top: 2px solid var(--primary);
     font-size: 0.85em; padding: 6px 8px;
 }
 .cell-note { padding: 10px; color: var(--muted); }
+.gd-barrier-intro { background: var(--panel); border-left: 4px solid var(--primary); margin: 14px 0 20px; padding: 14px 18px; }
+.gd-barrier-intro h3 { color: var(--primary); margin: 0 0 8px; }
+.gd-barrier-intro p { line-height: 1.55; }
 
 .steps p {
     margin: 5px 0; padding: 5px 8px; border-bottom: 1px dotted var(--border); font-size: 0.93em;
@@ -596,6 +632,7 @@ tfoot td { font-weight: 700; background: var(--subtle); }
 }
 @media (max-width: 768px) {
     .layout { flex-direction: column; }
+    .simplex-decision-card { grid-template-columns: 1fr; }
     .sidebar {
         width: 100%; flex: none; height: auto; position: sticky; top: 0; z-index: 60;
         flex-direction: row; align-items: center; flex-wrap: wrap; padding: 10px 12px; gap: 8px;

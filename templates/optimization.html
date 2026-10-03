@@ -20,13 +20,16 @@
     <div class="dp-problem">
         <h3>Đề bài quy hoạch tuyến tính</h3>
         <p>Hợp tác xã phân bổ tối đa <b>100 ha</b> cho lúa và rau màu. Lợi nhuận lần lượt là <b>50</b> và <b>30 triệu đồng/ha</b>. Một đơn vị nước bằng 100 m³: mỗi ha lúa cần 14.000 m³ (140 đơn vị), mỗi ha rau cần 6.000 m³ (60 đơn vị), còn nguồn nước có 1.000.000 m³ (10.000 đơn vị). Hãy tìm diện tích mỗi loại cây để tối đa lợi nhuận.</p>
+    </div>
+    <div class="dp-problem hidden" id="lpModel" aria-hidden="true" aria-live="polite">
+        <h3>Mô hình toán học</h3>
         <div class="formula">$$\max Z = 50x_1 + 30x_2 \quad (\text{triệu đồng})$$</div>
         <p>với $x_1$ = diện tích lúa (ha), $x_2$ = diện tích rau màu (ha), và</p>
         <div class="formula">$$140x_1 + 60x_2 \le 10.000,\quad x_1+x_2\le100,\quad x_1,x_2\ge0.$$</div>
         <p class="note dp-model-note">Bộ số trong các ô bên dưới là dữ liệu chung: đồ thị, Simplex, điểm trong, hạ dốc và Newton đều giải bộ dữ liệu đang nhập. Nghiệm mặc định là $(50,50)$ ha, lợi nhuận $Z^*=4.000$ triệu đồng.</p>
     </div>
     <p class="note">
-        Bấm <b>Giải và vẽ</b> để cập nhật bài toán chung. Các phương pháp còn lại dùng đúng hệ số mục tiêu và ràng buộc đang hiển thị.
+        Bấm một trong các nút giải để hiện mô hình toán học và cập nhật lời giải theo dữ liệu đang nhập. Các phương pháp dùng chung hệ số mục tiêu và ràng buộc.
         <span class="hint" data-tip="Với bài toán tuyến tính có miền khả thi bị chặn, ít nhất một nghiệm tối ưu nằm tại một đỉnh của miền đó.">Đỉnh tối ưu?<sup>ⓘ</sup></span>
     </p>
 
@@ -58,7 +61,7 @@
                 <p class="note" style="font-size:0.8em">Mỗi hàng là một giới hạn nguồn lực. Bộ mặc định: nước $140x_1+60x_2\le10.000$; đất $x_1+x_2\le100$.</p>
             </div>
             <div class="btn-row">
-                <button type="button" class="btn primary" id="lpRun">Giải và vẽ</button>
+                <button type="button" class="btn primary" id="lpRun">Giải bài & vẽ</button>
                 <button type="button" class="btn ghost" id="lpSimplex">▶ Chạy Simplex</button>
                 <button type="button" class="btn ghost" id="lpInterior">▶ Chạy điểm trong</button>
             </div>
@@ -75,7 +78,7 @@
         </div>
     </div>
 
-    <!-- Kết quả đồ giải + Simplex: hiện khi bấm "Giải & Vẽ" -->
+    <!-- Kết quả đồ giải + Simplex: hiện khi bấm "Giải bài & vẽ" -->
     <div id="lpContent" class="chart-grid hidden" style="margin-top:18px">
         <div class="chart-card full">
             <h3>Cách giải bằng đồ thị: liệt kê đỉnh khả thi và so sánh cùng hàm mục tiêu</h3>
@@ -105,68 +108,92 @@
     <!-- Lý thuyết + Bảng lặp Simplex: hiện khi bấm "Chạy Simplex" -->
     <div id="lpSimplexContent" class="chart-grid hidden" style="margin-top:18px">
         <div class="chart-card full">
-            <h3>Bảng Simplex: từ hệ bất phương trình sang hệ phương trình (s₁, s₂, vế phải)</h3>
-            <p class="note">Các phép tính số bên dưới minh họa bộ mặc định. Bảng lặp và đường đi được tính lại theo dữ liệu hiện có trong biểu mẫu.</p>
+            <h3>1. Simplex thực chất đang làm gì?</h3>
+            <p>Simplex không thử mọi điểm trong miền nghiệm. Thuật toán bắt đầu ở một đỉnh, tìm một đỉnh kề có lợi nhuận cao hơn, rồi lặp lại cho đến khi không còn hướng cải thiện.</p>
+            <p>Với bộ dữ liệu mặc định, đường đi là:</p>
+            <div class="formula">$$(0,0)\;\longrightarrow\;(71.43,0)\;\longrightarrow\;(50,50),\qquad Z^*=4{,}000\text{ triệu đồng}$$</div>
+            <p class="note">Đây là đường đi của ví dụ mặc định; bảng lặp và đồ thị bên dưới được tính lại theo dữ liệu đang nhập.</p>
+        </div>
+
+        <div class="chart-card full">
+            <h3>2. Biến bù s₁, s₂ là tài nguyên còn dư</h3>
             <div class="steps">
-                <p><b>① Simplex giải hệ <u>phương trình</u> (dạng ma trận), không phải hệ bất phương trình:</b> hệ $Ax \le b$ không có "nghiệm cơ bản" để khởi tạo vòng lặp. Simplex chỉ thao tác trên đẳng thức $Ax = b$ với ma trận hệ số &mdash; nên bước đầu tiên bắt buộc phải chuyển bất đẳng thức thành đẳng thức.</p>
-                <p><b>② Chuyển đổi bằng biến bù (slack):</b> $140x_1 + 60x_2 \le 10.000 \Rightarrow 140x_1 + 60x_2 + s_1 = 10.000$; &nbsp;$x_1 + x_2 \le 100 \Rightarrow x_1 + x_2 + s_2 = 100$, với điều kiện $s_1, s_2 \ge 0$. Chính điều kiện $s \ge 0$ giữ cho hệ đẳng thức <i>tương đương</i> với bất đẳng thức gốc.</p>
-                <p><b>③ Điểm xuất phát (Initial Basic Feasible Solution):</b> đặt các biến quyết định $x_1 = x_2 = 0$ ⟹ biến bù tự động nhận đúng giá trị vế phải: $s_1 = 10.000$, $s_2 = 100$. Về ma trận, các biến bù tạo thành <b>Ma trận đơn vị (Identity Matrix)</b> &mdash; nhờ có ma trận đơn vị này, Simplex khởi tạo được bảng đầu tiên mà <i>không cần giải hệ phương trình phức tạp</i>.</p>
-                <p><b>④ Ý nghĩa hình học &mdash; khoảng cách đến biên:</b> đường $140x_1 + 60x_2 = 10.000$ là một <i>mặt biên</i> của đa diện khả thi; giá trị $s_1 = 10.000 - 140x_1 - 60x_2$ chính là <b>khoảng cách đại số</b> từ điểm hiện tại $(x_1, x_2)$ đến biên đó (tương tự $s_2$ với biên $x_1 + x_2 = 100$).</p>
-                <p><b>⑤ Đọc dấu của biến bù:</b> $s_1 > 0$ ⟹ điểm nằm <i>bên trong</i> miền khả thi (chưa dùng hết giới hạn); $s_1 = 0$ ⟹ điểm nằm <i>trên biên</i> (đã dùng hết tài nguyên); $s_1 < 0$ ⟹ điểm nằm <i>ngoài</i> miền khả thi &mdash; bị cấm bởi $s \ge 0$.</p>
-                <p><b>⑥ Cột vế phải và hàng Z:</b> sau mỗi phép xoay trục, cột vế phải ghi giá trị hiện tại của biến cơ sở trong hàng đó (khởi tạo: $s_1 = 10.000$, $s_2 = 100$). Hàng Z cuối bảng chứa <i>chi phí giảm</i>: hệ số âm nhất (−50 của $x_1$) là biến vào.</p>
+                <p>Dấu $\le$ cho phép không dùng hết nguồn lực. Ta thêm biến bù để ghi phần còn lại:</p>
+                <p>$$140x_1+60x_2+s_1=10{,}000,\qquad x_1+x_2+s_2=100,\qquad s_1,s_2\ge0.$$</p>
+                <p><b>$s_1$ là lượng nước còn dư;</b> <b>$s_2$ là diện tích đất còn dư.</b> Nếu $s_i&gt;0$, tài nguyên tương ứng còn dư; nếu $s_i=0$, ràng buộc đã chạm giới hạn; nếu $s_i&lt;0$, phương án vượt quá nguồn lực và không khả thi.</p>
+                <p>Tại $(x_1,x_2)=(0,0)$, ta có $s_1=10{,}000$ đơn vị nước và $s_2=100$ ha đất: chưa trồng gì nên cả hai nguồn lực còn nguyên.</p>
             </div>
         </div>
 
         <div class="chart-card full">
-            <h3>Tại sao cần biến vào và biến ra?</h3>
+            <h3>3. Đỉnh xuất phát và các biến cơ sở</h3>
             <div class="steps">
-                <p><b>① Tại sao cần biến vào?</b> Ban đầu, bảng của bạn có nghiệm $x_1 = x_2 = 0,\; s_1 = 10.000,\; s_2 = 100,\; Z = 0$. Trong đó $x_1, x_2$ là các hoạt động tạo lợi ích — nếu cả hai đều bằng 0 thì chưa tạo ra giá trị nào. Hàng $Z$ cho thấy $Z = 50x_1 + 30x_2$, vì vậy muốn tăng $Z$ ta phải cho ít nhất một trong hai biến $x_1, x_2$ tăng lên. Biến được chọn tăng và đưa vào nhóm biến cơ sở gọi là <b>biến vào</b>. Trong hình, $x_1$ được chọn vì nó có khả năng cải thiện $Z$ nhanh nhất: $50 &gt; 30$. Do đó $\boxed{x_1 \text{ vào cơ sở}}$. Nếu không chọn biến vào, Simplex không biết nên di chuyển theo hướng nào để làm nghiệm tốt hơn.</p>
-                <p><b>② Tại sao cần biến ra?</b> Ta không thể tăng $x_1$ vô hạn vì các nguồn lực có giới hạn. Từ bảng: $140x_1 + 60x_2 + s_1 = 10.000$; $x_1 + x_2 + s_2 = 100$. Nếu giữ $x_2 = 0$ và tăng $x_1$: $s_1 = 10.000 - 140x_1$; $s_2 = 100 - x_1$. Càng tăng $x_1$, các biến dư $s_1, s_2$ càng giảm — tăng quá mức thì một biến dư sẽ âm, nghĩa là dùng nhiều tài nguyên hơn lượng hiện có. Cụ thể: $x_1 \le \frac{10.000}{140} = 71{,}43$ và $x_1 \le \frac{100}{1} = 100$. Ràng buộc thứ nhất chạm giới hạn trước, tại $x_1 = 71{,}43,\; s_1 = 0$. Vì $s_1$ đã hết phần dư nên nó phải rời cơ sở: $\boxed{s_1 \text{ là biến ra}}$. Nếu không xác định biến ra, ta có thể tăng $x_1$ quá xa và tạo ra một nghiệm không khả thi.</p>
-                <p><b>③ Tại sao một biến vào thì phải có một biến ra?</b> Trong bài toán có hai phương trình ràng buộc, mỗi nghiệm cơ sở chỉ có thể có hai biến cơ sở. Ban đầu: $\text{Cơ sở} = \{s_1, s_2\}$. Khi $x_1$ được đưa vào mà không đưa biến nào ra thì sẽ có ba biến cơ sở $\{s_1, s_2, x_1\}$ — không phù hợp với cấu trúc nghiệm cơ sở của hệ hai phương trình. Vì vậy phải đổi chỗ: $\{s_1, s_2\} \;\longrightarrow\; \{x_1, s_2\}$. Có thể hiểu giống như một đội chỉ có hai vị trí chính thức: muốn đưa một người mới vào thì một người hiện tại phải ra.</p>
-                <p><b>④ Ý nghĩa hình học.</b> Với bài toán hai biến, miền nghiệm là một đa giác và Simplex chỉ xét các đỉnh của đa giác. Mỗi lần chọn biến vào và biến ra tương ứng với việc: $\text{Đỉnh hiện tại} \rightarrow \text{đi dọc theo một cạnh} \rightarrow \text{đỉnh kế tiếp tốt hơn}$. Biến vào xác định cạnh và hướng di chuyển; biến ra xác định điểm phải dừng trên cạnh đó; pivot thực hiện việc chuyển sang đỉnh mới. Trong hình của bạn: $(0,0) \rightarrow (71{,}43;\ 0) \rightarrow (50, 50)$ — chính là quá trình đi từ một đỉnh khả thi đến đỉnh có giá trị mục tiêu cao hơn.</p>
+                <p>Vì có hai phương trình ràng buộc, ở một nghiệm cơ sở ta chọn hai biến cơ sở. Tại điểm xuất phát, chọn $s_1,s_2$ làm biến cơ sở và đặt $x_1=x_2=0$ làm biến không cơ sở. Khi đó đọc được ngay $s_1=10{,}000$, $s_2=100$ từ vế phải.</p>
+                <p>Các cột $s_1,s_2$ tạo thành ma trận đơn vị nên cung cấp cơ sở ban đầu thuận tiện. Có thể hình dung hai biến cơ sở như hai vị trí đang giữ nghiệm; khi một biến mới vào, một biến cơ sở sẽ rời đi.</p>
             </div>
         </div>
 
         <div class="chart-card full">
-            <h3>Đi dọc cạnh: biến vào là hướng đi, biến ra là chiều dài cạnh</h3>
+            <h3>4. Cơ sở và không cơ sở: cách Simplex biểu diễn một đỉnh</h3>
             <div class="steps">
-                <p><b>① Biến vào = chọn HƯỚNG đi dọc cạnh:</b> tại một đỉnh bất kỳ luôn có nhiều cạnh tỏa ra — biến vào cho biết nên rẽ vào cạnh nào để Z tăng <i>nhanh nhất</i>. Bảng: chọn cột có hệ số âm nhất ở hàng Z (reduced cost lớn nhất). Hình học: nó xác định trục tọa độ (hướng vector) ta di chuyển. Lặp 1 tại $(0,0)$: $x_1$ có hệ số $-50$ (âm nhất) ⟹ đi dọc trục $x_1$ (cạnh nằm trên trục hoành, nơi $x_2 = 0$).</p>
-                <p><b>② Biến ra = tính chiều dài cạnh để tìm đỉnh mới:</b> có hướng rồi nhưng không thể đi mãi, phải dừng khi chạm một ràng buộc khác. Bảng dùng phép thử tỷ số tối thiểu $\frac{\text{vế phải}}{\text{cột biến vào}}$. Hình học: tỷ số nhỏ nhất chính là <b>chiều dài đoạn thẳng</b> từ đỉnh cũ đến đỉnh mới dọc theo cạnh đó.</p>
-                <p><b>Lặp 1 — tại $(0,0)$: đi dọc trục $x_1$.</b> Đâm vào tường $s_1$ (ràng buộc 1) sau $10.000/140 = 71{,}43$ bước; đâm vào tường $s_2$ (ràng buộc 2) sau $100/1 = 100$ bước ⟹ chọn $71{,}43$ (nhỏ nhất). Chiều dài cạnh = $71{,}43$, tới đỉnh $(71{,}43; 0)$; $s_1$ bị loại vì đã chạm đúng biên ($s_1 = 0$).</p>
-                <p><b>🏃 Lặp 2 — tại $(71{,}43; 0)$:</b> đang nằm trên biên ràng buộc 1 ($s_1 = 0$). Biến vào $x_2$ (hệ số $-8{,}57$) ⟹ hướng đi lên; vì đang trên biên $s_1 = 0$, khi $x_2$ tăng thì $x_1$ <i>phải giảm</i> để giữ $140x_1 + 60x_2 = 10.000$ — chính là đoạn thẳng màu xanh đậm trên đồ thị. Biến ra $s_2$: $28{,}57/0{,}5714 = 50$ bước thì chạm biên $x_1 + x_2 = 100$ ⟹ đỉnh mới $(50, 50)$.</p>
-                <p><b>🏆 Lặp 3 — dừng tại $(50, 50)$:</b> hàng Z không còn số âm ⟹ không còn cạnh nào "đi lên" được nữa ⟹ đã leo tới đỉnh cao nhất của ngọn núi đa diện, $Z = 4.000$. So với đồ giải (đánh giá mọi đỉnh), Simplex <b>chỉ cần đi theo 2 cạnh liên tiếp</b> — không bao giờ thăm $(0, 100)$ dù nó có $Z = 3.000$.</p>
-                <p><b>Tóm lại:</b> Simplex luôn đứng tại một đỉnh khả thi. Biến vào xác định cạnh nên đi để tăng Z nhanh nhất; biến ra xác định điểm phải dừng để nghiệm vẫn khả thi.</p>
+                <p>Sau khi thêm biến bù, ta có hai phương trình và bốn biến $x_1,x_2,s_1,s_2$. Với hai phương trình độc lập, mỗi nghiệm cơ sở chọn hai biến cơ sở; hai biến còn lại là không cơ sở và được đặt bằng 0.</p>
+                <p><b>Ban đầu:</b> chọn cơ sở $\{s_1,s_2\}$, đặt $x_1=x_2=0$. Từ hai phương trình suy ra $(x_1,x_2,s_1,s_2)=(0,0,10{,}000,100)$. Các cột $s_1,s_2$ là ma trận đơn vị nên tạo được nghiệm cơ sở ban đầu ngay từ vế phải.</p>
+                <p><b>Biến cơ sở</b> là các biến được xác định từ hệ phương trình cơ sở để biểu diễn nghiệm hiện tại; <b>biến không cơ sở</b> là các biến đang được đặt bằng 0. Biến cơ sở thường khác 0, nhưng ở nghiệm suy biến một biến cơ sở cũng có thể bằng 0.</p>
+                <p>Khi $x_1$ được chọn vào, nó thay vị trí $s_1$: $\{s_1,s_2\}\to\{x_1,s_2\}$. Ở vòng tiếp theo, $x_2$ vào và $s_2$ ra: $\{x_1,s_2\}\to\{x_1,x_2\}$. Mỗi lần chỉ đổi một biến để vẫn giữ đúng hai biến cơ sở cho hai phương trình.</p>
+                <p><b>Hình dung như hai chiếc ghế:</b> có hai ghế cơ sở; muốn một biến không cơ sở ngồi vào thì một biến đang ở cơ sở phải rời ghế.</p>
             </div>
         </div>
 
         <div class="chart-card full">
-            <h3>Biến cơ sở và không cơ sở được chọn theo tiêu chí nào?</h3>
+            <h3>5. Biến vào chọn hướng; biến ra xác định giới hạn</h3>
             <div class="steps">
-                <p><b>① BƯỚC KHỞI TẠO (Lặp 1) — tìm "Ma trận đơn vị" (Identity Matrix):</b> sau khi thêm biến bù, các cột biến bù tạo thành ma trận đơn vị — cột $s_1 = \begin{bmatrix}1\\0\end{bmatrix}$, cột $s_2 = \begin{bmatrix}0\\1\end{bmatrix}$ (mỗi cột đúng một số 1, còn lại là 0). Cột nào có dạng "cột đơn vị" ⟹ biến đó <b>được chọn làm biến cơ sở</b>.</p>
-                <p><b>② Vì sao lại chọn như vậy?</b> Khi đặt biến còn lại là không cơ sở ($x_1 = x_2 = 0$), ta <i>đọc ngay giá trị biến cơ sở từ cột vế phải</i> ($s_1 = 10.000$, $s_2 = 100$) <b>mà không cần giải hệ phương trình</b>. Áp dụng: chọn $\{s_1, s_2\}$ làm cơ sở; $\{x_1, x_2\}$ là không cơ sở (= 0).</p>
-                <p><b>③ CÁC BƯỚC LẶP SAU (Pivot) — 2 tiêu chí: tối ưu &amp; khả thi.</b></p>
-                <p><b>Chọn BIẾN VÀO (không cơ sở → cơ sở) — Optimality Condition:</b> nhìn hàng $Z$, chọn hệ số <b>âm nhất</b> đối với bài Max (dương nhất đối với Min). Hệ số đó là <i>reduced cost</i>: Áp dụng — Lặp 1 có $-50$ và $-30$; $-50$ âm nhất ⟹ $x_1$ vào (mỗi đơn vị $x_1$ làm Z tăng nhanh nhất: +50).</p>
-                <p><b>Chọn biến ra (cơ sở → không cơ sở):</b> lấy vế phải ÷ cột biến vào, chỉ xét hệ số <b>dương &gt; 0</b>. Hàng có tỷ số nhỏ nhất là hàng rời cơ sở. Ý nghĩa: khi tăng biến vào, <b>không biến cơ sở nào bị âm</b>. Áp dụng: $10.000/140 = 71{,}43$ và $100/1 = 100$ ⟹ $71{,}43$ nhỏ nhất ⟹ $s_1$ ra.</p>
-                <p><b>④ Kết quả Pivot:</b> $x_1$ thay thế vị trí $s_1$ trong cột "Biến cơ sở" ⟹ cơ sở mới $\{x_1, s_2\}$, không cơ sở $\{x_2, s_1\} = 0$.</p>
-                <p><b>⑤ Luật bất biến về số lượng:</b> với $m$ = số ràng buộc (số hàng, không tính hàng Z) và $n$ = tổng số biến (biến quyết định + biến bù) thì <b>luôn có đúng $m$ biến cơ sở và $n - m$ biến không cơ sở</b>. Bài này: $m = 2$, $n = 4$ $(x_1, x_2, s_1, s_2)$ ⟹ luôn 2 cơ sở và 2 không cơ sở tại mọi thời điểm.</p>
-                <p><b>Tóm tắt quy trình ra quyết định:</b> Lần 1: cột nào là ma trận đơn vị thì gán làm cơ sở. Các lần sau: hàng $Z$ (chọn âm nhất) cho biến vào; cột tỷ số (chọn dương nhỏ nhất) cho biến ra; biến vào thay thế biến ra trong cột cơ sở.</p>
+                <p>Tại $(0,0)$, biến $x_1$ được chọn vào cơ sở để bắt đầu tăng Z. Trong tableau minh họa, điều này tương ứng hệ số $-50$ âm nhất ở hàng Z. <b>Biến vào chọn hướng đi.</b></p>
+                <p>Để không vượt nguồn lực, thử tỷ số ở các hàng có hệ số biến vào dương: $10{,}000/140=71.43$ (nước), $100/1=100$ (đất). Tỷ số dương nhỏ nhất là $71.43$, nên nước hết trước; $s_1$ rời cơ sở. <b>Biến ra cho biết giới hạn đi được bao xa.</b></p>
+                <p>Quy tắc “chọn hệ số âm nhất” phụ thuộc quy ước lập hàng Z của tableau; không nên áp dụng máy móc cho mọi cách viết bảng.</p>
+            </div>
+        </div>
+
+        <div class="chart-card full">
+            <h3>6. Pivot đưa ta sang đỉnh mới</h3>
+            <div class="steps">
+                <p>Sau pivot thứ nhất, $x_1$ vào và $s_1$ ra: cơ sở đổi từ $\{s_1,s_2\}$ thành $\{x_1,s_2\}$. Điểm mới là $(71.43,0)$; đã hết nước nhưng còn $28.57$ ha đất.</p>
+                <p>Tại đỉnh này, $x_2$ còn có thể cải thiện lợi nhuận. Tăng rau đồng thời giảm lúa để giữ phương trình nước $140x_1+60x_2=10{,}000$. Khi chạm giới hạn đất $x_1+x_2=100$, ta tới $(50,50)$; lúc này $s_1=s_2=0$ và Z = $4{,}000$ triệu đồng.</p>
+                <p>Pivot là phép biến đổi bảng thay biến ra bằng biến vào. Với tableau đang dùng, khi hàng Z không còn hệ số âm có thể cải thiện, thuật toán dừng tại nghiệm tối ưu.</p>
+                <p><b>Chuỗi dễ nhớ:</b> thêm biến bù → chọn đỉnh xuất phát → chọn biến vào (hướng) → chọn biến ra (giới hạn) → pivot → đỉnh mới → tối ưu.</p>
             </div>
         </div>
 
         <div class="chart-card">
-            <h3>Minh họa biến bù s₁, s₂: khoảng cách đến biên</h3>
+            <h3>Minh họa độ dư và khoảng cách vuông góc đến biên</h3>
             <div id="lpSimplexChart" class="plot small"></div>
-            <p class="note" style="font-size:0.82em"><b>Đường tím chấm</b> = khoảng cách đại số từ đỉnh hiện tại đến biên (chính là biến bù s). Điểm trên biên có s = 0; đụng biên = đã dùng hết giới hạn. Mũi tên xanh = đường đi Simplex qua các đỉnh.</p>
+            <p class="note" style="font-size:0.82em"><b>Biến bù $s_i$</b> là lượng tài nguyên còn dư, không phải khoảng cách hình học. Đường tím chấm là khoảng cách vuông góc đến đường biên; với ràng buộc $a_1x_1+a_2x_2\le b$, khoảng cách là $d=s_i/\sqrt{a_1^2+a_2^2}$. Mũi tên xanh = đường đi Simplex qua các đỉnh.</p>
+        </div>
+
+        <div class="chart-card full">
+            <h3>Đọc bảng lặp bằng bốn câu hỏi</h3>
+            <p>Mỗi vòng lặp, hãy tự hỏi: <b>1. Đang đứng ở đâu?</b> <b>2. Biến nào vào, tức chọn hướng nào?</b> <b>3. Biến nào ra, tức giới hạn đi được bao xa?</b> <b>4. Sau pivot, tới đỉnh nào và Z bằng bao nhiêu?</b></p>
+            <div class="steps">
+                <p><b>Lặp 1 — bắt đầu tại $(0,0)$:</b> $s_1=10{,}000$, $s_2=100$, $Z=0$. Hàng Z có $(-50,-30)$; theo quy ước tableau này, $-50$ âm nhất nên $x_1$ vào cơ sở. Tỷ số là $10{,}000/140=71.43$ và $100/1=100$; giá trị nhỏ hơn cho biết nước chạm giới hạn trước. Vì vậy $s_1$ ra, phần tử pivot là $140$. Sau pivot: $(0,0)\to(71.43,0)$ và $Z=50(71.43)=3{,}571.43$ triệu đồng.</p>
+                <p><b>Lặp 2 — đang tại $(71.43,0)$:</b> nước đã hết ($s_1=0$), còn $28.57$ ha đất ($s_2=28.57$). Hệ số của $x_2$ ở hàng Z là khoảng $-8.57$, nên $x_2$ vào cơ sở. Tỷ số: $71.43/0.4286\approx166.67$ và $28.57/0.5714=50$. Chọn $50$, do đó $s_2$ ra và phần tử pivot là $0.5714$. Vì nước đã chạm biên, tăng rau phải đồng thời giảm lúa để giữ $140x_1+60x_2=10{,}000$. Sau pivot: $(71.43,0)\to(50,50)$, $Z=4{,}000$ triệu đồng.</p>
+                <p><b>Lặp 3 — kiểm tra dừng tại $(50,50)$:</b> $s_1=s_2=0$, cả nước và đất đều dùng hết. Hàng Z là $(0,0,0.25,15)$ theo thứ tự cột $x_1,x_2,s_1,s_2$; không còn hệ số âm để chọn biến vào, nên nghiệm tối ưu là $x_1^*=50$, $x_2^*=50$, $Z^*=4{,}000$ triệu đồng.</p>
+            </div>
+            <p class="note"><b>Lưu ý độ chính xác:</b> các tỷ số và phần tử pivot ở đây được in đủ chữ số để tiện theo dõi. Phần mềm giữ độ chính xác đầy đủ khi cập nhật tableau; chỉ làm tròn bản sao dùng để hiển thị bảng (4 chữ số thập phân), nên sai số làm tròn không tích lũy giữa các vòng lặp.</p>
         </div>
 
         <div class="chart-card">
             <h3>Bảng lặp Simplex</h3>
+            <div class="simplex-legend" aria-label="Chú giải màu và ký hiệu của bảng Simplex">
+                <span class="key-basis">🔵 Cơ sở</span><span class="key-enter">🟢 Vào</span>
+                <span class="key-leave">🟠 Ra</span><span class="key-pivot">🟣 Pivot</span>
+                <span class="key-rhs">🔷 RHS</span><span class="key-ratio">🟡 Tỷ số</span>
+                <span class="key-z">🟪 Hàng Z</span>
+            </div>
             <div class="table-responsive" style="max-height:340px; overflow:auto">
                 <table id="lpSimplexTable" class="dp-table" style="font-size:0.80em; min-width:760px">
                     <tbody></tbody>
                 </table>
             </div>
-            <p class="note" style="font-size:0.82em"><b>→ x₁</b> = cột biến vào; <b>s₁ ←</b> = hàng biến ra; ô được nhấn mạnh = phần tử trục. Tỷ số = vế phải ÷ hệ số biến vào, chọn nhỏ nhất. Hàng “Nghiệm hiện tại” tóm tắt nghiệm sau mỗi lần lặp; dừng khi hàng Z không còn số âm.</p>
+            <p class="note" style="font-size:0.82em"><b>→ x₁</b> = cột biến vào; <b>s₁ ←</b> = hàng biến ra; ô được nhấn mạnh = phần tử pivot. Chỉ tính tỷ số ở hàng có hệ số cột biến vào dương; chọn tỷ số nhỏ nhất trong các hàng đủ điều kiện. Hàng “Nghiệm hiện tại” tóm tắt nghiệm sau mỗi lần lặp; với quy ước bảng này, dừng khi hàng Z không còn số âm.</p>
         </div>
     </div>
 
@@ -210,8 +237,15 @@
 <section class="card" id="gd">
     <h2 class="card-title">3.2 Hạ dốc và Newton trên bài toán chung</h2>
     <p class="note">
-        Hai phương pháp dùng hàm rào cản trơn của cùng bài toán quy hoạch tuyến tính: tối đa $\phi_\mu=Z+\mu\sum_j\ln(s_j)$, trong đó $s_j$ gồm $x_1$, $x_2$ và độ dư của từng ràng buộc. Giảm $\mu$ dần để nghiệm đi về nghiệm tối ưu của bài toán gốc. Hạ dốc cập nhật theo gradient; Newton dùng gradient và Hessian.
+        Simplex đi từ đỉnh này sang đỉnh khác trên biên; hạ dốc và Newton tối ưu hàm rào cản từ bên trong miền khả thi rồi tiến dần về biên tối ưu. Cả ba phương pháp giải cùng bài toán, nhưng dùng đường đi và cách chọn bước khác nhau.
     </p>
+    <div class="card gd-barrier-intro">
+        <h3>Vì sao dùng hàm rào cản?</h3>
+        <p>Với hai ràng buộc mặc định, độ dư là $s_1=10{,}000-140x_1-60x_2$ (nước) và $s_2=100-x_1-x_2$ (đất). Điểm bên trong cần thỏa $x_1,x_2,s_1,s_2&gt;0$.</p>
+        <p class="note">Hàm mục tiêu dưới đây minh họa bộ mặc định; khi thay dữ liệu ở mục 3.1, phần mềm dùng các hệ số đang nhập.</p>
+        <div class="formula">$$\phi_\mu(x)=50x_1+30x_2+\mu\left[\ln x_1+\ln x_2+\ln s_1+\ln s_2\right]$$</div>
+        <p>Lợi nhuận $Z$ kéo nghiệm về phía tốt hơn; các số hạng logarit tạo “bức tường” vì $\ln(s)\to-\infty$ khi một biến hoặc độ dư tiến về 0. Khi $\mu$ giảm, rào cản yếu dần và nghiệm tiến gần nghiệm LP tối ưu $(50,50)$, $Z^*=4{,}000$.</p>
+    </div>
 
     <div class="psplit">
         <div>
@@ -239,13 +273,14 @@
     <!-- Kết quả hạ dốc / Newton: hiện khi bấm nút -->
     <div id="gdContent" class="chart-grid hidden" style="margin-top:18px">
         <div class="chart-card full">
-            <h3>Hạ dốc và Newton trên hàm rào cản của bài toán chung</h3>
+            <h3>Hai cách tối ưu cùng hàm rào cản</h3>
             <div id="gdTheory" class="steps">
-                <p><b>① Dùng chung miền khả thi:</b> $x_1,x_2&gt;0$ và $s_i=b_i-a_{i1}x_1-a_{i2}x_2&gt;0$. Điểm khởi tạo phải nằm bên trong miền này.</p>
-                <p><b>② Hàm rào cản:</b> $\phi_\mu(x)=c^Tx+\mu\left[\ln x_1+\ln x_2+\sum_i\ln(b_i-a_i^Tx)\right]$. Các hệ số $c_i,a_i,b_i$ lấy từ bài toán ở mục 3.1.</p>
-                <p><b>③ Hạ dốc:</b> tối thiểu hóa $-\phi_\mu$ theo gradient; mỗi bước được giảm độ dài nếu cần để luôn ở trong miền khả thi. Lặp với $\mu$ nhỏ dần.</p>
-                <p><b>④ Newton:</b> giải $H_\mu\Delta x=-\nabla(-\phi_\mu)$ bằng Hessian của hàm rào cản rồi tìm bước đi còn nằm trong miền khả thi.</p>
-                <p><b>⑤ Đọc kết quả:</b> bảng và đồ thị theo dõi $(x_1,x_2)$ cùng lợi nhuận gốc $Z=c_1x_1+c_2x_2$; khi $\mu\to0$, hai phương pháp tiến gần nghiệm mà đồ thị, Simplex và điểm trong tìm được.</p>
+                <p><b>Miền bên trong:</b> thuật toán luôn giữ $x_1,x_2&gt;0$ và mọi độ dư $s_i=b_i-a_{i1}x_1-a_{i2}x_2&gt;0$. Với các hệ số đang nhập, $Z=c_1x_1+c_2x_2$ và $\phi_\mu=Z+\mu[\ln x_1+\ln x_2+\sum_i\ln s_i]$.</p>
+                <p><b>Hạ dốc:</b> đặt $f_\mu=-\phi_\mu$, rồi cập nhật $x^{k+1}=x^k-\alpha_k\nabla f_\mu(x^k)$. Mỗi dòng bảng là một bước nội bộ được chấp nhận; $\alpha_k$ bắt đầu từ giá trị thanh trượt và được giảm một nửa nếu bước chưa đủ tốt hoặc làm điểm ra khỏi miền trong.</p>
+                <p><b>Newton:</b> dùng cả độ dốc và độ cong. Tính hướng $\Delta x$ từ $H_{f_\mu}\Delta x=-\nabla f_\mu$, sau đó dùng $x^{k+1}=x^k+\lambda_k\Delta x$. Line search giảm $\lambda_k$ nếu cần để giữ điểm khả thi và cải thiện hàm rào cản.</p>
+                <p><b>Thang rào cản:</b> chương trình giảm $\mu$ theo dãy $100,30,9,\ldots$. Có nhiều bước hạ dốc/Newton ở cùng một mức $\mu$; khi hội tụ ở mức đó, chương trình chuyển sang mức nhỏ hơn.</p>
+                <p><b>Ví dụ bước đầu mặc định:</b> từ $(10,85)$, $s_1=3{,}500$ và $s_2=5$. Khi $\mu=100$, $\nabla f_\mu\approx(-36,-9.46)$. Nếu $\alpha=0.05$ được line search chấp nhận, bước đầu là $(10,85)\to(11.8,85.473)$; các vị trí xa hơn trong bảng là những bước nội bộ tiếp theo, không phải một lần cập nhật duy nhất.</p>
+                <p><b>Đọc cột độ dư:</b> $s_i&gt;0$ suốt quá trình cho thấy điểm còn ở bên trong. Khi $x$ tiến về $(50,50)$, hai độ dư nước và đất cùng tiến về 0. Gradient dùng trong bảng là $\nabla f_\mu$; cột $Z$ luôn là lợi nhuận gốc, không cộng phần rào cản.</p>
             </div>
         </div>
 
@@ -255,13 +290,12 @@
             <p class="note" style="font-size:0.82em">Đường đi của cả hai phương pháp nằm trong miền khả thi; lợi nhuận được tính theo hàm mục tiêu chung ở mục 3.1.</p>
         </div>
 
-        <div class="chart-card gd-result">
-            <h3>Bảng tính hạ dốc và Newton</h3>
+        <div class="chart-card gd-result full">
+            <h3 id="gdTableTitle">Quá trình hội tụ của thuật toán</h3>
+            <p class="note">Mỗi hàng là một bước nội bộ được chấp nhận; các hàng có cùng $\mu$ thuộc cùng một giai đoạn rào cản. Cột $\alpha$ hoặc $\lambda$ ghi độ dài bước từ hàng trước đến điểm ở hàng hiện tại (hàng khởi tạo ghi “—”); “Giảm bước” là số lần line search chia đôi bước. Với bộ mặc định, $s_1$ là nước và $s_2$ là đất.</p>
             <div class="table-responsive" style="max-height:340px; overflow:auto">
-                <table id="gdTable" class="dp-table" style="font-size:0.80em; min-width:520px">
-                    <thead>
-                        <tr><th>Bước</th><th>x₁</th><th>x₂</th><th>μ</th><th>∇fμ,x₁</th><th>∇fμ,x₂</th><th>Z</th></tr>
-                    </thead>
+                <table id="gdTable" class="dp-table" style="font-size:0.80em; min-width:1100px">
+                    <thead></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -412,5 +446,5 @@
     window.__LP = {{ lp | tojson }};
     window.__DP = {{ dp | tojson }};
 </script>
-<script src="{{ url_for('static', filename='js/plotly_app.js') }}?v=15"></script>
+<script src="{{ url_for('static', filename='js/plotly_app.js') }}?v=20"></script>
 {% endblock %}

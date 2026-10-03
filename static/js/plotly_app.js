@@ -9,6 +9,9 @@
     function fmt(v) {
         return Number(v).toLocaleString('vi-VN', { maximumFractionDigits: 2 });
     }
+    function fmtSimplex(v) {
+        return Number(v).toLocaleString('vi-VN', { maximumFractionDigits: 4 });
+    }
     function zval(o, c1, c2) { return c1 * o[0] + c2 * o[1]; }
 
     /* ============================= LP ============================= */
@@ -115,7 +118,16 @@
         }
     }
 
+    function revealLPModel() {
+        const model = document.getElementById('lpModel');
+        if (!model || !model.classList.contains('hidden')) return;
+        model.classList.remove('hidden');
+        model.setAttribute('aria-hidden', 'false');
+        model.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
     async function lpSolveClick() {
+        revealLPModel();
         const f = readLPForm();
         const fd = new FormData();
         fd.append('c1', f.c1); fd.append('c2', f.c2);
@@ -212,6 +224,7 @@
     }
 
     async function lpSimplexClick() {
+        revealLPModel();
         try {
             const solved = await solveCurrentLP();
             if (!solved.solution.feasible) throw new Error(solved.solution.note || 'Miền khả thi rỗng.');
@@ -254,11 +267,8 @@
         const names = its[0].var_names || ['x1', 'x2', 's1', 's2'];
         const cols = names.length + 3;
         its.forEach(function (it) {
-            let title = 'Lặp ' + it.it + ' · đỉnh (x₁, x₂) = (' + fmt(it.point[0]) + '; ' + fmt(it.point[1]) + ')' +
-                ' · Z = <b>' + fmt(it.z) + '</b>';
-            if (it.entering) title += ' · vào: <b>→ ' + it.entering + '</b>';
-            if (it.leaving) title += ' · ra: <b>' + it.leaving + ' ←</b> · trục = <b>' + fmt(it.pivot) + '</b>';
-            if (it.optimal) title += '  ✅ TỐI ƯU';
+            const title = 'Lặp ' + it.it + ' · đỉnh (x₁, x₂) = (' + fmt(it.point[0]) + '; ' + fmt(it.point[1]) + ')' +
+                ' · Z = <b>' + fmt(it.z) + '</b>' + (it.optimal ? '  ✅ TỐI ƯU' : '');
             tbody.insertAdjacentHTML('beforeend',
                 '<tr class="itr-hdr"><td colspan="' + cols + '">' + title + '</td></tr>');
 
@@ -266,40 +276,105 @@
             const leaveRow = it.leaving ? it.basis.indexOf(it.leaving) : -1;
             const rows = it.tableau;
             const nrow = rows.length - 1;
+            const zrow = rows[nrow];
+            const currentBasis = '<span class="simplex-basis-chips">' + it.basis.map(function (nm) {
+                return '<span class="simplex-basis-chip">' + nm + '</span>';
+            }).join('') + '</span>';
+            let nextBasis = it.basis.slice();
+            if (leaveRow >= 0 && enterIdx >= 0) nextBasis[leaveRow] = it.entering;
+            const nextBasisHtml = '<span class="simplex-basis-chips">' + nextBasis.map(function (nm) {
+                return '<span class="simplex-basis-chip">' + nm + '</span>';
+            }).join('') + '</span>';
 
-            let hdr = '<tr class="itr-colhdr"><th>Biến cơ sở</th>';
+            const ratioLines = [];
+            if (enterIdx >= 0) {
+                for (let i = 0; i < nrow; i++) {
+                    const coefficient = rows[i][enterIdx];
+                    if (coefficient > 1e-9 && it.ratios[i] != null) {
+                        ratioLines.push(it.basis[i] + ': ' + fmtSimplex(rows[i][names.length]) + ' ÷ ' +
+                            fmtSimplex(coefficient) + ' = ' + fmtSimplex(it.ratios[i]) + (i === leaveRow ? ' ✓' : ''));
+                    }
+                }
+            }
+            let decision = '<div class="simplex-decision-card">' +
+                '<div class="simplex-decision-line"><b>📍 Đang ở:</b> (' + fmt(it.point[0]) + ', ' + fmt(it.point[1]) + '), Z = ' + fmt(it.z) + '</div>' +
+                '<div class="simplex-decision-line"><b>🔵 Cơ sở hiện tại:</b> ' + currentBasis + '</div>';
+            if (it.entering) {
+                decision += '<div class="simplex-decision-line"><b>🟢 Biến vào:</b> ' + it.entering +
+                    ' — hệ số hàng Z ' + fmtSimplex(zrow[enterIdx]) + ' âm nhất, chọn hướng cải thiện.</div>' +
+                    '<div class="simplex-decision-line"><b>🟡 Tỷ số:</b> ' + (ratioLines.length ? ratioLines.join(' · ') : 'không có hàng có hệ số biến vào dương') + '</div>';
+                if (it.leaving) {
+                    decision += '<div class="simplex-decision-line"><b>🟠 Biến ra:</b> ' + it.leaving +
+                        ' — tỷ số nhỏ nhất trong các hàng đủ điều kiện. <b>🟣 Pivot:</b> ' + fmtSimplex(it.pivot) +
+                        ' — giao giữa hàng ' + it.leaving + ' và cột ' + it.entering + '.</div>' +
+                        '<div class="simplex-decision-line"><b>➡️ Cơ sở mới:</b> ' + nextBasisHtml + '</div>';
+                } else {
+                    decision += '<div class="simplex-decision-line"><b>⚠️ Biến ra:</b> không có tỷ số dương; bài toán có thể không bị chặn.</div>';
+                }
+            } else {
+                decision += '<div class="simplex-decision-line simplex-optimal-line"><b>✅ TỐI ƯU:</b> hàng Z không còn hệ số âm; không chọn biến vào. Cơ sở tối ưu: ' + currentBasis + '</div>';
+            }
+            decision += '</div>';
+            tbody.insertAdjacentHTML('beforeend',
+                '<tr class="itr-decision-row"><td colspan="' + cols + '">' + decision + '</td></tr>');
+
+            let hdr = '<tr class="itr-colhdr"><th class="basis-head" title="Các biến cơ sở được xác định từ hệ phương trình và mô tả nghiệm hiện tại.">🔵 Cơ sở</th>';
             names.forEach(function (nm, j) {
-                hdr += (j === enterIdx) ? '<th class="enter-col">' + nm + ' →</th>' : '<th>' + nm + '</th>';
+                const isEntering = j === enterIdx;
+                hdr += isEntering
+                    ? '<th class="enter-col" title="Biến vào: được chọn để tăng Z theo tiêu chuẩn hàng Z.">🟢 ' + nm + ' → VÀO</th>'
+                    : '<th>' + nm + '</th>';
             });
-            hdr += '<th>Vế phải</th><th>Tỷ số</th></tr>';
+            hdr += '<th class="rhs-head" title="RHS – Right Hand Side: giá trị hiện tại của biến cơ sở khi các biến không cơ sở bằng 0.">🔷 Vế phải<small>Giá trị biến cơ sở</small></th>' +
+                '<th class="ratio-head" title="Chỉ tính khi hệ số ở cột biến vào dương; chọn tỷ số nhỏ nhất trong các hàng đủ điều kiện.">🟡 Tỷ số<small>RHS ÷ hệ số cột vào</small></th></tr>';
             tbody.insertAdjacentHTML('beforeend', hdr);
 
             rows.forEach(function (row, i) {
                 const isZ = (i === nrow);
                 const isLeave = (i === leaveRow);
-                const basisLabel = isZ ? 'Z' : (isLeave ? it.leaving + ' ←' : it.basis[i]);
-                let cells = '<td><b>' + basisLabel + '</b></td>';
+                const basisLabel = isZ
+                    ? '<span title="Với bài Max theo quy ước tableau này, hệ số âm còn lại cho biết có thể cải thiện Z.">🟪 Z · KIỂM TRA TỐI ƯU</span>'
+                    : (isLeave ? '<span class="leaving-label">🟠 ' + it.leaving + ' ← RA</span>' : '<span class="basis-label">🔵 ' + it.basis[i] + '</span>');
+                let cells = '<td class="' + (isZ ? 'z-basis' : (isLeave ? 'leaving-basis' : 'basis-label-cell')) + '"><b>' + basisLabel + '</b></td>';
                 for (let j = 0; j < names.length; j++) {
-                    let cls = '';
-                    if (j === enterIdx) cls = (isZ || !isLeave) ? ' enter-col' : ' pivot-cell';
-                    const v = fmt(row[j]);
-                    cells += '<td' + (cls ? ' class="' + cls.trim() + '"' : '') + '>' +
-                        (cls === 'pivot-cell' ? '<b>' + v + '</b>' : v) + '</td>';
+                    const isPivot = !isZ && isLeave && j === enterIdx;
+                    const isSelectedEntering = isZ && j === enterIdx;
+                    let cls = j === enterIdx ? 'enter-col' : '';
+                    if (isPivot) cls = 'pivot-cell';
+                    if (isSelectedEntering) cls = 'enter-selected';
+                    const v = fmtSimplex(row[j]);
+                    const content = isPivot
+                        ? '<b>🟣 ' + v + ' PIVOT</b>'
+                        : (isSelectedEntering ? '<b>→ ' + v + ' ✓</b><small>âm nhất · vào</small>' : v);
+                    const pivotTitle = isPivot
+                        ? 'Phần tử pivot: giao giữa hàng biến ra ' + it.leaving + ' và cột biến vào ' + it.entering + '.'
+                        : '';
+                    cells += '<td' + (cls ? ' class="' + cls + '"' : '') + (pivotTitle ? ' title="' + pivotTitle + '"' : '') + '>' + content + '</td>';
                 }
-                cells += '<td>' + fmt(row[names.length]) + '</td>';
+                const rhs = row[names.length];
+                cells += '<td class="rhs-cell" title="RHS là vế phải, tức giá trị hiện tại của biến cơ sở khi biến không cơ sở bằng 0.">' + fmtSimplex(rhs) + '</td>';
                 if (isZ) {
-                    cells += '<td>—</td>';
+                    cells += '<td class="ratio-na">—</td>';
                 } else {
-                    cells += '<td>' + (it.ratios[i] != null ? fmt(it.ratios[i]) : '—') + '</td>';
+                    const coefficient = enterIdx >= 0 ? row[enterIdx] : 0;
+                    if (coefficient > 1e-9 && it.ratios[i] != null) {
+                        const selected = i === leaveRow;
+                        const formula = fmtSimplex(rhs) + ' ÷ ' + fmtSimplex(coefficient) + ' = ' + fmtSimplex(it.ratios[i]);
+                        cells += '<td class="ratio-cell' + (selected ? ' ratio-selected' : '') + '" title="Tỷ số = RHS ÷ hệ số ở cột biến vào; chỉ tính khi hệ số dương.">' +
+                            '<b>' + fmtSimplex(it.ratios[i]) + (selected ? ' ✓' : '') + '</b><small>' + formula + '</small></td>';
+                    } else {
+                        cells += '<td class="ratio-na" title="Hệ số cột biến vào không dương nên không tính tỷ số.">—</td>';
+                    }
                 }
+                const rowClass = [isZ ? 'itr-zrow' : '', isLeave ? 'itr-leave-row' : ''].filter(Boolean).join(' ');
                 tbody.insertAdjacentHTML('beforeend',
-                    '<tr' + (isZ ? ' class="itr-zrow"' : '') + '>' + cells + '</tr>');
+                    '<tr' + (rowClass ? ' class="' + rowClass + '"' : '') + '>' + cells + '</tr>');
             });
 
             const solParts = [];
             for (let v = 0; v < names.length; v++) {
                 const bi = it.basis.indexOf(names[v]);
-                solParts.push(names[v] + ' = ' + fmt(bi >= 0 ? rows[bi][rows[bi].length - 1] : 0));
+                solParts.push(names[v] + ' = ' + fmtSimplex(bi >= 0 ? rows[bi][rows[bi].length - 1] : 0));
             }
             const optTag = it.optimal ? '  ★ Nghiệm tối ưu' : '';
             tbody.insertAdjacentHTML('beforeend',
@@ -309,6 +384,7 @@
     }
 
     async function lpInteriorClick() {
+        revealLPModel();
         const f = readLPForm();
         const fd = new FormData();
         fd.append('c1', f.c1); fd.append('c2', f.c2);
@@ -456,8 +532,8 @@
     function gdBarrierTrajectory(problem, start, alpha) {
         let x = start[0], y = start[1];
         const first = barrierEval(x, y, problem, barrierMus()[0]);
-        const traj = [{ iteration: 0, x: x, y: y, mu: barrierMus()[0], gx: -first.gx, gy: -first.gy, z: first.z }];
-        barrierMus().forEach(function (mu) {
+        const traj = [{ iteration: 0, outer: 1, x: x, y: y, mu: barrierMus()[0], gx: -first.gx, gy: -first.gy, z: first.z, step_length: null, backtracks: null }];
+        barrierMus().forEach(function (mu, outerIndex) {
             for (let iter = 0; iter < 500; iter++) {
                 const current = barrierEval(x, y, problem, mu);
                 if (!current) break;
@@ -465,12 +541,15 @@
                 if (norm2 < 1e-10) break;
                 let step = alpha;
                 let accepted = false;
+                let backtracks = 0;
                 for (let ls = 0; ls < 40; ls++) {
                     const nx = x + step * current.gx, ny = y + step * current.gy;
                     const next = barrierEval(nx, ny, problem, mu);
                     if (next && next.value >= current.value + 1e-4 * step * norm2) {
                         x = nx; y = ny; accepted = true;
-                        traj.push({ iteration: traj.length, x: x, y: y, mu: mu, gx: -next.gx, gy: -next.gy, z: next.z });
+                        backtracks = ls;
+                        traj.push({ iteration: traj.length, outer: outerIndex + 1, x: x, y: y, mu: mu,
+                            gx: -next.gx, gy: -next.gy, z: next.z, step_length: step, backtracks: backtracks });
                         break;
                     }
                     step *= 0.5;
@@ -484,8 +563,8 @@
     function newtonBarrierTrajectory(problem, start) {
         let x = start[0], y = start[1];
         const first = barrierEval(x, y, problem, barrierMus()[0]);
-        const traj = [{ iteration: 0, x: x, y: y, mu: barrierMus()[0], gx: -first.gx, gy: -first.gy, z: first.z }];
-        barrierMus().forEach(function (mu) {
+        const traj = [{ iteration: 0, outer: 1, x: x, y: y, mu: barrierMus()[0], gx: -first.gx, gy: -first.gy, z: first.z, step_length: null, backtracks: null }];
+        barrierMus().forEach(function (mu, outerIndex) {
             for (let iter = 0; iter < 80; iter++) {
                 const current = barrierEval(x, y, problem, mu);
                 if (!current) break;
@@ -496,12 +575,15 @@
                 const dy = (current.hxy * current.gx - current.hxx * current.gy) / det;
                 const ascent = current.gx * dx + current.gy * dy;
                 let step = 1, accepted = false;
+                let backtracks = 0;
                 for (let ls = 0; ls < 40; ls++) {
                     const nx = x + step * dx, ny = y + step * dy;
                     const next = barrierEval(nx, ny, problem, mu);
                     if (next && next.value >= current.value + 1e-4 * step * ascent) {
                         x = nx; y = ny; accepted = true;
-                        traj.push({ iteration: traj.length, x: x, y: y, mu: mu, gx: -next.gx, gy: -next.gy, z: next.z });
+                        backtracks = ls;
+                        traj.push({ iteration: traj.length, outer: outerIndex + 1, x: x, y: y, mu: mu,
+                            gx: -next.gx, gy: -next.gy, z: next.z, step_length: step, backtracks: backtracks });
                         break;
                     }
                     step *= 0.5;
@@ -576,16 +658,31 @@
         }, CNF);
     }
 
-    function populateGDTable(traj) {
+    function populateGDTable(traj, problem, method) {
+        const table = document.getElementById('gdTable');
         const tbody = document.querySelector('#gdTable tbody');
+        const head = table.querySelector('thead');
+        const rows = problem.rows || [];
+        const stepName = method === 'gd' ? 'α đã nhận' : 'λ đã nhận';
+        head.innerHTML = '<tr><th>k · Bước</th><th>Giai đoạn μ</th><th>x₁</th><th>x₂</th>' +
+            rows.map(function (_, i) { return '<th title="Độ dư của ràng buộc ' + (i + 1) + '">s' + (i + 1) + ' · dư #' + (i + 1) + '</th>'; }).join('') +
+            '<th title="Tham số rào cản đang cố định trong giai đoạn nội bộ này.">μ</th>' +
+            '<th title="Gradient của fμ = −φμ tại điểm hiện tại.">∂fμ/∂x₁</th><th title="Gradient của fμ = −φμ tại điểm hiện tại.">∂fμ/∂x₂</th>' +
+            '<th title="Độ dài bước thực tế dùng để tới điểm ở hàng này; α cho hạ dốc, λ cho Newton.">' + stepName + '</th>' +
+            '<th title="Số lần line search chia đôi bước trước khi chấp nhận.">Giảm bước</th><th title="Giá trị hàm mục tiêu gốc, không bao gồm số hạng rào cản.">Z gốc</th></tr>';
         tbody.innerHTML = traj.map(function (p, i) {
+            const slacks = rows.map(function (r) { return r.b - r.a1 * p.x - r.a2 * p.y; });
+            const slackCells = slacks.map(function (s) { return '<td>' + fmtSimplex(s) + '</td>'; }).join('');
             return '<tr' + (i === traj.length - 1 ? ' class="active-row"' : '') + '><td>' + p.iteration + '</td>' +
-                '<td>' + fmt(p.x) + '</td><td>' + fmt(p.y) + '</td><td>' + fmt(p.mu) + '</td>' +
-                '<td>' + fmt(p.gx) + '</td><td>' + fmt(p.gy) + '</td><td><b>' + fmt(p.z) + '</b></td></tr>';
+                '<td>' + p.outer + '</td><td>' + fmtSimplex(p.x) + '</td><td>' + fmtSimplex(p.y) + '</td>' + slackCells +
+                '<td>' + fmtSimplex(p.mu) + '</td><td>' + fmtSimplex(p.gx) + '</td><td>' + fmtSimplex(p.gy) + '</td>' +
+                '<td>' + (p.step_length == null ? '—' : fmtSimplex(p.step_length)) + '</td>' +
+                '<td>' + (p.backtracks == null ? '—' : p.backtracks) + '</td><td><b>' + fmtSimplex(p.z) + '</b></td></tr>';
         }).join('');
     }
 
     async function runBarrierMethod(method) {
+        revealLPModel();
         const form = getGDForm();
         const st = document.getElementById('gdStatus');
         st.classList.remove('hidden');
@@ -603,9 +700,12 @@
             document.getElementById('gdWarn').classList.add('hidden');
             document.getElementById('gdContent').classList.remove('hidden');
             document.querySelectorAll('.gd-result').forEach(el => el.classList.remove('hidden'));
+            document.getElementById('gdTableTitle').textContent = method === 'gd'
+                ? 'Quá trình hội tụ — Hạ dốc'
+                : 'Quá trình hội tụ — Newton';
             plotGDSurface(shown, method === 'newton' ? true : null, solved.solution);
             drawGdConvergence(shown, solved.solution);
-            populateGDTable(shown);
+            populateGDTable(res.traj, solved.problem, method);
             const label = method === 'gd' ? 'Hạ dốc' : 'Newton';
             st.innerHTML = '✅ ' + label + ' trên hàm rào cản tiến tới (' + fmt(res.xf) + ', ' + fmt(res.yf) + '), Z = ' +
                 fmt(solved.problem.c1 * res.xf + solved.problem.c2 * res.yf) + '. Nghiệm Simplex/đồ thị: (' +
