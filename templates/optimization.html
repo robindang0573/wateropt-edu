@@ -306,33 +306,30 @@
         S_{t+1}=S_t+I_t-H_t-A_t-D_t,\quad F_{13}(S_{13})={{ dp.w }}S_{13}$$
     </div>
 
-    <div class="psplit">
-        <div>
-            <div class="btn-row">
-                <button type="button" class="btn primary" id="dpPlay">▶ Chạy truy hồi ngược</button>
-                <button type="button" class="btn ghost" id="dpReset">↺ Làm lại</button>
-            </div>
-            <p class="note">Chọn một tháng để xem các phương án phân bổ phát điện, tưới, sinh hoạt và đáp án tối ưu.</p>
-            <div class="dp-timeline" id="dpTimeline"></div>
-            <div id="dpReadout" class="sim-readout"></div>
-            <div id="dpMonthSolution" class="dp-solution" aria-live="polite">
-                <h3>Lời giải theo tháng</h3>
-                <p>Chọn tháng 1–12 ở trên để hiện phép tính chi tiết.</p>
-            </div>
-            <div class="card">
-                <h3>Quỹ đạo vận hành tối ưu từ S₁ = 0</h3>
-                <div class="table-responsive">
-                    <table id="dpTable" class="dp-table">
-                        <thead><tr><th>Tháng</th><th>Iₜ</th><th>Sₜ thực</th><th>Sₜ lưới DP</th><th>Phát điện Hₜ*</th><th>Tưới Aₜ*</th><th>Sinh hoạt Dₜ*</th><th>Tổng lợi ích</th><th>Fₜ(Sₜ)</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
+    <div class="dp-workspace">
+        <div class="btn-row">
+            <button type="button" class="btn primary" id="dpPlay">▶ Chạy truy hồi ngược</button>
+            <button type="button" class="btn ghost" id="dpReset">↺ Làm lại</button>
         </div>
-        <div>
-            <div id="dpPlot" class="plot dp-plot"></div>
+        <p class="note">Chọn một tháng để xem các phương án phân bổ phát điện, tưới, sinh hoạt và đáp án tối ưu.</p>
+        <div class="dp-timeline" id="dpTimeline"></div>
+        <div id="dpReadout" class="sim-readout"></div>
+        <div id="dpMonthSolution" class="dp-solution" aria-live="polite">
+            <h3>Lời giải theo tháng</h3>
+            <p>Chọn tháng 1–12 ở trên để hiện phép tính chi tiết.</p>
         </div>
     </div>
+
+    <div class="card dp-trajectory-card">
+        <h3>Quỹ đạo vận hành tối ưu từ S₁ = 0</h3>
+        <div class="table-responsive">
+            <table id="dpTable" class="dp-table">
+                <thead><tr><th>Tháng</th><th>Iₜ</th><th>Sₜ thực</th><th>Sₜ lưới DP</th><th>Phát điện Hₜ*</th><th>Tưới Aₜ*</th><th>Sinh hoạt Dₜ*</th><th>Tổng lợi ích</th><th>Fₜ(Sₜ)</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+    <div id="dpPlot" class="plot dp-plot dp-full-plot"></div>
 </section>
 
 </div>

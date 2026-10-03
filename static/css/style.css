@@ -1479,6 +1479,41 @@ tfoot td { font-weight: 700; background: var(--subtle); }
 .learning-page .dp-options-table tr.dp-best-option td { background: #e5f1ef; font-weight: 800; }
 .learning-page .dp-answer { background: #edf7f4; border-radius: 6px; padding: 10px 12px; }
 
+/* DP month worksheet uses the full module width instead of the narrow split column. */
+.module-optimization .dp-workspace,
+.module-optimization .dp-solution { min-width: 0; width: 100%; }
+.module-optimization .dp-solution { overflow: hidden; }
+.module-optimization .dp-options-table {
+    width: 100%;
+    min-width: 1080px;
+    table-layout: fixed;
+    font-variant-numeric: tabular-nums;
+}
+.module-optimization .dp-options-table th {
+    line-height: 1.25;
+    padding: 9px 6px;
+    white-space: normal;
+}
+.module-optimization .dp-options-table td {
+    padding: 7px 6px;
+    white-space: nowrap;
+}
+.module-optimization .dp-options-table tbody tr:nth-child(even) td { background: var(--panel); }
+.module-optimization .dp-options-table tbody tr.dp-best-option td { background: #d9eee8; }
+.module-optimization .dp-options-table tbody tr:hover td { background: var(--accent); }
+.module-optimization .dp-trajectory-card { min-width: 0; width: 100%; }
+.module-optimization #dpTable {
+    width: 100%;
+    min-width: 920px;
+    table-layout: fixed;
+    font-variant-numeric: tabular-nums;
+}
+.module-optimization #dpTable th { padding: 9px 6px; line-height: 1.25; white-space: normal; }
+.module-optimization #dpTable td { padding: 8px 6px; white-space: nowrap; }
+.module-optimization #dpTable tbody tr:nth-child(even) td { background: var(--panel); }
+.module-optimization #dpTable tbody tr.current td { background: var(--accent); font-weight: 800; }
+.module-optimization .dp-full-plot { width: 100%; max-width: 100%; }
+
 .learning-page .chain {
     display: flex;
     flex-wrap: wrap;
