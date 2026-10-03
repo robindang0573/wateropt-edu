@@ -277,7 +277,7 @@ def build_economic_details(v, cf_with_list, cf_without_list, cash_flows, npv_ter
 # ============================================================
 # MODULE 2 — GIÁ NƯỚC NÔNG NGHIỆP
 # ============================================================
-def compute_pricing(form):
+def compute_agricultural_pricing(form):
     invest = float(form.get("invest", 100000))         # triệu đồng — vốn đầu tư ban đầu
     dep_life = float(form.get("dep_life", 5))          # năm — thời gian khấu hao
     mode = form.get("mode", "dynamic")                 # static | dynamic
@@ -412,6 +412,98 @@ def compute_pricing(form):
         "total_ha_bill": total_ha_bill,
     }
 
+
+
+CLEAN_WATER_DEFAULTS = {
+    "materials": 25.0,
+    "labor": 12.0,
+    "depreciation": 22.0,
+    "overhead": 10.0,
+    "other_production": 4.0,
+    "selling": 4.0,
+    "management": 7.0,
+    "financial": 3.0,
+    "other_revenue": 0.6,
+    "production_volume": 12.0,
+    "loss_rate": 10.0,
+}
+
+
+def compute_clean_water_cost(form):
+    """Compute clean-water cost per commercial m³ using annual VND billions."""
+    inputs = {}
+    for name, default in CLEAN_WATER_DEFAULTS.items():
+        value = float(form.get(name, default))
+        if not math.isfinite(value) or value < 0:
+            raise ValueError(f"Giá trị {name} phải là số không âm.")
+        inputs[name] = value
+
+    if inputs["loss_rate"] >= 100:
+        raise ValueError("Tỷ lệ hao hụt phải nhỏ hơn 100%.")
+
+    production_volume = inputs["production_volume"]
+    commercial_volume = production_volume * (1 - inputs["loss_rate"] / 100)
+    if commercial_volume <= 0:
+        raise ValueError("Sản lượng nước thương phẩm phải lớn hơn 0.")
+
+    production_cost_keys = (
+        "materials", "labor", "depreciation", "overhead", "other_production"
+    )
+    B = sum(inputs[name] for name in production_cost_keys)
+    E = B + inputs["selling"] + inputs["management"] + inputs["financial"]
+    F = inputs["other_revenue"]
+    net_cost = E - F
+    if net_cost < 0:
+        raise ValueError("Khoản thu khác không thể lớn hơn tổng chi phí trong ví dụ này.")
+
+    labels = {
+        "materials": "Vật tư, nguyên nhiên liệu trực tiếp",
+        "labor": "Nhân công trực tiếp",
+        "depreciation": "Khấu hao TSCĐ trực tiếp",
+        "overhead": "Chi phí sản xuất chung",
+        "other_production": "Chi phí hợp lý khác phục vụ sản xuất",
+        "selling": "Chi phí bán hàng",
+        "management": "Chi phí quản lý",
+        "financial": "Chi phí tài chính",
+    }
+    descriptions = {
+        "materials": "Định mức tiêu hao × đơn giá điện, hóa chất, nhiên liệu và vật tư",
+        "labor": "Hao phí lao động trực tiếp × đơn giá tiền lương",
+        "depreciation": "Khấu hao TSCĐ trực tiếp theo chế độ hiện hành",
+        "overhead": "Sửa chữa, bảo trì, điện phụ trợ và chi phí phục vụ sản xuất",
+        "other_production": "Chi phí hợp lý, hợp lệ khác chưa tính ở các nhóm trên",
+        "selling": "Chi phí đưa dịch vụ nước sạch đến khách hàng",
+        "management": "Chi phí quản trị, văn phòng, CNTT và hành chính",
+        "financial": "Chi phí tài chính liên quan đến sản xuất, kinh doanh nước sạch",
+    }
+
+    cost_rows = []
+    for name, label in labels.items():
+        amount = inputs[name]
+        cost_rows.append({
+            "key": name,
+            "name": label,
+            "description": descriptions[name],
+            "amount": amount,
+            "unit_cost": amount * 1000 / commercial_volume,
+            "share": amount / E * 100 if E > 0 else 0.0,
+        })
+
+    other_revenue_unit = F * 1000 / commercial_volume
+    return {
+        "inputs": inputs,
+        "production_cost": B,
+        "total_cost": E,
+        "other_revenue": F,
+        "net_cost": net_cost,
+        "production_volume": production_volume,
+        "loss_volume": production_volume - commercial_volume,
+        "commercial_volume": commercial_volume,
+        "unit_cost": net_cost * 1000 / commercial_volume,
+        "gross_unit_cost": E * 1000 / commercial_volume,
+        "other_revenue_unit": other_revenue_unit,
+        "cost_rows": cost_rows,
+    }
 
 # ============================================================
 # MODULE 3.1 — QUY HOẠCH TUYẾN TÍNH (LP) 2 biến
@@ -924,12 +1016,28 @@ def economic():
 @app.route("/pricing", methods=["GET", "POST"])
 def pricing():
     result = None
+    error = None
+    inputs = dict(CLEAN_WATER_DEFAULTS)
+    if request.method == "POST":
+        inputs.update(request.form.to_dict())
+        try:
+            result = compute_clean_water_cost(request.form)
+            inputs = result["inputs"]
+        except (ValueError, ZeroDivisionError):
+            error = "Dữ liệu chưa hợp lệ. Hãy nhập số không âm và bảo đảm sản lượng thương phẩm lớn hơn 0."
+    return render_template("pricing.html", active="pricing", result=result,
+                           inputs=inputs, error=error)
+
+
+@app.route("/pricing/agriculture", methods=["GET", "POST"])
+def agricultural_pricing():
+    result = None
     if request.method == "POST":
         try:
-            result = compute_pricing(request.form)
+            result = compute_agricultural_pricing(request.form)
         except (ValueError, ZeroDivisionError):
             result = {"error": "Dữ liệu đầu vào không hợp lệ."}
-    return render_template("pricing.html", active="pricing", result=result)
+    return render_template("agricultural_pricing.html", active="pricing", result=result)
 
 
 @app.route("/optimization", methods=["GET"])
@@ -967,7 +1075,15 @@ def api_economic():
 @app.route("/api/pricing", methods=["POST"])
 def api_pricing():
     try:
-        return jsonify(compute_pricing(request.form))
+        return jsonify(compute_agricultural_pricing(request.form))
+    except (ValueError, ZeroDivisionError):
+        return jsonify({"error": "invalid"}), 400
+
+
+@app.route("/api/pricing/clean-water", methods=["POST"])
+def api_clean_water_pricing():
+    try:
+        return jsonify(compute_clean_water_cost(request.form))
     except (ValueError, ZeroDivisionError):
         return jsonify({"error": "invalid"}), 400
 

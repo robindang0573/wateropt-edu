@@ -1588,6 +1588,99 @@ tfoot td { font-weight: 700; background: var(--subtle); }
 }
 .module-economic .exercise-workspace:focus { border-color: var(--primary); outline: 2px solid var(--accent); }
 
+.module-pricing .clean-water-rule,
+.module-pricing .clean-water-example {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 5px solid var(--primary);
+    border-radius: 10px;
+    margin: 14px 0 20px;
+    padding: 12px 18px;
+}
+.module-pricing .clean-water-rule {
+    align-items: center;
+    display: grid;
+    gap: 8px 22px;
+    grid-template-columns: minmax(220px, 1fr) 3fr;
+}
+.module-pricing .clean-water-rule .formula { font-size: 1.35em; margin: 0; }
+.module-pricing .clean-water-rule p { margin: 5px 0; }
+.module-pricing .clean-water-group-title {
+    border-bottom: 1px solid var(--border);
+    color: var(--primary);
+    font-size: 1em;
+    margin: 20px 0 12px;
+    padding-bottom: 6px;
+}
+.module-pricing .clean-water-input-grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(225px, 1fr));
+}
+.module-pricing .clean-water-input-grid > div {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 12px;
+}
+.module-pricing .clean-water-input-grid input {
+    width: 100%;
+}
+.module-pricing .clean-water-input-grid small,
+.module-pricing .clean-water-breakdown td small {
+    color: var(--muted);
+    display: block;
+    line-height: 1.4;
+    margin-top: 5px;
+}
+.module-pricing .clean-water-volume-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.module-pricing .clean-water-results { margin-top: 20px; }
+.module-pricing .clean-water-breakdown { margin-top: 18px; }
+.module-pricing .clean-water-breakdown td:first-child { text-align: left; }
+.module-pricing .clean-water-share { min-width: 115px; }
+.module-pricing .clean-water-share > div {
+    background: var(--panel);
+    border-radius: 99px;
+    height: 8px;
+    margin-top: 4px;
+    overflow: hidden;
+}
+.module-pricing .clean-water-share i {
+    background: var(--secondary);
+    border-radius: inherit;
+    display: block;
+    height: 100%;
+}
+.module-pricing .clean-water-example h3 { color: var(--primary); margin: 2px 0 7px; }
+.module-pricing .clean-water-example p { margin: 0; line-height: 1.55; }
+.module-pricing .clean-water-cost-note { margin-top: 16px; }
+.module-pricing .clean-water-method { margin-top: 20px; }
+.module-pricing .pricing-switch {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 18px;
+}
+.module-pricing .pricing-switch a {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--text);
+    font-weight: 700;
+    padding: 9px 16px;
+    text-decoration: none;
+}
+.module-pricing .pricing-switch a:hover,
+.module-pricing .pricing-switch a.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--on-primary);
+}
+
+@media (max-width: 768px) {
+    .module-pricing .clean-water-rule { grid-template-columns: 1fr; }
+}
+
 .learning-page .chain {
     display: flex;
     flex-wrap: wrap;

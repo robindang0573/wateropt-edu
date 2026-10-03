@@ -6,7 +6,7 @@
 - **Base URL:** `https://dautieng.kttnn.online`
 - **Định dạng dữ liệu:** `application/json`
 - **Bảng trang web (HTML)**
-- Đơn vị tiền tệ theo từng mô-đun: Module 1 dùng triệu USD; giá nước dùng triệu đồng và triệu m³, cho kết quả đồng/m³. Lãi suất nhập theo đơn vị **%**.
+- Đơn vị tiền tệ theo từng mô-đun: Module 1 dùng triệu USD; Module 2 nhập chi phí tỷ đồng/năm và sản lượng triệu m³/năm, cho giá thành đồng/m³. Lãi suất nhập theo đơn vị **%**.
 
 ---
 
@@ -16,7 +16,8 @@
 |--------|------------------|--------------------------------------------------------------|
 | GET    | `/`              | Trang chủ                                                     |
 | GET/POST | `/economic`    | Phân tích kinh tế dự án (NPV, IRR, B/C, thời gian hoàn vốn)  |
-| GET/POST | `/pricing`     | Tính toán giá nước (eps-tĩnh/động, biểu giá 3 bậc)           |
+| GET/POST | `/pricing`     | Tính giá thành nước sạch theo chi phí và sản lượng thương phẩm |
+| GET/POST | `/pricing/agriculture` | Cơ chế tính giá nước nông nghiệp hiện có |
 | GET    | `/optimization`  | Module 3 — LP, Gradient/Newton, Interior Point, Quy hoạch động|
 
 ---
@@ -75,58 +76,50 @@ curl -X POST https://dautieng.kttnn.online/api/economic \
 
 ---
 
-## 3. `POST /api/pricing`
+## 3. `POST /api/pricing/clean-water`
 
-Tính giá nước từ chi phí (khấu hao tĩnh/động) và doanh thu yêu cầu; có bảng giá 3 bậc.
+Tính giá thành một m³ nước sạch theo `G=(E-F)/A`. Chi phí nhập bằng tỷ đồng/năm; sản lượng bằng triệu m³/năm; đầu ra là đồng/m³.
 
 ### Request — form-urlencoded
 
-| Field         | Loại  | Mặc định | Mô tả                                    |
-|---------------|-------|----------|------------------------------------------|
-| `invest`      | float | 100000   | Vốn đầu tư (triệu đồng)                  |
-| `dep_life`    | float | 5        | Số năm khấu hao                          |
-| `mode`        | string| `dynamic`| `static` hoặc `dynamic`                   |
-| `disc_rate`   | float | 6        | Tỉ suất chiết khấu xã hội (%)            |
-| `om_labor`    | float | 10000    | CP nhân công (triệu đồng/năm)            |
-| `om_energy`   | float | 8000     | CP điện năng (triệu đồng/năm)            |
-| `om_repair`   | float | 4000     | CP sửa chữa (triệu đồng/năm)             |
-| `om_mgmt`     | float | 3000     | CP quản lý (triệu đồng/năm)              |
-| `profit`      | float | 5        | Tỷ suất lợi nhuận (%)                    |
-| `tax`         | float | 3        | Thuế (%)                                 |
-| `design_q`    | float | 100      | Lượng nước thiết kế (triệu m³/năm)       |
-| `actual_q`    | float | 40       | Lượng nước thực tế (triệu m³/năm)        |
-| `quota`       | float | 6000     | Định mức (m³/hộ/năm)                     |
-| `use`         | float | 7200     | Lượng dùng hộ mẫu (m³/hộ/năm)            |
-| `area_ha`     | float | 1000     | Diện tích vùng tưới (ha)                 |
-| `tier2`       | float | 20       | Phụ giá bậc 2 (%) (vượt ≤10%)            |
-| `tier3`       | float | 50       | Phụ giá bậc 3 (%) (vượt >10%)            |
+| Field | Loại | Mặc định | Mô tả |
+|---|---:|---:|---|
+| `materials` | float | 25 | Vật tư, nguyên nhiên liệu trực tiếp (tỷ đồng/năm) |
+| `labor` | float | 12 | Nhân công trực tiếp (tỷ đồng/năm) |
+| `depreciation` | float | 22 | Khấu hao TSCĐ trực tiếp (tỷ đồng/năm) |
+| `overhead` | float | 10 | Chi phí sản xuất chung (tỷ đồng/năm) |
+| `other_production` | float | 4 | Chi phí hợp lý khác phục vụ sản xuất (tỷ đồng/năm) |
+| `selling` | float | 4 | Chi phí bán hàng (tỷ đồng/năm) |
+| `management` | float | 7 | Chi phí quản lý (tỷ đồng/năm) |
+| `financial` | float | 3 | Chi phí tài chính (tỷ đồng/năm) |
+| `other_revenue` | float | 0.6 | Khoản thu khác được giảm trừ F (tỷ đồng/năm) |
+| `production_volume` | float | 12 | Sản lượng sản xuất Qsx (triệu m³/năm) |
+| `loss_rate` | float | 10 | Tỷ lệ hao hụt (%) |
+
+Sản lượng thương phẩm `A=Qsx×(1−loss_rate/100)`. Mỗi chi phí và sản lượng phải không âm; `loss_rate<100` và A phải lớn hơn 0.
 
 ### Response 200
 
-| Trường           | Loại   | Mô tả                                        |
-|------------------|--------|----------------------------------------------|
-| `breakdown`      | object | Cơ cấu chi phí: Khấu hao, Nhân công, ...     |
-| `cost_rows`      | array  | `{name, value, share, calc}` (tỉ trọng % + giải thích) |
-| `dep_static` / `dep_dynamic` | float | Khấu hao đường thẳng / niên kim |
-| `comp_static` / `comp_dynamic` | object | So sánh: `{C, profit, tax, R, price}` |
-| `crf`            | float  | (A/P, i, n)                                  |
-| `C`              | float  | Tổng chi phí năm                             |
-| `profit_amt`, `tax_amt`, `R` | float | Lợi nhuận, thuế, doanh thu yêu cầu |
-| `price_vnd`   | float|null | Giá nước (đồng/m³; triệu đồng ÷ triệu m³) |
-| `q_pricing`      | float  | Lưu lượng định giá (quy tắc 60%: max(aq, 0.6·dq)) |
-| `rule60`         | bool   | Có áp quy tắc 60% hay không                 |
-| `tiers`          | array  | Giá 3 bậc: `{name, range, use, rate, price, amount}` |
-| `bill`           | float  | Hóa đơn hộ mẫu (3 bậc)                      |
-| `total_ha_*`     | float  | Doanh thu vùng (use/quota/bill × area_ha)   |
+Trả về các trường `production_cost` (B), `total_cost` (E), `other_revenue` (F), `net_cost` (E−F), `commercial_volume` (A), `unit_cost` (G, đồng/m³), `gross_unit_cost`, `other_revenue_unit`, các giá trị đầu vào `inputs` và `cost_rows`. Mỗi dòng chi phí có `name`, `amount` (tỷ đồng/năm), `unit_cost` (đồng/m³), `share` (% tổng E) và mô tả cách xác định.
+
+### Ví dụ
+
+```bash
+curl -X POST https://dautieng.kttnn.online/api/pricing/clean-water \
+  -d "materials=25&labor=12&depreciation=22&overhead=10&other_production=4&selling=4&management=7&financial=3&other_revenue=0.6&production_volume=12&loss_rate=10"
+```
+
+Với dữ liệu mẫu, E=87 tỷ đồng/năm, F=0,6 tỷ đồng/năm, A=10,8 triệu m³/năm và G=8.000 đồng/m³.
 
 ### Lỗi
 
 `400 {"error": "invalid"}` khi dữ liệu không hợp lệ.
 
-```bash
-curl -X POST https://dautieng.kttnn.online/api/pricing \
-  -d "invest=100000&dep_life=5&mode=dynamic&disc_rate=6&design_q=100&actual_q=40"
-```
+## 3.1 `POST /api/pricing` — giá nước nông nghiệp
+
+Giữ API giá nước nông nghiệp hiện có với các tham số về vốn, khấu hao, chi phí vận hành, doanh thu cho phép, quy tắc 60% và biểu giá lũy tiến. Các trường và cấu trúc kết quả tương thích với phiên bản trước.
+
+Các trường chính gồm `invest`, `dep_life`, `mode`, `disc_rate`, `om_labor`, `om_energy`, `om_repair`, `om_mgmt`, `profit`, `tax`, `design_q`, `actual_q`, `quota`, `use`, `area_ha`, `tier2` và `tier3`. Đơn vị tiền là triệu đồng, lượng nước năm là triệu m³, định mức hộ là m³/hộ/năm.
 
 ---
 

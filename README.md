@@ -3,7 +3,7 @@
 Nền tảng học tập tương tác giúp sinh viên Thủy lợi & Tài nguyên nước trực quan hóa 3 trụ cột:
 
 1. **📊 Phân tích kinh tế dự án** — NPV, B/C, IRR, AW, Payback (Chương 3).
-2. **🌾 Cơ chế giá nước nông nghiệp** — chi phí cho phép (准许成本), quy tắc 60%, giá lũy tiến, tham chiếu Hồ Nam 0,038 CNY/m³ (Chương 6, cơ chế Trung Quốc).
+2. **🚰 Tính giá nước** — chọn bộ tính giá thành nước sạch theo chi phí/sản lượng thương phẩm hoặc giữ bộ tính giá nước nông nghiệp với quy tắc 60% và biểu giá lũy tiến.
 3. **🧠 Tối ưu hóa** — Quy hoạch tuyến tính 2 biến (vùng khả thi + hoạt ảnh Simplex/Interior Point), Gradient Descent & Newton trên bề mặt 3D, Quy hoạch động vận hành hồ chứa (truy hồi ngược).
 4. **💧 Governance hệ thống nước** — mô phỏng trạng thái hồ chứa, ràng buộc dòng chảy môi trường, Pareto front và lựa chọn Planning/Management theo trọng số Governance.
 
@@ -37,7 +37,8 @@ python app.py
 | Endpoint | Phương thức | Mô tả |
 |---|---|---|
 | `/api/economic` | POST | Tính NPV/B/C/IRR/AW (form: invest, benefit, om, rate, nper, rep_cost, rep_year, salvage) |
-| `/api/pricing` | POST | Tính giá nước (form: dep, om_labor, om_energy, om_repair, om_mgmt, profit, tax, design_q, actual_q, quota, use, area_ha, tier2, tier3) |
+| `/api/pricing/clean-water` | POST | Tính giá thành nước sạch theo chi phí thương phẩm (form: materials, labor, depreciation, overhead, other_production, selling, management, financial, other_revenue, production_volume, loss_rate) |
+| `/api/pricing` | POST | Tính giá nước nông nghiệp, giữ các tham số và kết quả hiện có |
 | `/api/optimize/lp` | POST | Giải LP 2 biến + đỉnh/đồ giải + tableau Simplex (form: c1, c2, a1_1..6, a2_1..6, b_1..6) |
 | `/api/optimize/gd` | GET | Gradient Descent (query: x0, y0, alpha) |
 | `/api/optimize/newton` | GET | Bước nhảy Newton (query: x0, y0) |
@@ -46,4 +47,4 @@ python app.py
 | `/api/governance` | GET/POST | Mô phỏng Governance–Planning–Management và chọn nghiệm Pareto (vcrit, qeco, periods, v0, q0, w_econ, w_soc, w_env, w_risk) |
 
 ## Đơn vị
-- Module 1: triệu USD. Module 2: triệu đồng/năm và triệu m³/năm; giá đầu ra là đồng/m³. Module 3: ha, tỷ m³, tỷ đồng.
+- Module 1: triệu USD. Module 2: giá nước nông nghiệp (triệu đồng, triệu m³) và giá thành nước sạch (tỷ đồng/năm, triệu m³/năm, kết quả đồng/m³). Module 3: ha, tỷ m³, tỷ đồng.
