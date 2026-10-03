@@ -426,13 +426,25 @@ CLEAN_WATER_DEFAULTS = {
     "other_revenue": 0.6,
     "production_volume": 12.0,
     "loss_rate": 10.0,
+    "profit_per_m3": 500.0,
+}
+
+CLEAN_WATER_CHINA_DEFAULTS = {
+    "cn_allowed_cost": 60.0,
+    "cn_effective_assets": 300.0,
+    "cn_tax": 3.0,
+    "cn_debt_ratio": 40.0,
+    "cn_equity_return": 7.0,
+    "cn_debt_return": 3.5,
+    "cn_approved_volume": 10.8,
+    "cn_utilization": 75.0,
 }
 
 
 def compute_clean_water_cost(form):
-    """Compute clean-water cost per commercial m³ using annual VND billions."""
+    """Compute Vietnamese unit cost and an educational China-style allowed-revenue comparison."""
     inputs = {}
-    for name, default in CLEAN_WATER_DEFAULTS.items():
+    for name, default in {**CLEAN_WATER_DEFAULTS, **CLEAN_WATER_CHINA_DEFAULTS}.items():
         value = float(form.get(name, default))
         if not math.isfinite(value) or value < 0:
             raise ValueError(f"Giá trị {name} phải là số không âm.")
@@ -440,6 +452,12 @@ def compute_clean_water_cost(form):
 
     if inputs["loss_rate"] >= 100:
         raise ValueError("Tỷ lệ hao hụt phải nhỏ hơn 100%.")
+    if inputs["cn_debt_ratio"] > 100:
+        raise ValueError("Tỷ trọng nợ phải nằm trong khoảng 0–100%.")
+    if inputs["cn_utilization"] <= 0 or inputs["cn_utilization"] > 100:
+        raise ValueError("Mức sử dụng công suất phải lớn hơn 0% và không vượt 100%.")
+    if inputs["cn_approved_volume"] <= 0:
+        raise ValueError("Sản lượng được duyệt theo mô hình Trung Quốc phải lớn hơn 0.")
 
     production_volume = inputs["production_volume"]
     commercial_volume = production_volume * (1 - inputs["loss_rate"] / 100)
@@ -490,6 +508,23 @@ def compute_clean_water_cost(form):
         })
 
     other_revenue_unit = F * 1000 / commercial_volume
+
+    # China-style comparison: allowed revenue = allowed costs + allowed return + tax.
+    debt_ratio = inputs["cn_debt_ratio"] / 100
+    allowed_return_rate = (
+        inputs["cn_equity_return"] * (1 - debt_ratio)
+        + inputs["cn_debt_return"] * debt_ratio
+    ) / 100
+    allowed_return = inputs["cn_effective_assets"] * allowed_return_rate
+    allowed_revenue = inputs["cn_allowed_cost"] + allowed_return + inputs["cn_tax"]
+    utilization = inputs["cn_utilization"] / 100
+    capacity_adjusted_volume = inputs["cn_approved_volume"]
+    low_utilization_adjustment = utilization < 0.65
+    if low_utilization_adjustment:
+        # Price rules adjust the denominator up to the 65% design-capacity reference.
+        capacity_adjusted_volume /= utilization / 0.65
+    china_unit_price = allowed_revenue * 1000 / capacity_adjusted_volume
+    vietnam_avg_price = net_cost * 1000 / commercial_volume + inputs["profit_per_m3"]
     return {
         "inputs": inputs,
         "production_cost": B,
@@ -503,6 +538,15 @@ def compute_clean_water_cost(form):
         "gross_unit_cost": E * 1000 / commercial_volume,
         "other_revenue_unit": other_revenue_unit,
         "cost_rows": cost_rows,
+        "vietnam_profit_per_m3": inputs["profit_per_m3"],
+        "vietnam_average_price": vietnam_avg_price,
+        "china_allowed_return_rate": allowed_return_rate * 100,
+        "china_allowed_return": allowed_return,
+        "china_allowed_revenue": allowed_revenue,
+        "china_approved_volume": inputs["cn_approved_volume"],
+        "china_pricing_volume": capacity_adjusted_volume,
+        "china_unit_price": china_unit_price,
+        "china_low_utilization_adjustment": low_utilization_adjustment,
     }
 
 # ============================================================

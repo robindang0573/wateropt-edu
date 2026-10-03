@@ -12,8 +12,8 @@
     <a href="{{ url_for('agricultural_pricing') }}">Giá nước nông nghiệp</a>
 </nav>
 
+<div class="clean-water-formula formula">$$G=\frac{E-F}{A}$$</div>
 <div class="clean-water-rule">
-    <div class="formula">$$G=\frac{E-F}{A}$$</div>
     <p><b>G</b>: giá thành một m³ nước sạch; <b>E</b>: tổng chi phí sản xuất, kinh doanh; <b>F</b>: khoản thu khác được giảm trừ; <b>A</b>: sản lượng nước thương phẩm.</p>
     <p class="note">Đơn vị nhập: chi phí tỷ đồng/năm, sản lượng triệu m³/năm. Quy đổi: 1 tỷ đồng / 1 triệu m³ = 1.000 đồng/m³.</p>
 </div>
@@ -45,6 +45,24 @@
         <div><label for="cw_loss_rate">Tỷ lệ hao hụt <span class="unit">%</span></label><input id="cw_loss_rate" name="loss_rate" type="number" min="0" max="99.99" step="any" value="{{ inputs.get('loss_rate', 10) }}"><small>A = Q<sub>sx</sub> × (1 − tỷ lệ hao hụt).</small></div>
     </div>
     <p class="note">Tỷ lệ hao hụt nhập theo phương án và căn cứ được địa phương áp dụng; ví dụ 10% chỉ là dữ liệu minh họa.</p>
+
+    <h3 class="clean-water-group-title">Tham số giá bình quân theo mô hình Việt Nam</h3>
+    <div class="clean-water-input-grid clean-water-volume-grid">
+        <div><label for="cw_profit_per_m3">Lợi nhuận hoặc tích lũy P <span class="unit">đồng/m³</span></label><input id="cw_profit_per_m3" name="profit_per_m3" type="number" min="0" step="any" value="{{ inputs.get('profit_per_m3', 500) }}"><small>Thêm vào giá thành để minh họa giá bán lẻ bình quân; mức thực tế cần được thẩm định, quyết định.</small></div>
+    </div>
+
+    <h3 class="clean-water-group-title">Tham số mô hình doanh thu được phép kiểu Trung Quốc</h3>
+    <p class="note">Nhập chi phí được công nhận, tài sản hiệu quả, thuế và sản lượng được duyệt. Đây là mô phỏng học tập theo cơ chế quản lý giá cấp nước đô thị của Trung Quốc.</p>
+    <div class="clean-water-input-grid">
+        <div><label for="cn_allowed_cost">Chi phí được phép C<sub>allowed</sub> <span class="unit">tỷ đồng/năm</span></label><input id="cn_allowed_cost" name="cn_allowed_cost" type="number" min="0" step="any" value="{{ inputs.get('cn_allowed_cost', 60) }}"><small>Nhập sau giám sát hiệu quả; phần thất thoát vượt chuẩn và chi phí không hợp lý bị loại.</small></div>
+        <div><label for="cn_effective_assets">Tài sản hiệu quả <span class="unit">tỷ đồng</span></label><input id="cn_effective_assets" name="cn_effective_assets" type="number" min="0" step="any" value="{{ inputs.get('cn_effective_assets', 300) }}"><small>Tài sản đủ điều kiện phục vụ hoạt động cấp nước.</small></div>
+        <div><label for="cn_tax">Thuế được phép <span class="unit">tỷ đồng/năm</span></label><input id="cn_tax" name="cn_tax" type="number" min="0" step="any" value="{{ inputs.get('cn_tax', 3) }}"></div>
+        <div><label for="cn_debt_ratio">Tỷ trọng nợ D <span class="unit">%</span></label><input id="cn_debt_ratio" name="cn_debt_ratio" type="number" min="0" max="100" step="any" value="{{ inputs.get('cn_debt_ratio', 40) }}"></div>
+        <div><label for="cn_equity_return">Tỷ suất vốn chủ sở hữu r<sub>E</sub> <span class="unit">%/năm</span></label><input id="cn_equity_return" name="cn_equity_return" type="number" min="0" step="any" value="{{ inputs.get('cn_equity_return', 7) }}"><small>Tham chiếu lợi suất trái phiếu Chính phủ 10 năm cộng mức điều tiết.</small></div>
+        <div><label for="cn_debt_return">Tỷ suất vốn vay r<sub>D</sub> <span class="unit">%/năm</span></label><input id="cn_debt_return" name="cn_debt_return" type="number" min="0" step="any" value="{{ inputs.get('cn_debt_return', 3.5) }}"><small>Tham chiếu LPR theo quy định điều tiết.</small></div>
+        <div><label for="cn_approved_volume">Sản lượng được duyệt Q<sub>approved</sub> <span class="unit">triệu m³/năm</span></label><input id="cn_approved_volume" name="cn_approved_volume" type="number" min="0" step="any" value="{{ inputs.get('cn_approved_volume', 10.8) }}"><small>Căn cứ lượng lấy vào sau khi trừ tự dùng và thất thoát được chấp nhận.</small></div>
+        <div><label for="cn_utilization">Mức sử dụng công suất thiết kế <span class="unit">%</span></label><input id="cn_utilization" name="cn_utilization" type="number" min="0.01" max="100" step="any" value="{{ inputs.get('cn_utilization', 75) }}"><small>Nếu thấp hơn 65%, mô phỏng điều chỉnh mẫu số về mốc tham chiếu 65%.</small></div>
+    </div>
     <div class="btn-row"><button type="submit" class="btn primary">Tính giá thành nước sạch</button></div>
 </form>
 
@@ -57,6 +75,7 @@
         <div class="kpi-box"><span>Nước thương phẩm A</span><strong>{{ '{:,.2f}'.format(result.commercial_volume) }} triệu m³/năm</strong></div>
         <div class="kpi-box"><span>Tổng chi phí E</span><strong>{{ '{:,.2f}'.format(result.total_cost) }} tỷ đồng/năm</strong></div>
         <div class="kpi-box"><span>Chi phí sau giảm trừ E − F</span><strong>{{ '{:,.2f}'.format(result.net_cost) }} tỷ đồng/năm</strong></div>
+        <div class="kpi-box"><span>Giá bình quân VN: G + P</span><strong>{{ '{:,.0f}'.format(result.vietnam_average_price) }} đồng/m³</strong></div>
     </div>
 
     <section class="card clean-water-breakdown">
@@ -92,16 +111,66 @@
     </div>
 
     <div class="alert warning clean-water-cost-note">
-        G là <b>giá thành</b>, chưa phải giá bán cuối cùng. Phương án giá bán còn xét lợi nhuận và các quy định về giá bán buôn/bán lẻ; mô đun này không tự quyết định giá bán áp dụng cho khách hàng.
+        G là <b>giá thành</b>. Chỉ tiêu G + P là giá bình quân minh họa; các mức giá thực tế cần được thẩm định và quyết định theo thẩm quyền.
     </div>
+
+    <section class="card pricing-comparison">
+        <h2 class="card-title">So sánh kết quả hai mô hình điều tiết</h2>
+        <div class="pricing-comparison-grid">
+            <article>
+                <h3>Mô hình Việt Nam · Chi phí trên một m³</h3>
+                <div class="formula">$$G_{VN}=\frac{E-F}{A},\qquad G_{bq}=G_{VN}+P$$</div>
+                <p>Giá thành <b>{{ '{:,.0f}'.format(result.unit_cost) }} đồng/m³</b> + P <b>{{ '{:,.0f}'.format(result.vietnam_profit_per_m3) }} đồng/m³</b> = giá bình quân minh họa <b>{{ '{:,.0f}'.format(result.vietnam_average_price) }} đồng/m³</b>.</p>
+            </article>
+            <article>
+                <h3>Mô hình Trung Quốc · Doanh thu được phép</h3>
+                <div class="formula">$$AR=C_{allowed}+Asset_{effective}r_{allowed}+Tax$$</div>
+                <p>Tỷ suất sinh lợi được phép: <b>{{ '{:.2f}'.format(result.china_allowed_return_rate) }}%</b>; lợi nhuận được phép: <b>{{ '{:,.2f}'.format(result.china_allowed_return) }} tỷ đồng/năm</b>.</p>
+                <p>AR: <b>{{ '{:,.2f}'.format(result.china_allowed_revenue) }} tỷ đồng/năm</b>; mẫu số tính giá: <b>{{ '{:,.2f}'.format(result.china_pricing_volume) }} triệu m³/năm</b>.</p>
+                <p class="china-price-result">Giá bình quân mô phỏng (chưa VAT): <b>{{ '{:,.0f}'.format(result.china_unit_price) }} đồng/m³</b>.</p>
+                {% if result.china_low_utilization_adjustment %}<p class="note">Đã áp dụng điều chỉnh mẫu số do mức sử dụng công suất thấp hơn 65%.</p>{% endif %}
+            </article>
+        </div>
+        <p class="note">Đây là so sánh giáo dục giữa hai kiến trúc điều tiết. Giá tính ra không thay thế hồ sơ chi phí được thẩm định hoặc quyết định giá của cơ quan có thẩm quyền.</p>
+    </section>
 </section>
 {% endif %}
 
+<section class="card pricing-comparison pricing-method-overview">
+    <h2 class="card-title">Ưu điểm của hai cách tính</h2>
+    <div class="pricing-comparison-grid">
+        <article>
+            <h3>Việt Nam · Tính chi phí trên một m³</h3>
+            <div class="formula">$$G_{VN}=\frac{E-F}{A},\qquad G_{bq}=G_{VN}+P$$</div>
+            <ul>
+                <li>Dễ truy vết từ các khoản chi phí kế toán đến giá thành một m³.</li>
+                <li>Thể hiện trực tiếp quan hệ giữa tổng chi phí ròng và lượng nước thương phẩm.</li>
+                <li>Dễ giải thích, đối chiếu và kiểm toán theo từng nhóm chi phí.</li>
+                <li>Có thể điều chỉnh theo điều kiện hệ thống và quyết định của địa phương.</li>
+            </ul>
+        </article>
+        <article>
+            <h3>Trung Quốc · Doanh thu được phép</h3>
+            <div class="formula">$$AR=C_{allowed}+Asset_{effective}r_{allowed}+Tax$$</div>
+            <div class="formula">$$r_{allowed}=r_E(1-D)+r_DD,\qquad G_{CN}=\frac{AR}{Q_{approved}}$$</div>
+            <p>Chi phí được phép được thẩm định, gồm khấu hao, phân bổ tài sản vô hình và vận hành–bảo trì; tài sản và sản lượng cũng phải qua giám sát điều tiết.</p>
+            <ul>
+                <li>Liên kết lợi nhuận được phép với tài sản hiệu quả thực sự phục vụ cấp nước.</li>
+                <li>Làm rõ vai trò của cấu trúc vốn chủ sở hữu và vốn vay trong tỷ suất sinh lợi.</li>
+                <li>Cho phép xem xét chi phí, tài sản và sản lượng trong một khung doanh thu thống nhất.</li>
+                <li>Có quy tắc điều tiết riêng cho thất thoát vượt chuẩn và mức sử dụng công suất thấp.</li>
+            </ul>
+        </article>
+    </div>
+    <p class="note">Việt Nam thuận tiện khi phân tích chi phí đơn vị và đối chiếu dữ liệu doanh nghiệp; mô hình Trung Quốc làm rõ hơn việc xác định chi phí hiệu quả, tài sản được tính sinh lợi và phân bổ rủi ro công suất. Mô hình doanh thu được phép cần dữ liệu tài sản, chi phí và quy trình giám sát chặt chẽ.</p>
+</section>
+
 <section class="card clean-water-method">
-    <h2 class="card-title">Cấu trúc chi phí và phương pháp</h2>
+    <h2 class="card-title">Cấu trúc chi phí và căn cứ tham khảo</h2>
     <div class="formula">$$B=C_{VL}+C_{NC}+C_{KH}+C_{SXC}+C_{khác},\qquad E=B+C_{BH}+C_{QL}+C_{TC},\qquad G=\frac{E-F}{A}$$</div>
     <p>Chi phí vật tư căn cứ định mức kinh tế-kỹ thuật và đơn giá; các nhóm nhân công, khấu hao, sản xuất chung, chi phí hợp lý khác, bán hàng, quản lý và tài chính được nhập riêng để tránh bỏ sót hoặc tính trùng. Sản lượng thương phẩm được xác định từ sản lượng sản xuất trừ sản lượng hao hụt.</p>
     <p class="note">Mô đun dùng phương pháp tính giá thành được hướng dẫn tại <a href="https://vanban.chinhphu.vn/?classid=1&amp;docid=216468&amp;pageid=27160&amp;typegroupid=6" target="_blank" rel="noopener">Thông tư 145/2025/TT-BTC</a> (hiệu lực từ 15/02/2026), cùng phương pháp định giá chung tại <a href="https://vanban.chinhphu.vn/?classid=1&amp;docid=210611&amp;orggroupid=4&amp;pageid=27160" target="_blank" rel="noopener">Thông tư 45/2024/TT-BTC</a>. Các số mặc định là ví dụ giảng dạy, không phải định mức hay giá được cơ quan nhà nước phê duyệt.</p>
+    <p class="note">Mô hình doanh thu được phép kiểu Trung Quốc tham khảo <a href="https://zfxxgk.ndrc.gov.cn/web/iteminfo.jsp?id=18524" target="_blank" rel="noopener">Biện pháp quản lý giá cấp nước đô thị của NDRC</a> và <a href="https://zfxxgk.ndrc.gov.cn/web/iteminfo.jsp?id=18523" target="_blank" rel="noopener">Biện pháp giám sát chi phí định giá nước đô thị</a>. Các tham số nhập là giả định minh họa để so sánh, không phải bộ thông số điều tiết của Trung Quốc hay một địa phương cụ thể.</p>
 </section>
 
 </div>

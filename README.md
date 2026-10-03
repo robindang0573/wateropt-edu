@@ -3,7 +3,7 @@
 Nền tảng học tập tương tác giúp sinh viên Thủy lợi & Tài nguyên nước trực quan hóa 3 trụ cột:
 
 1. **📊 Phân tích kinh tế dự án** — NPV, B/C, IRR, AW, Payback (Chương 3).
-2. **🚰 Tính giá nước** — chọn bộ tính giá thành nước sạch theo chi phí/sản lượng thương phẩm hoặc giữ bộ tính giá nước nông nghiệp với quy tắc 60% và biểu giá lũy tiến.
+2. **🚰 Tính giá nước** — tính giá thành nước sạch theo phương pháp Việt Nam, so sánh doanh thu được phép kiểu Trung Quốc, hoặc dùng bộ tính giá nước nông nghiệp hiện có.
 3. **🧠 Tối ưu hóa** — Quy hoạch tuyến tính 2 biến (vùng khả thi + hoạt ảnh Simplex/Interior Point), Gradient Descent & Newton trên bề mặt 3D, Quy hoạch động vận hành hồ chứa (truy hồi ngược).
 4. **💧 Governance hệ thống nước** — mô phỏng trạng thái hồ chứa, ràng buộc dòng chảy môi trường, Pareto front và lựa chọn Planning/Management theo trọng số Governance.
 
@@ -37,7 +37,7 @@ python app.py
 | Endpoint | Phương thức | Mô tả |
 |---|---|---|
 | `/api/economic` | POST | Tính NPV/B/C/IRR/AW (form: invest, benefit, om, rate, nper, rep_cost, rep_year, salvage) |
-| `/api/pricing/clean-water` | POST | Tính giá thành nước sạch theo chi phí thương phẩm (form: materials, labor, depreciation, overhead, other_production, selling, management, financial, other_revenue, production_volume, loss_rate) |
+| `/api/pricing/clean-water` | POST | Tính giá nước sạch Việt Nam và mô phỏng doanh thu được phép kiểu Trung Quốc (xem API.md để biết đủ tham số) |
 | `/api/pricing` | POST | Tính giá nước nông nghiệp, giữ các tham số và kết quả hiện có |
 | `/api/optimize/lp` | POST | Giải LP 2 biến + đỉnh/đồ giải + tableau Simplex (form: c1, c2, a1_1..6, a2_1..6, b_1..6) |
 | `/api/optimize/gd` | GET | Gradient Descent (query: x0, y0, alpha) |

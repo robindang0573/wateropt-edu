@@ -78,7 +78,7 @@ curl -X POST https://dautieng.kttnn.online/api/economic \
 
 ## 3. `POST /api/pricing/clean-water`
 
-Tính giá thành một m³ nước sạch theo `G=(E-F)/A`. Chi phí nhập bằng tỷ đồng/năm; sản lượng bằng triệu m³/năm; đầu ra là đồng/m³.
+Tính giá thành nước sạch theo phương pháp Việt Nam `G=(E-F)/A`, giá bình quân minh họa `G+P`, đồng thời mô phỏng phương pháp doanh thu được phép kiểu Trung Quốc `G_CN=(C_allowed+Asset_effective×r_allowed+Tax)/Q_approved`. Chi phí nhập bằng tỷ đồng/năm; sản lượng bằng triệu m³/năm; đầu ra là đồng/m³. Phần Trung Quốc là mô hình giáo dục với tham số do người dùng giả định, không tạo giá chính thức.
 
 ### Request — form-urlencoded
 
@@ -95,12 +95,21 @@ Tính giá thành một m³ nước sạch theo `G=(E-F)/A`. Chi phí nhập b�
 | `other_revenue` | float | 0.6 | Khoản thu khác được giảm trừ F (tỷ đồng/năm) |
 | `production_volume` | float | 12 | Sản lượng sản xuất Qsx (triệu m³/năm) |
 | `loss_rate` | float | 10 | Tỷ lệ hao hụt (%) |
+| `profit_per_m3` | float | 500 | P, lợi nhuận/tích lũy minh họa (đồng/m³) |
+| `cn_allowed_cost` | float | 60 | Chi phí được phép sau giám sát (tỷ đồng/năm) |
+| `cn_effective_assets` | float | 300 | Tài sản hiệu quả được phép tính sinh lợi (tỷ đồng) |
+| `cn_tax` | float | 3 | Thuế được phép (tỷ đồng/năm) |
+| `cn_debt_ratio` | float | 40 | Tỷ trọng nợ D (%) |
+| `cn_equity_return` | float | 7 | Tỷ suất sinh lợi vốn chủ sở hữu rE (%/năm) |
+| `cn_debt_return` | float | 3.5 | Tỷ suất sinh lợi vốn vay rD (%/năm) |
+| `cn_approved_volume` | float | 10.8 | Sản lượng được duyệt, sau tự dùng và thất thoát được chấp nhận (triệu m³/năm) |
+| `cn_utilization` | float | 75 | Mức sử dụng công suất thiết kế (%); dưới 65% sẽ áp dụng điều chỉnh mẫu số minh họa |
 
 Sản lượng thương phẩm `A=Qsx×(1−loss_rate/100)`. Mỗi chi phí và sản lượng phải không âm; `loss_rate<100` và A phải lớn hơn 0.
 
 ### Response 200
 
-Trả về các trường `production_cost` (B), `total_cost` (E), `other_revenue` (F), `net_cost` (E−F), `commercial_volume` (A), `unit_cost` (G, đồng/m³), `gross_unit_cost`, `other_revenue_unit`, các giá trị đầu vào `inputs` và `cost_rows`. Mỗi dòng chi phí có `name`, `amount` (tỷ đồng/năm), `unit_cost` (đồng/m³), `share` (% tổng E) và mô tả cách xác định.
+Trả về các trường `production_cost` (B), `total_cost` (E), `other_revenue` (F), `net_cost` (E−F), `commercial_volume` (A), `unit_cost` (G, đồng/m³), `vietnam_average_price` (G+P), `china_allowed_return_rate`, `china_allowed_return`, `china_allowed_revenue`, `china_pricing_volume`, `china_unit_price`, các giá trị đầu vào `inputs` và `cost_rows`. Mỗi dòng chi phí có `name`, `amount` (tỷ đồng/năm), `unit_cost` (đồng/m³), `share` (% tổng E) và mô tả cách xác định.
 
 ### Ví dụ
 
@@ -109,7 +118,9 @@ curl -X POST https://dautieng.kttnn.online/api/pricing/clean-water \
   -d "materials=25&labor=12&depreciation=22&overhead=10&other_production=4&selling=4&management=7&financial=3&other_revenue=0.6&production_volume=12&loss_rate=10"
 ```
 
-Với dữ liệu mẫu, E=87 tỷ đồng/năm, F=0,6 tỷ đồng/năm, A=10,8 triệu m³/năm và G=8.000 đồng/m³.
+Với dữ liệu mẫu Việt Nam, E=87 tỷ đồng/năm, F=0,6 tỷ đồng/năm, A=10,8 triệu m³/năm, G=8.000 đồng/m³ và G+P=8.500 đồng/m³. Tham số Trung Quốc cho phép tự chỉnh riêng để so sánh.
+
+Mô hình Trung Quốc dựa trên công thức lợi nhuận được phép bằng tài sản hiệu quả nhân tỷ suất sinh lợi bình quân gia quyền. Khi mức sử dụng công suất thấp hơn 65%, mô phỏng điều chỉnh mẫu số theo mốc 65%. Căn cứ tham khảo: [NDRC — Biện pháp quản lý giá cấp nước đô thị](https://zfxxgk.ndrc.gov.cn/web/iteminfo.jsp?id=18524) và [NDRC — Biện pháp giám sát chi phí định giá nước đô thị](https://zfxxgk.ndrc.gov.cn/web/iteminfo.jsp?id=18523).
 
 ### Lỗi
 
