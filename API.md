@@ -309,9 +309,9 @@ Lợi ích tháng là tổng của `B_H(H)=6H−1.5H²`, `B_A(A)=8A−2.5A²` v�
 | Trường     | Loại  | Mô tả                                        |
 |------------|-------|----------------------------------------------|
 | `months`   | array | `[1..12]`                                    |
-| `states`   | array | Mực nước rời rạc `0..K` (K = 4)              |
+| `states`   | array | 41 mức trữ lượng từ `0` đến `4.0`, bước `0.1` tỷ m³ |
 | `inflows`  | array | Dòng chảy 12 tháng                           |
-| `K`, `w`, `step` | float | Dung tích, giá trị nước cuối kỳ và bước phân bổ |
+| `K`, `w`, `step`, `state_step` | float | Dung tích, giá trị nước cuối kỳ, bước phân bổ `0.2` và bước trạng thái `0.1` |
 | `irrigation_demand` | array | Nhu cầu tưới tối đa theo tháng |
 | `benefit_coefficients` | object | Hệ số hàm lợi ích của ba mục đích |
 | `F`        | array | Ma trận giá trị tối ưu `F[tháng][mực nước]` |

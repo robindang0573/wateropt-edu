@@ -635,10 +635,10 @@
         tbody.innerHTML = d.sample.map(function (row, m) {
             const step = d.sample_steps[m];
             return '<tr data-month="' + (m + 1) + '">' +
-                '<td>' + (m + 1) + '</td><td>' + fmt(row.inflow) + '</td>' +
-                '<td>' + fmt(row.storage) + '</td><td>' + fmt(step.state) + '</td>' +
+                '<td>' + (m + 1) + '</td><td>' + fmt(row.storage) + '</td><td>' + fmt(row.inflow) + '</td>' +
                 '<td>' + fmt(row.hydro) + '</td><td>' + fmt(row.irrigation) + '</td>' +
-                '<td>' + fmt(row.domestic) + '</td><td>' + fmt(row.benefit) + '</td>' +
+                '<td>' + fmt(row.domestic) + '</td><td>' + fmt(row.s_next) + '</td>' +
+                '<td>' + fmt(row.benefit) + '</td>' +
                 '<td>' + fmt(step.value) + '</td></tr>';
         }).join('');
     }
@@ -662,29 +662,79 @@
             return '<tr class="' + (option.optimal ? 'dp-best-option' : '') + '">' +
                 '<td>' + fmt(option.hydro) + (option.optimal ? ' ★' : '') + '</td>' +
                 '<td>' + fmt(option.irrigation) + '</td><td>' + fmt(option.domestic) + '</td>' +
-                '<td>' + fmt(option.s_next) + '</td><td>' + fmt(option.next_state) + '</td>' +
+                '<td>' + fmt(option.s_next) + '</td>' +
                 '<td>' + fmt(option.benefit_hydro) + '</td><td>' + fmt(option.benefit_irrigation) + '</td>' +
-                '<td>' + fmt(option.benefit_domestic) + '</td><td>' + fmt(option.future_value) + '</td>' +
-                '<td><b>' + fmt(option.total) + '</b></td></tr>';
+                '<td>' + fmt(option.benefit_domestic) + '</td><td>' + fmt(option.benefit) + '</td>' +
+                '<td>' + fmt(option.future_value) + '</td><td><b>' + fmt(option.total) + '</b></td></tr>';
+        }).join('');
+        const benefitCoefficients = d.benefit_coefficients;
+        function sectorBenefit(name, quantity) {
+            const coeff = benefitCoefficients[name];
+            return coeff[0] * quantity - coeff[1] * quantity * quantity;
+        }
+        const policyRows = d.states.map(function (state, stateIndex) {
+            const action = d.sector_policy[month - 1][stateIndex];
+            const hydro = action.hydro;
+            const irrigation = action.irrigation;
+            const domestic = action.domestic;
+            const release = hydro + irrigation + domestic;
+            const nextIndex = stateIndex + Math.round(step.inflow * 10) - Math.round(release * 10);
+            if (nextIndex < 0 || nextIndex >= d.states.length) return '';
+            const nextState = d.states[nextIndex];
+            const benefitHydro = sectorBenefit('hydro', hydro);
+            const benefitIrrigation = sectorBenefit('irrigation', irrigation);
+            const benefitDomestic = sectorBenefit('domestic', domestic);
+            const currentBenefit = benefitHydro + benefitIrrigation + benefitDomestic;
+            const futureValue = month === 12 ? d.F_last[nextIndex] : d.F[month][nextIndex];
+            const totalValue = currentBenefit + futureValue;
+            const value = d.F[month - 1][stateIndex];
+            return '<tr class="' + (Math.abs(state - step.state) < 1e-9 ? 'dp-current-state' : '') + '">' +
+                '<td>' + fmt(state) + '</td><td>' + fmt(hydro) + '</td><td>' + fmt(irrigation) + '</td>' +
+                '<td>' + fmt(domestic) + '</td><td>' + fmt(nextState) + '</td>' +
+                '<td>' + fmt(benefitHydro) + '</td><td>' + fmt(benefitIrrigation) + '</td>' +
+                '<td>' + fmt(benefitDomestic) + '</td><td>' + fmt(currentBenefit) + '</td>' +
+                '<td>' + fmt(futureValue) + '</td><td><b>' + fmt(totalValue) + '</b></td>' +
+                '<td><b>' + fmt(value) + '</b></td></tr>';
         }).join('');
         const futureRule = month === 12
             ? 'Tháng 12 dùng điều kiện cuối kỳ: F<sub>13</sub>(S<sub>13</sub>) = ' + fmt(d.w) + ' × S<sub>13</sub>.'
             : 'F<sub>' + nextMonth + '</sub> là giá trị tối ưu đã tính ở bước trước khi truy hồi ngược.';
         const detail = document.getElementById('dpMonthSolution');
         detail.innerHTML = '<h3>Lời giải tháng ' + month + '</h3>' +
-            '<p>Trạng thái thực trên quỹ đạo là <b>' + fmt(step.actual_storage) + '</b>; mô hình DP dùng mức lưới gần nhất ' +
-            '<b>S<sub>' + month + '</sub> = ' + fmt(step.state) + '</b>. Dòng vào I<sub>' + month + '</sub> = <b>' + fmt(step.inflow) + '</b>.</p>' +
+            '<p>Trạng thái hồ trên lưới 0,1 tỷ m³ là <b>S<sub>' + month + '</sub> = ' + fmt(step.state) +
+            '</b>. Dòng vào I<sub>' + month + '</sub> = <b>' + fmt(step.inflow) + '</b>; trạng thái kế tiếp được tính chính xác trên cùng lưới.</p>' +
             '<p class="dp-equation">' + equation + '</p>' +
             '<p>Thay B<sub>H</sub> = 6H − 1,5H²; B<sub>A</sub> = 8A − 2,5A²; B<sub>D</sub> = 12D − 10D²; ' +
             'S<sub>' + nextMonth + '</sub> = S<sub>' + month + '</sub> + I<sub>' + month + '</sub> − H<sub>' + month + '</sub> − A<sub>' + month + '</sub> − D<sub>' + month + '</sub>. ' + futureRule + '</p>' +
-            '<div class="table-responsive"><table class="dp-table dp-options-table"><thead><tr>' +
-            '<th>H thử</th><th>A thử</th><th>D thử</th><th>S kế tiếp</th><th>Lưới kế</th><th>Bₕ</th><th>Bₐ</th><th>Bᵈ</th><th>F tương lai</th><th>Tổng</th>' +
+            '<h4>So sánh quyết định tại trạng thái đang xét S<sub>' + month + '</sub> = ' + fmt(step.state) + '</h4>' +
+            '<div class="table-responsive"><table class="dp-table dp-options-table"><thead>' +
+            '<tr class="dp-column-groups"><th colspan="3">Quyết định phân bổ</th><th>Trạng thái mới</th>' +
+            '<th colspan="4">Lợi ích hiện tại B<sub>' + month + '</sub></th>' +
+            '<th>Giá trị tương lai</th><th>Tổng giá trị</th></tr><tr>' +
+            '<th>Nước phát điện H<sub>' + month + '</sub></th><th>Nước tưới A<sub>' + month + '</sub></th>' +
+            '<th>Nước sinh hoạt D<sub>' + month + '</sub></th><th>Nước còn lại S<sub>' + nextMonth + '</sub></th>' +
+            '<th>Lợi ích phát điện B<sub>H</sub></th><th>Lợi ích tưới B<sub>A</sub></th>' +
+            '<th>Lợi ích sinh hoạt B<sub>D</sub></th><th>Lợi ích tháng B<sub>' + month + '</sub></th>' +
+            '<th>F<sub>' + nextMonth + '</sub>(S<sub>' + nextMonth + '</sub>)</th><th>Tổng giá trị phương án J<sub>' + month + '</sub></th>' +
             '</tr></thead><tbody>' + options + '</tbody></table></div>' +
+            '<h4>Bảng chính sách tối ưu cho mọi trạng thái có thể xảy ra</h4>' +
+            '<p>Mỗi dòng ứng với một S<sub>' + month + '</sub> trên lưới 0,1 tỷ m³. Dòng được tô màu là trạng thái trên lịch vận hành từ S₁ = 0.</p>' +
+            '<div class="table-responsive"><table class="dp-table dp-options-table dp-policy-table"><thead>' +
+            '<tr class="dp-column-groups"><th>Trạng thái</th><th colspan="3">Quyết định tối ưu</th><th>Trạng thái mới</th>' +
+            '<th colspan="4">Lợi ích hiện tại B<sub>' + month + '</sub></th><th>Giá trị tương lai</th>' +
+            '<th>Tổng phương án</th><th>Giá trị tối ưu</th></tr><tr>' +
+            '<th>S<sub>' + month + '</sub></th><th>Nước phát điện H<sub>' + month + '</sub></th>' +
+            '<th>Nước tưới A<sub>' + month + '</sub></th><th>Nước sinh hoạt D<sub>' + month + '</sub></th>' +
+            '<th>Nước còn lại S<sub>' + nextMonth + '</sub></th><th>Lợi ích phát điện B<sub>H</sub></th>' +
+            '<th>Lợi ích tưới B<sub>A</sub></th><th>Lợi ích sinh hoạt B<sub>D</sub></th>' +
+            '<th>Lợi ích tháng B<sub>' + month + '</sub></th><th>F<sub>' + nextMonth + '</sub>(S<sub>' + nextMonth + '</sub>)</th>' +
+            '<th>J<sub>' + month + '</sub></th><th>F<sub>' + month + '</sub>(S<sub>' + month + '</sub>)</th>' +
+            '</tr></thead><tbody>' + policyRows + '</tbody></table></div>' +
             '<p class="dp-answer">Đáp án tháng ' + month + ': H<sub>' + month + '</sub>* = <b>' + fmt(step.optimal_hydro) + '</b>, ' +
             'A<sub>' + month + '</sub>* = <b>' + fmt(step.optimal_irrigation) + '</b>, D<sub>' + month + '</sub>* = <b>' + fmt(step.optimal_domestic) + '</b> tỷ m³; ' +
             'tổng lợi ích tháng = <b>' + fmt(step.benefit_hydro + step.benefit_irrigation + step.benefit_domestic) + '</b>; ' +
-            'F<sub>' + month + '</sub>(' + fmt(step.state) + ') = <b>' + fmt(step.value) + '</b>. ' +
-            '★ đánh dấu phương án tối ưu.</p>';
+            'F<sub>' + month + '</sub>(' + fmt(step.state) + ') = <b>' + fmt(step.value) + '</b>, bằng giá trị lớn nhất trong cột J<sub>' + month + '</sub>. ' +
+            '★ đánh dấu phương án đạt cực đại.</p>';
 
         document.getElementById('dpReadout').innerHTML =
             '🔁 <b>Truy hồi ngược — tháng ' + month + ':</b> xét trạng thái lưới S<sub>' + month + '</sub> = ' + fmt(step.state) +

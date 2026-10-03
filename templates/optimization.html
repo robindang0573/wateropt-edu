@@ -292,7 +292,10 @@
             {% endfor %}
         </div>
         <p class="note dp-model-note">
-            Mục tiêu: tối đa tổng lợi ích 12 tháng của phát điện, tưới và sinh hoạt cộng giá trị nước cuối kỳ. Đơn vị nước: tỷ m³; lợi ích: tỷ đồng quy đổi. Mô hình rời rạc dùng S ∈ {0, 1, 2, 3, 4}; các phân bổ H, A, D chọn theo bước {{ dp.step }} tỷ m³. Trạng thái kế tiếp được làm tròn về mức nguyên gần nhất.
+            Mục tiêu: tối đa tổng lợi ích 12 tháng của phát điện, tưới và sinh hoạt cộng giá trị nước cuối kỳ. Đơn vị nước: tỷ m³; lợi ích: tỷ đồng quy đổi. Lưới trạng thái gồm 41 mức S ∈ {0; 0,1; 0,2; …; 4,0}; dòng vào theo bước 0,1 và các phân bổ H, A, D theo bước {{ dp.step }} tỷ m³. Vì vậy trạng thái kế tiếp luôn nằm chính xác trên lưới, không cần làm tròn.
+        </p>
+        <p class="note dp-model-note">
+            DP không tối ưu từng tháng một cách độc lập: mỗi quyết định cộng lợi ích hiện tại với giá trị của lượng nước để lại cho tương lai. Lợi ích biên là B′<sub>H</sub>=6−3H, B′<sub>A</sub>=8−5A và B′<sub>D</sub>=12−20D; Bellman cân nhắc các giá trị này cùng F<sub>t+1</sub>(S<sub>t+1</sub>).
         </p>
         <h3>Yêu cầu</h3>
         <ol>
@@ -321,10 +324,10 @@
     </div>
 
     <div class="card dp-trajectory-card">
-        <h3>Quỹ đạo vận hành tối ưu từ S₁ = 0</h3>
+        <h3>Lịch vận hành tối ưu thực tế của hồ khi bắt đầu với S₁ = 0</h3>
         <div class="table-responsive">
             <table id="dpTable" class="dp-table">
-                <thead><tr><th>Tháng</th><th>Iₜ</th><th>Sₜ thực</th><th>Sₜ lưới DP</th><th>Phát điện Hₜ*</th><th>Tưới Aₜ*</th><th>Sinh hoạt Dₜ*</th><th>Tổng lợi ích</th><th>Fₜ(Sₜ)</th></tr></thead>
+                <thead><tr><th>Tháng</th><th>Sₜ</th><th>Dòng vào Iₜ</th><th>Phát điện Hₜ*</th><th>Tưới Aₜ*</th><th>Sinh hoạt Dₜ*</th><th>Sₜ₊₁</th><th>Lợi ích tháng</th><th>Fₜ(Sₜ)</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -340,5 +343,5 @@
     window.__LP = {{ lp | tojson }};
     window.__DP = {{ dp | tojson }};
 </script>
-<script src="{{ url_for('static', filename='js/plotly_app.js') }}?v=12"></script>
+<script src="{{ url_for('static', filename='js/plotly_app.js') }}?v=15"></script>
 {% endblock %}

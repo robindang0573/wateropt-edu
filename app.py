@@ -724,8 +724,15 @@ def newton_step(x0, y0, target=(40.0, 60.0), k=3.0):
 def solve_dp(inflows, K=4.0, w=2.0):
     """Optimize monthly water allocation to hydropower, irrigation and homes."""
     months = list(range(1, 13))
-    states = list(range(int(K) + 1))
+    state_step = 0.1
     step = 0.2
+    state_count = int(round(K / state_step)) + 1
+    states = [round(i * state_step, 1) for i in range(state_count)]
+
+    def to_state_units(value):
+        """Represent water amounts as integer tenths for exact transitions."""
+        return int(round(value / state_step))
+
     hydro_cap = 0.8
     domestic_demand = 0.4
     irrigation_demand = [0.4, 0.4, 0.6, 0.8, 1.0, 1.0, 0.8, 0.8, 0.6, 0.6, 0.4, 0.4]
@@ -752,22 +759,24 @@ def solve_dp(inflows, K=4.0, w=2.0):
 
     for m in range(11, -1, -1):
         inf = inflows[m]
+        inflow_units = to_state_units(inf)
         irrigation_choices = choices(irrigation_demand[m])
         for s_idx, s in enumerate(states):
             best = -1e18
             best_action = {"hydro": 0.0, "irrigation": 0.0, "domestic": 0.0}
+            available_units = s_idx + inflow_units
             for h in hydro_choices:
                 for a in irrigation_choices:
                     for d in domestic_choices:
                         release = h + a + d
-                        if release > s + inf + 1e-9:
+                        release_units = to_state_units(release)
+                        if release_units > available_units:
                             continue
-                        s_next = s + inf - release
-                        if s_next < -1e-9 or s_next > K + 1e-9:
+                        next_idx = available_units - release_units
+                        if next_idx >= len(states):
                             continue
-                        nxt = int(round(min(max(s_next, 0.0), K)))
                         immediate = benefit_hydro(h) + benefit_irrigation(a) + benefit_domestic(d)
-                        val = immediate + F[m + 1][nxt]
+                        val = immediate + F[m + 1][next_idx]
                         if val > best:
                             best = val
                             best_action = {"hydro": h, "irrigation": a, "domestic": d}
@@ -776,14 +785,16 @@ def solve_dp(inflows, K=4.0, w=2.0):
 
     sample = []
     sample_steps = []
-    s = 0.0
+    sample_state_idx = 0
     for m in range(12):
-        s_idx = int(round(min(max(s, 0.0), K)))
-        dp_state = states[s_idx]
-        action = policy[m][s_idx]
+        s = states[sample_state_idx]
+        dp_state = s
+        action = policy[m][sample_state_idx]
         h, a, d = action["hydro"], action["irrigation"], action["domestic"]
         release = h + a + d
-        s_next = s + inflows[m] - release
+        available_units = sample_state_idx + to_state_units(inflows[m])
+        next_idx = available_units - to_state_units(release)
+        s_next = states[next_idx]
         bh = benefit_hydro(h)
         ba = benefit_irrigation(a)
         bd = benefit_domestic(d)
@@ -805,28 +816,31 @@ def solve_dp(inflows, K=4.0, w=2.0):
         })
 
         options = []
+        inflow_units = to_state_units(inflows[m])
+        available_units = sample_state_idx + inflow_units
         for candidate_h in hydro_choices:
             for candidate_a in choices(irrigation_demand[m]):
                 for candidate_d in domestic_choices:
                     candidate_release = candidate_h + candidate_a + candidate_d
-                    if candidate_release > dp_state + inflows[m] + 1e-9:
+                    candidate_release_units = to_state_units(candidate_release)
+                    if candidate_release_units > available_units:
                         continue
-                    candidate_s_next = dp_state + inflows[m] - candidate_release
-                    if candidate_s_next < -1e-9 or candidate_s_next > K + 1e-9:
+                    candidate_next_idx = available_units - candidate_release_units
+                    if candidate_next_idx >= len(states):
                         continue
-                    next_idx = int(round(min(max(candidate_s_next, 0.0), K)))
+                    candidate_s_next = states[candidate_next_idx]
                     option_bh = benefit_hydro(candidate_h)
                     option_ba = benefit_irrigation(candidate_a)
                     option_bd = benefit_domestic(candidate_d)
                     option_benefit = option_bh + option_ba + option_bd
-                    continuation = F[m + 1][next_idx]
+                    continuation = F[m + 1][candidate_next_idx]
                     options.append({
                         "hydro": candidate_h,
                         "irrigation": candidate_a,
                         "domestic": candidate_d,
                         "release": round(candidate_release, 2),
                         "s_next": round(candidate_s_next, 2),
-                        "next_state": states[next_idx],
+                        "next_state": states[candidate_next_idx],
                         "benefit_hydro": round(option_bh, 3),
                         "benefit_irrigation": round(option_ba, 3),
                         "benefit_domestic": round(option_bd, 3),
@@ -850,11 +864,11 @@ def solve_dp(inflows, K=4.0, w=2.0):
             "benefit_hydro": round(bh, 3),
             "benefit_irrigation": round(ba, 3),
             "benefit_domestic": round(bd, 3),
-            "value": round(float(F[m][s_idx]), 3),
+            "value": round(float(F[m][sample_state_idx]), 3),
             "next_month": m + 2,
             "options": options,
         })
-        s = max(0.0, min(s_next, K))
+        sample_state_idx = next_idx
 
     return {
         "months": months,
@@ -868,7 +882,7 @@ def solve_dp(inflows, K=4.0, w=2.0):
             "irrigation": [8.0, 2.5],
             "domestic": [12.0, 10.0],
         },
-        "K": K, "w": w, "step": step,
+        "K": K, "w": w, "step": step, "state_step": state_step,
         "F": [[round(float(f), 3) for f in row] for row in F[:12]],
         "policy": [[round(sum(action.values()), 2) for action in row] for row in policy[:12]],
         "sector_policy": policy[:12],

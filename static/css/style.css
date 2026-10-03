@@ -1494,6 +1494,11 @@ tfoot td { font-weight: 700; background: var(--subtle); }
     padding: 9px 6px;
     white-space: normal;
 }
+.module-optimization .dp-options-table .dp-column-groups th {
+    background: var(--secondary);
+    border-bottom: 2px solid var(--card);
+    font-size: .92em;
+}
 .module-optimization .dp-options-table td {
     padding: 7px 6px;
     white-space: nowrap;
@@ -1501,6 +1506,8 @@ tfoot td { font-weight: 700; background: var(--subtle); }
 .module-optimization .dp-options-table tbody tr:nth-child(even) td { background: var(--panel); }
 .module-optimization .dp-options-table tbody tr.dp-best-option td { background: #d9eee8; }
 .module-optimization .dp-options-table tbody tr:hover td { background: var(--accent); }
+.module-optimization .dp-policy-table { min-width: 1320px; font-size: .76em; }
+.module-optimization .dp-policy-table tbody tr.dp-current-state td { background: var(--accent); font-weight: 800; }
 .module-optimization .dp-trajectory-card { min-width: 0; width: 100%; }
 .module-optimization #dpTable {
     width: 100%;
