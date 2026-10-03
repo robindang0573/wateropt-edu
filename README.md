@@ -46,4 +46,4 @@ python app.py
 | `/api/governance` | GET/POST | Mô phỏng Governance–Planning–Management và chọn nghiệm Pareto (vcrit, qeco, periods, v0, q0, w_econ, w_soc, w_env, w_risk) |
 
 ## Đơn vị
-- Module 1: triệu USD. Module 2: triệu CNY / triệu m³ / CNY per m³ (quy đổi ₫ với tỉ giá tham chiếu 3.550 đ/CNY). Module 3: ha, tỷ m³, tỷ đồng.
+- Module 1: triệu USD. Module 2: triệu đồng/năm và triệu m³/năm; giá đầu ra là đồng/m³. Module 3: ha, tỷ m³, tỷ đồng.

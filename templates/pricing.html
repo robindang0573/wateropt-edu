@@ -22,8 +22,8 @@
                     <div>
                         <label>Phương pháp tính khấu hao</label>
                         <select name="mode" id="f_mode">
-                            <option value="static">Tĩnh — đường thẳng I ÷ n (theo quy định giá)</option>
-                            <option value="dynamic">Động — niên kim hóa I × (A/P, i, n)</option>
+                            <option value="static">Tĩnh — đường thẳng I ÷ n</option>
+                            <option value="dynamic" selected>Động — niên kim hóa I × (A/P, i, n)</option>
                         </select>
                     </div>
                     <div>
@@ -32,8 +32,8 @@
                     </div>
                 </div>
                 <p class="note" style="margin-top:6px"><b>Khấu hao hàng năm</b> =
-                    <span id="depPreview">Vốn đầu tư ÷ Số năm khấu hao = 100.000 ÷ 5 = <b>20.000 triệu đồng/năm</b></span>
-                    (<span id="modeLabel">phương pháp tĩnh</span>, tự tính, không nhập tay).</p>
+                    <span id="depPreview">Vốn đầu tư × (A/P, 6%, 5) = 100.000 × 0,237396 = <b>23.739,64 triệu đồng/năm</b></span>
+                    (<span id="modeLabel">phương pháp động (niên kim hóa)</span>, tự tính, không nhập tay).</p>
                 <p class="note" style="margin-top:4px"><b>Tĩnh và động:</b> phương pháp tĩnh dùng đường thẳng I÷n, phù hợp khi muốn minh họa cách phân bổ vốn đều theo thời gian. Phương pháp động niên kim hóa vốn đầu tư bằng hệ số (A/P, i, n), phù hợp khi so sánh phương án đầu tư có xét chi phí vốn theo thời gian. Đổi phương pháp để xem khấu hao và giá P thay đổi.</p>
             </div>
 
@@ -165,7 +165,11 @@
                     </table>
                 </div>
                 <div class="chain">
+                    {% if result.mode == 'dynamic' %}
+                    <div class="chain-step">Vốn đầu tư <b>{{ '{:,.0f}'.format(result.invest) }}</b> × CRF <b>{{ '{:.6f}'.format(result.crf) }}</b> (A/P, {{ '{:.1f}%'.format(result.disc_rate) }}, {{ '{:,.0f}'.format(result.dep_life) }} năm)</div>
+                    {% else %}
                     <div class="chain-step">Vốn đầu tư <b>{{ '{:,.0f}'.format(result.invest) }}</b> triệu đồng ÷ <b>{{ '{:,.0f}'.format(result.dep_life) }}</b> năm</div>
+                    {% endif %}
                     <div class="chain-arrow">→</div>
                     <div class="chain-step">Khấu hao <b>{{ '{:,.2f}'.format(result.breakdown['Khấu hao']) }}</b></div>
                     <div class="chain-arrow">→</div>
@@ -215,36 +219,6 @@
                 Đang chọn <b>phương pháp động</b> (khấu hao = {{ '{:,.2f}'.format(result.dep_dynamic) }} triệu đồng/năm). Nếu chuyển sang tĩnh: khấu hao chỉ còn {{ '{:,.2f}'.format(result.dep_static) }} triệu đồng/năm, R → {{ '{:,.2f}'.format(result.comp_static.R) }}, P → <b>{{ '{:,.0f}'.format(result.comp_static.price) if result.comp_static.price is not none else '—' }} đồng/m³</b>.
                 {% endif %}
             </p>
-        </div>
-
-        <div class="card">
-            <h3>Bảng điều khiển quy hoạch động hồ chứa</h3>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Tháng</th>
-                            {% for v in [10, 20, 30, 40, 50] %}
-                            <th>{{ 'V={{ v }}'.format(v=v) }}</th>
-                            {% endfor %}
-                            <th>R<sub>t</sub></th>
-                            <th>f<sub>t</sub>(V)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for t in range(1, 13) %}
-                        <tr>
-                            <td>{{ 'Tháng {{ t }}'.format(t=t) }}</td>
-                            {% for v in [10, 20, 30, 40, 50] %}
-                            <td>{{ '{{ f_{{ t }}_{{ v }}'|safe }}</td>
-                            {% endfor %}
-                            <td>{{ '{{ R_{{ t }}'|safe }}</td>
-                            <td>{{ '{{ f_{{ t }}_{{ v }}'|safe }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
         </div>
 
         <div class="card">

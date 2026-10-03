@@ -6,7 +6,7 @@
 - **Base URL:** `https://dautieng.kttnn.online`
 - **Định dạng dữ liệu:** `application/json`
 - **Bảng trang web (HTML)**
-- Mọi giá trị tiền tệ tính bằng **triệu** (USD/CNY); lãi suất nhập theo đơn vị **%** và được chia 100 trong tính toán.
+- Đơn vị tiền tệ theo từng mô-đun: Module 1 dùng triệu USD; giá nước dùng triệu đồng và triệu m³, cho kết quả đồng/m³. Lãi suất nhập theo đơn vị **%**.
 
 ---
 
@@ -83,18 +83,18 @@ Tính giá nước từ chi phí (khấu hao tĩnh/động) và doanh thu yêu c
 
 | Field         | Loại  | Mặc định | Mô tả                                    |
 |---------------|-------|----------|------------------------------------------|
-| `invest`      | float | 100      | Vốn đầu tư (triệu CNY)                   |
+| `invest`      | float | 100000   | Vốn đầu tư (triệu đồng)                  |
 | `dep_life`    | float | 5        | Số năm khấu hao                          |
-| `mode`        | string| `static` | `static` | `dynamic`                   |
+| `mode`        | string| `dynamic`| `static` hoặc `dynamic`                   |
 | `disc_rate`   | float | 6        | Tỉ suất chiết khấu xã hội (%)            |
-| `om_labor`    | float | 0        | CP nhân công                             |
-| `om_energy`   | float | 0        | CP điện năng                             |
-| `om_repair`   | float | 0        | CP sửa chữa                              |
-| `om_mgmt`     | float | 0        | CP quản lý                               |
+| `om_labor`    | float | 10000    | CP nhân công (triệu đồng/năm)            |
+| `om_energy`   | float | 8000     | CP điện năng (triệu đồng/năm)            |
+| `om_repair`   | float | 4000     | CP sửa chữa (triệu đồng/năm)             |
+| `om_mgmt`     | float | 3000     | CP quản lý (triệu đồng/năm)              |
 | `profit`      | float | 5        | Tỷ suất lợi nhuận (%)                    |
 | `tax`         | float | 3        | Thuế (%)                                 |
-| `design_q`    | float | 100      | Lưu lượng thiết kế (m³/năm ·10⁶? theo UI)|
-| `actual_q`    | float | 80       | Lưu lượng thực tế                        |
+| `design_q`    | float | 100      | Lượng nước thiết kế (triệu m³/năm)       |
+| `actual_q`    | float | 40       | Lượng nước thực tế (triệu m³/năm)        |
 | `quota`       | float | 6000     | Định mức (m³/hộ/năm)                     |
 | `use`         | float | 7200     | Lượng dùng hộ mẫu (m³/hộ/năm)            |
 | `area_ha`     | float | 1000     | Diện tích vùng tưới (ha)                 |
@@ -112,7 +112,7 @@ Tính giá nước từ chi phí (khấu hao tĩnh/động) và doanh thu yêu c
 | `crf`            | float  | (A/P, i, n)                                  |
 | `C`              | float  | Tổng chi phí năm                             |
 | `profit_amt`, `tax_amt`, `R` | float | Lợi nhuận, thuế, doanh thu yêu cầu |
-| `price_cny` / `price_vnd` | float|null | Giá nước (CNY/m³ và VND/m³; VND_PER_CNY=3550) |
+| `price_vnd`   | float|null | Giá nước (đồng/m³; triệu đồng ÷ triệu m³) |
 | `q_pricing`      | float  | Lưu lượng định giá (quy tắc 60%: max(aq, 0.6·dq)) |
 | `rule60`         | bool   | Có áp quy tắc 60% hay không                 |
 | `tiers`          | array  | Giá 3 bậc: `{name, range, use, rate, price, amount}` |
@@ -125,7 +125,7 @@ Tính giá nước từ chi phí (khấu hao tĩnh/động) và doanh thu yêu c
 
 ```bash
 curl -X POST https://dautieng.kttnn.online/api/pricing \
-  -d "invest=100&dep_life=5&mode=dynamic&disc_rate=6&design_q=100&actual_q=80"
+  -d "invest=100000&dep_life=5&mode=dynamic&disc_rate=6&design_q=100&actual_q=40"
 ```
 
 ---
@@ -298,8 +298,11 @@ Giống §4 (`c1`, `c2`, `a1_k`, `a2_k`, `b_k`, k=1..6).
 
 ## 8. `GET /api/optimize/dp`
 
-Quy hoạch động vận hành hồ chứa (12 tháng, truy hồi ngược). Dùng dòng chảy mặc định:
-`[1.4, 1.2, 1.0, 0.9, 0.8, 0.6, 0.5, 0.6, 0.8, 1.0, 1.2, 1.5]`.
+Quy hoạch động phân bổ nước hồ chứa cho phát điện, tưới và sinh hoạt (12 tháng, truy hồi ngược). Dùng dòng vào mặc định:
+`[1.4, 1.2, 1.0, 0.9, 0.8, 0.6, 0.5, 0.6, 0.8, 1.0, 1.2, 1.5]` tỷ m³.
+Lợi ích tháng là tổng của `B_H(H)=6H−1.5H²`, `B_A(A)=8A−2.5A²` và
+`B_D(D)=12D−10D²`; giới hạn mỗi tháng lần lượt là `H≤0.8`, nhu cầu tưới theo mùa,
+`D≤0.4` tỷ m³. Mục tiêu cộng tổng lợi ích 12 tháng với giá trị nước cuối kỳ `2S₁₃`.
 
 ### Response 200
 

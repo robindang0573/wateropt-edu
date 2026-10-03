@@ -280,7 +280,7 @@ def build_economic_details(v, cf_with_list, cf_without_list, cash_flows, npv_ter
 def compute_pricing(form):
     invest = float(form.get("invest", 100000))         # triệu đồng — vốn đầu tư ban đầu
     dep_life = float(form.get("dep_life", 5))          # năm — thời gian khấu hao
-    mode = form.get("mode", "static")                  # static | dynamic
+    mode = form.get("mode", "dynamic")                 # static | dynamic
     disc_rate = float(form.get("disc_rate", 6)) / 100.0  # tỉ suất chiết khấu xã hội (6–8%)
     n_years = max(float(dep_life), 1.0)
     dep_static = invest / n_years                      # đường thẳng I ÷ n
@@ -295,7 +295,7 @@ def compute_pricing(form):
     profit = float(form.get("profit", 5)) / 100.0
     tax = float(form.get("tax", 3)) / 100.0
     dq = float(form.get("design_q", 100))
-    aq = float(form.get("actual_q", 80))
+    aq = float(form.get("actual_q", 40))
     quota = float(form.get("quota", 6000))          # m³/hộ/năm
     use = float(form.get("use", 7200))              # m³/hộ/năm (hộ mẫu)
     area_ha = float(form.get("area_ha", 1000))
