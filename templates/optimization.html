@@ -335,6 +335,75 @@
     <div id="dpPlot" class="plot dp-plot dp-full-plot"></div>
 </section>
 
+<section class="card optimization-exercises" id="practice">
+    <h2 class="card-title">Bài tập tự thực hiện</h2>
+    <p class="page-desc">Vận dụng quy hoạch tĩnh và quy hoạch động vào hai bài toán cấp nước đô thị.</p>
+
+    <article class="exercise-card" id="exercise-water-sources">
+        <h3>Bài 1 — Quy hoạch tĩnh: phối hợp các nguồn cấp nước đô thị</h3>
+        <p>Khu đô thị cần cung cấp <b>180.000 m³/ngày</b> từ ba nguồn. Lượng nước sau phối trộn phải có TDS trung bình không vượt quá <b>500 mg/L</b>.</p>
+        <div class="table-responsive">
+            <table class="exercise-data-table">
+                <thead><tr><th>Nguồn nước</th><th>Biến quyết định</th><th>Công suất tối đa<br>(1.000 m³/ngày)</th><th>Chi phí<br>(triệu đồng/1.000 m³)</th><th>TDS (mg/L)</th></tr></thead>
+                <tbody>
+                    <tr><td>Nước mặt</td><td>x₁</td><td>100</td><td>2,4</td><td>200</td></tr>
+                    <tr><td>Nước ngầm</td><td>x₂</td><td>70</td><td>3,2</td><td>600</td></tr>
+                    <tr><td>Nước tái sử dụng</td><td>x₃</td><td>80</td><td>1,5</td><td>1.000</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <h4>Mô hình cần xây dựng</h4>
+        <div class="formula">
+            $$\min C=2.4x_1+3.2x_2+1.5x_3\quad(\text{triệu đồng/ngày})$$
+            $$x_1+x_2+x_3=180,\qquad 0\le x_1\le100,\quad 0\le x_2\le70,\quad 0\le x_3\le80$$
+            $$\frac{200x_1+600x_2+1000x_3}{180}\le500$$
+        </div>
+        <h4>Yêu cầu</h4>
+        <ol>
+            <li>Thiết lập bài toán quy hoạch tuyến tính và giải thích ý nghĩa từng ràng buộc.</li>
+            <li>Xác định lượng cấp tối ưu x₁*, x₂*, x₃* và chi phí tối thiểu mỗi ngày.</li>
+            <li>Xác định các ràng buộc hoạt động tại nghiệm tối ưu.</li>
+            <li>Giải thích vì sao không thể chỉ chọn toàn bộ nước tái sử dụng dù đơn giá thấp nhất.</li>
+        </ol>
+        <label for="exerciseWaterAnswer">Bài làm</label>
+        <textarea id="exerciseWaterAnswer" class="exercise-workspace" rows="7" placeholder="Ghi mô hình, các bước giải, nghiệm tối ưu và nhận xét tại đây…"></textarea>
+    </article>
+
+    <article class="exercise-card" id="exercise-flood-reservoir">
+        <h3>Bài 2 — Quy hoạch động: vận hành hồ điều tiết chống ngập đô thị</h3>
+        <p>Hồ có dung tích tối đa <b>K = 5 triệu m³</b>. Trước đợt mưa, lượng nước trong hồ là <b>S₁ = 1 triệu m³</b>. Đợt mưa kéo dài bốn thời đoạn; ở mỗi thời đoạn, người vận hành chọn lượng nước bơm ra để cân bằng chi phí bơm, thiệt hại ngập và chi phí phục hồi dung tích cuối kỳ.</p>
+        <div class="table-responsive">
+            <table class="exercise-data-table">
+                <thead><tr><th>Thời đoạn t</th><th>Dòng vào Iₜ<br>(triệu m³)</th><th>Chi phí bơm cₜ<br>(tỷ đồng/triệu m³)</th></tr></thead>
+                <tbody>
+                    <tr><td>1</td><td>2</td><td>1</td></tr>
+                    <tr><td>2</td><td>4</td><td>2</td></tr>
+                    <tr><td>3</td><td>3</td><td>5</td></tr>
+                    <tr><td>4</td><td>1</td><td>2</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="exercise-model">
+            <h4>Quan hệ vận hành</h4>
+            <p>Lượng bơm Pₜ ∈ {0, 1, 2} triệu m³ và không vượt lượng nước sẵn có: Pₜ ≤ Sₜ + Iₜ.</p>
+            <div class="formula">
+                $$O_t=\max(0,S_t+I_t-P_t-K),\qquad C_F(O_t)=12O_t$$
+                $$S_{t+1}=\min\left[K,S_t+I_t-P_t\right],\qquad S_t\in\{0,1,2,3,4,5\}$$
+                $$F_5(S_5)=2S_5,\qquad \min\sum_{t=1}^{4}(c_tP_t+12O_t)+2S_5$$
+            </div>
+        </div>
+        <h4>Yêu cầu</h4>
+        <ol>
+            <li>Viết hàm Bellman cho từng thời đoạn và nêu điều kiện cuối kỳ.</li>
+            <li>Lập bảng truy hồi ngược, tìm quyết định bơm tối ưu cho từng trạng thái Sₜ ∈ {0,1,2,3,4,5}.</li>
+            <li>Lần theo chính sách tối ưu từ S₁ = 1; báo cáo Pₜ, Sₜ₊₁, lượng tràn Oₜ và tổng chi phí tối thiểu.</li>
+            <li>Giải thích cách chính sách cân đối chi phí bơm hiện tại với nguy cơ tràn và giá trị dung tích để lại.</li>
+        </ol>
+        <label for="exerciseFloodAnswer">Bài làm</label>
+        <textarea id="exerciseFloodAnswer" class="exercise-workspace" rows="9" placeholder="Ghi hàm Bellman, bảng truy hồi và lịch bơm tối ưu tại đây…"></textarea>
+    </article>
+</section>
+
 </div>
 {% endblock %}
 

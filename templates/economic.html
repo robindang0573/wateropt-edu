@@ -288,6 +288,40 @@
         </div>
         {% endif %}
 </div>
+
+<section class="card economic-exercises" id="project-exercise">
+    <h2 class="card-title">Bài tập thực hành · Đánh giá dự án hiện đại hóa tưới và cấp nước</h2>
+    <p>Một địa phương xem xét đầu tư dự án hiện đại hóa hệ thống tưới và cấp nước nông nghiệp. Hãy lập dòng tiền của dự án và đánh giá hiệu quả kinh tế.</p>
+    <div class="table-responsive">
+        <table class="exercise-data-table">
+            <thead><tr><th>Nội dung</th><th>Giá trị</th></tr></thead>
+            <tbody>
+                <tr><td>Vốn đầu tư ban đầu tại năm 0</td><td>1.200 tỷ đồng</td></tr>
+                <tr><td>Thời gian khai thác</td><td>15 năm</td></tr>
+                <tr><td>Lợi ích kinh tế hằng năm</td><td>320 tỷ đồng/năm</td></tr>
+                <tr><td>Chi phí vận hành và bảo trì hằng năm</td><td>80 tỷ đồng/năm</td></tr>
+                <tr><td>Chi phí sửa chữa lớn</td><td>200 tỷ đồng, phát sinh cuối năm 8</td></tr>
+                <tr><td>Giá trị còn lại của công trình</td><td>150 tỷ đồng, thu hồi cuối năm 15</td></tr>
+                <tr><td>Suất chiết khấu</td><td>10%/năm</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="exercise-assumption">
+        <b>Quy ước thời điểm:</b> lợi ích và chi phí vận hành, bảo trì phát sinh vào cuối mỗi năm từ năm 1 đến năm 15. Khoản sửa chữa phát sinh cuối năm 8; giá trị còn lại được thu hồi cuối năm 15.
+    </div>
+    <h3>Yêu cầu</h3>
+    <ol>
+        <li>Lập bảng dòng tiền theo năm từ năm 0 đến năm 15, thể hiện riêng lợi ích, chi phí vận hành, sửa chữa lớn và giá trị còn lại.</li>
+        <li>Tính NPV, B/C, IRR và AW của dự án.</li>
+        <li>Nhận xét hiệu quả kinh tế tại suất chiết khấu i = 10% và nêu căn cứ từ các chỉ tiêu đã tính.</li>
+    </ol>
+    <div class="formula exercise-indicator-guide">
+        $$NPV=PW(B)-PW(C),\qquad B/C=\frac{PW(B)}{PW(C)},\qquad NPV(IRR)=0$$
+        $$AW=NPV\times(A/P,10\%,15)$$
+    </div>
+    <label for="projectExerciseAnswer">Bài làm</label>
+    <textarea id="projectExerciseAnswer" class="exercise-workspace" rows="10" placeholder="Lập bảng dòng tiền theo năm, ghi công thức và kết quả NPV, B/C, IRR, AW…"></textarea>
+</section>
 </div>
 {% endblock %}
 

@@ -1521,6 +1521,73 @@ tfoot td { font-weight: 700; background: var(--subtle); }
 .module-optimization #dpTable tbody tr.current td { background: var(--accent); font-weight: 800; }
 .module-optimization .dp-full-plot { width: 100%; max-width: 100%; }
 
+.module-optimization .optimization-exercises { margin-top: 26px; }
+.module-optimization .exercise-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-top: 18px;
+    padding: clamp(14px, 2vw, 22px);
+}
+.module-optimization .exercise-card h3 { color: var(--primary); margin: 0 0 10px; }
+.module-optimization .exercise-card h4 { color: var(--primary); margin: 18px 0 8px; }
+.module-optimization .exercise-data-table { min-width: 680px; }
+.module-optimization .exercise-data-table tbody tr:nth-child(even) td { background: var(--panel); }
+.module-optimization .exercise-data-table td:first-child { font-weight: 700; }
+.module-optimization .exercise-workspace {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    display: block;
+    font: inherit;
+    line-height: 1.5;
+    margin-top: 6px;
+    min-height: 150px;
+    padding: 12px;
+    resize: vertical;
+    width: 100%;
+}
+.module-optimization .exercise-workspace:focus { border-color: var(--primary); outline: 2px solid var(--accent); }
+.module-optimization .exercise-model {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    margin: 16px 0;
+    padding: 12px 16px;
+}
+.module-optimization .exercise-model h4 { margin-top: 0; }
+
+.module-economic .economic-exercises { margin-top: 26px; }
+.module-economic .economic-exercises h3 { color: var(--primary); margin: 18px 0 8px; }
+.module-economic .exercise-data-table { min-width: 620px; }
+.module-economic .exercise-data-table tbody tr:nth-child(even) td { background: var(--panel); }
+.module-economic .exercise-data-table td:first-child { font-weight: 700; }
+.module-economic .exercise-assumption {
+    background: var(--panel);
+    border-left: 4px solid var(--primary);
+    border-radius: 7px;
+    line-height: 1.55;
+    margin: 14px 0;
+    padding: 12px 14px;
+}
+.module-economic .exercise-indicator-guide { margin: 16px 0; }
+.module-economic .exercise-workspace {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    display: block;
+    font: inherit;
+    line-height: 1.5;
+    margin-top: 6px;
+    min-height: 180px;
+    padding: 12px;
+    resize: vertical;
+    width: 100%;
+}
+.module-economic .exercise-workspace:focus { border-color: var(--primary); outline: 2px solid var(--accent); }
+
 .learning-page .chain {
     display: flex;
     flex-wrap: wrap;
