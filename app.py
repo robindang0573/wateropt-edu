@@ -721,58 +721,138 @@ def newton_step(x0, y0, target=(40.0, 60.0), k=3.0):
 # ============================================================
 # MODULE 3.3 — QUY HOẠCH ĐỘNG: VẬN HÀNH HỒ CHỨA (Backward)
 # ============================================================
-def solve_dp(inflows, K=4.0, w=2.0, b1=3.5, b2=0.4):
-    """inflows: 12 giá trị dòng chảy (tỷ m³). R ∈ 0..Rmax liên tục rời rạc hóa."""
+def solve_dp(inflows, K=4.0, w=2.0):
+    """Optimize monthly water allocation to hydropower, irrigation and homes."""
     months = list(range(1, 13))
-    states = list(range(int(K) + 1))            # mực nước: 0,1,..,K (đơn vị rời rạc)
-    r_choices = [round(j * K / 20.0, 2) for j in range(21)]  # 21 bước xả
-    Rmax = K
+    states = list(range(int(K) + 1))
+    step = 0.2
+    hydro_cap = 0.8
+    domestic_demand = 0.4
+    irrigation_demand = [0.4, 0.4, 0.6, 0.8, 1.0, 1.0, 0.8, 0.8, 0.6, 0.6, 0.4, 0.4]
 
-    def benefit(R):
-        r = max(0.0, min(R, Rmax))
-        return b1 * r - b2 * r * r
+    def benefit_hydro(h):
+        return 6.0 * h - 1.5 * h * h
 
-    F = np.zeros((13, len(states)))             # F[month_index][state] — tháng 12 → 12
-    policy = [[0.0] * len(states) for _ in range(13)]
-    # Điều kiện biên: giá trị nước cuối kỳ (mực nước * w tỷ đ)
+    def benefit_irrigation(a):
+        return 8.0 * a - 2.5 * a * a
+
+    def benefit_domestic(d):
+        return 12.0 * d - 10.0 * d * d
+
+    def choices(cap):
+        return [round(j * step, 2) for j in range(int(round(cap / step)) + 1)]
+
+    hydro_choices = choices(hydro_cap)
+    domestic_choices = choices(domestic_demand)
+
+    F = np.zeros((13, len(states)))
+    policy = [[{"hydro": 0.0, "irrigation": 0.0, "domestic": 0.0} for _ in states] for _ in range(13)]
     for s_idx, s in enumerate(states):
         F[12][s_idx] = w * s
-        policy[12][s_idx] = 0.0
 
-    # Truy hồi ngược tháng 11 → 1 (chỉ số mảng 11 → 0)
     for m in range(11, -1, -1):
         inf = inflows[m]
+        irrigation_choices = choices(irrigation_demand[m])
         for s_idx, s in enumerate(states):
             best = -1e18
-            best_r = 0.0
-            for r in r_choices:
-                if r > s + inf:
-                    continue
-                s_next = s + inf - r
-                if s_next < -1e-9 or s_next > K + 1e-9:
-                    continue
-                nxt = int(round(min(max(s_next, 0.0), K)))
-                val = benefit(r) + F[m + 1][nxt]
-                if val > best:
-                    best = val
-                    best_r = r
+            best_action = {"hydro": 0.0, "irrigation": 0.0, "domestic": 0.0}
+            for h in hydro_choices:
+                for a in irrigation_choices:
+                    for d in domestic_choices:
+                        release = h + a + d
+                        if release > s + inf + 1e-9:
+                            continue
+                        s_next = s + inf - release
+                        if s_next < -1e-9 or s_next > K + 1e-9:
+                            continue
+                        nxt = int(round(min(max(s_next, 0.0), K)))
+                        immediate = benefit_hydro(h) + benefit_irrigation(a) + benefit_domestic(d)
+                        val = immediate + F[m + 1][nxt]
+                        if val > best:
+                            best = val
+                            best_action = {"hydro": h, "irrigation": a, "domestic": d}
             F[m][s_idx] = best
-            policy[m][s_idx] = best_r
+            policy[m][s_idx] = best_action
 
-    # Đường vận hành mẫu (từ ngày 1, mực nước ban đầu 0)
     sample = []
+    sample_steps = []
     s = 0.0
     for m in range(12):
         s_idx = int(round(min(max(s, 0.0), K)))
-        r = policy[m][s_idx]
-        s_next = s + inflows[m] - r
+        dp_state = states[s_idx]
+        action = policy[m][s_idx]
+        h, a, d = action["hydro"], action["irrigation"], action["domestic"]
+        release = h + a + d
+        s_next = s + inflows[m] - release
+        bh = benefit_hydro(h)
+        ba = benefit_irrigation(a)
+        bd = benefit_domestic(d)
+        immediate = bh + ba + bd
         sample.append({
             "month": m + 1,
             "inflow": inflows[m],
             "storage": round(s, 2),
-            "release": round(r, 2),
-            "benefit": round(benefit(r), 3),
+            "dp_state": dp_state,
+            "hydro": round(h, 2),
+            "irrigation": round(a, 2),
+            "domestic": round(d, 2),
+            "release": round(release, 2),
+            "benefit_hydro": round(bh, 3),
+            "benefit_irrigation": round(ba, 3),
+            "benefit_domestic": round(bd, 3),
+            "benefit": round(immediate, 3),
             "s_next": round(s_next, 2),
+        })
+
+        options = []
+        for candidate_h in hydro_choices:
+            for candidate_a in choices(irrigation_demand[m]):
+                for candidate_d in domestic_choices:
+                    candidate_release = candidate_h + candidate_a + candidate_d
+                    if candidate_release > dp_state + inflows[m] + 1e-9:
+                        continue
+                    candidate_s_next = dp_state + inflows[m] - candidate_release
+                    if candidate_s_next < -1e-9 or candidate_s_next > K + 1e-9:
+                        continue
+                    next_idx = int(round(min(max(candidate_s_next, 0.0), K)))
+                    option_bh = benefit_hydro(candidate_h)
+                    option_ba = benefit_irrigation(candidate_a)
+                    option_bd = benefit_domestic(candidate_d)
+                    option_benefit = option_bh + option_ba + option_bd
+                    continuation = F[m + 1][next_idx]
+                    options.append({
+                        "hydro": candidate_h,
+                        "irrigation": candidate_a,
+                        "domestic": candidate_d,
+                        "release": round(candidate_release, 2),
+                        "s_next": round(candidate_s_next, 2),
+                        "next_state": states[next_idx],
+                        "benefit_hydro": round(option_bh, 3),
+                        "benefit_irrigation": round(option_ba, 3),
+                        "benefit_domestic": round(option_bd, 3),
+                        "benefit": round(option_benefit, 3),
+                        "future_value": round(float(continuation), 3),
+                        "total": round(float(option_benefit + continuation), 3),
+                        "optimal": all(abs(action[key] - value) < 1e-9 for key, value in (
+                            ("hydro", candidate_h), ("irrigation", candidate_a), ("domestic", candidate_d)
+                        )),
+                    })
+        sample_steps.append({
+            "month": m + 1,
+            "state": dp_state,
+            "actual_storage": round(s, 2),
+            "inflow": inflows[m],
+            "irrigation_demand": irrigation_demand[m],
+            "optimal_hydro": round(h, 2),
+            "optimal_irrigation": round(a, 2),
+            "optimal_domestic": round(d, 2),
+            "optimal_release": round(release, 2),
+            "benefit_hydro": round(bh, 3),
+            "benefit_irrigation": round(ba, 3),
+            "benefit_domestic": round(bd, 3),
+            "value": round(float(F[m][s_idx]), 3),
+            "next_month": m + 2,
+            "options": options,
         })
         s = max(0.0, min(s_next, K))
 
@@ -780,11 +860,21 @@ def solve_dp(inflows, K=4.0, w=2.0, b1=3.5, b2=0.4):
         "months": months,
         "states": states,
         "inflows": inflows,
-        "K": K, "w": w, "b1": b1, "b2": b2,
+        "irrigation_demand": irrigation_demand,
+        "hydro_cap": hydro_cap,
+        "domestic_demand": domestic_demand,
+        "benefit_coefficients": {
+            "hydro": [6.0, 1.5],
+            "irrigation": [8.0, 2.5],
+            "domestic": [12.0, 10.0],
+        },
+        "K": K, "w": w, "step": step,
         "F": [[round(float(f), 3) for f in row] for row in F[:12]],
-        "policy": [list(r) for r in policy[:12]],
+        "policy": [[round(sum(action.values()), 2) for action in row] for row in policy[:12]],
+        "sector_policy": policy[:12],
         "F_last": [round(float(f), 3) for f in F[12]],
         "sample": sample,
+        "sample_steps": sample_steps,
     }
 
 
@@ -831,11 +921,9 @@ def pricing():
 @app.route("/optimization", methods=["GET"])
 def optimization():
     lp = default_lp()
-    gd = gradient_descent(10, 85, 0.05)
-    nw = newton_step(10, 85)
     dp = solve_dp(DEFAULT_INFLOWS)
     return render_template("optimization.html", active="optimization",
-                           lp=lp, gd=gd, newton=nw, dp=dp)
+                           lp=lp, dp=dp)
 
 
 @app.route("/governance", methods=["GET", "POST"])

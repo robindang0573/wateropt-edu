@@ -212,15 +212,18 @@
     }
 
     async function lpSimplexClick() {
-        if (!window.__lpCur || !window.__lpCur.feasible) {
-            document.getElementById('lpStatus').textContent = '⚠️ Hãy ấn "Giải & Vẽ" trước.';
-            document.getElementById('lpStatus').classList.remove('hidden');
-            return;
+        try {
+            const solved = await solveCurrentLP();
+            if (!solved.solution.feasible) throw new Error(solved.solution.note || 'Miền khả thi rỗng.');
+            document.getElementById('lpSimplexContent').classList.remove('hidden');
+            drawSimplexSlackChart(solved.solution);
+            populateSimplexTable(solved.solution.simplex);
+            await animateLP(solved.solution.path || [], 'Simplex', '#005f73');
+        } catch (error) {
+            const status = document.getElementById('lpStatus');
+            status.textContent = '⚠️ ' + error.message;
+            status.classList.remove('hidden');
         }
-        document.getElementById('lpSimplexContent').classList.remove('hidden');
-        drawSimplexSlackChart(window.__lpCur);
-        populateSimplexTable(window.__lpCur.simplex);
-        await animateLP(window.__lpCur.path || [], 'Simplex', '#005f73');
     }
 
     function populateVertexTable(data) {
@@ -306,11 +309,6 @@
     }
 
     async function lpInteriorClick() {
-        if (!window.__lpCur || !window.__lpCur.optimal) {
-            document.getElementById('ipmStatus').textContent = '⚠️ Hãy ấn "Giải & Vẽ" trước.';
-            document.getElementById('ipmStatus').classList.remove('hidden');
-            return;
-        }
         const f = readLPForm();
         const fd = new FormData();
         fd.append('c1', f.c1); fd.append('c2', f.c2);
@@ -321,9 +319,11 @@
         document.getElementById('ipmStatus').textContent = 'Đang chạy phương pháp điểm trong...';
         document.getElementById('ipmStatus').classList.remove('hidden');
         try {
+            await solveCurrentLP();
             const res = await fetch('/api/optimize/ipm', { method: 'POST', body: fd });
             const data = await res.json();
             if (data.error) { document.getElementById('ipmStatus').textContent = '⚠️ ' + data.error; return; }
+            if (!data.optimal) { document.getElementById('ipmStatus').textContent = '⚠️ ' + (data.note || 'Bài toán chưa có nghiệm tối ưu.'); return; }
             const ipm = data.ipm;
             const o = data.optimal;
             const st = document.getElementById('ipmStatus');
@@ -335,7 +335,7 @@
             }
             drawIpmConvergence(ipm.convergence || []);
         } catch (e) {
-            document.getElementById('ipmStatus').textContent = '⚠️ Lỗi kết nối API.';
+            document.getElementById('ipmStatus').textContent = '⚠️ ' + e.message;
         }
     }
 
@@ -348,7 +348,7 @@
             'μ lớn → hàm rào cản chi phối, nghiệm gần tâm Chebyshev của miền.',
             'μ giảm (×0.3) → central path dịch về phía đỉnh tối ưu.',
             'Lặp Newton: giải H·Δx = −∇Z_μ, line search giữ x>0, s>0.',
-            'Giai đoạn cuối: μ→0, nghiệm hội tụ về (50,50), Z=4000.'
+            'Giai đoạn cuối: μ→0, nghiệm tiến gần nghiệm tối ưu của bài toán chung.'
         ];
         (ipm.hist || []).forEach(function (h, idx) {
             const t = theory[idx % theory.length];
@@ -403,251 +403,316 @@
     /* ============================= GD / NEWTON ============================= */
     function getGDForm() {
         return {
-            x0: parseFloat(document.getElementById('gd_x0').value) || 0,
-            y0: parseFloat(document.getElementById('gd_y0').value) || 0,
+            x0: parseFloat(document.getElementById('gd_x0').value),
+            y0: parseFloat(document.getElementById('gd_y0').value),
             alpha: parseFloat(document.getElementById('gdAlpha').value) || 0.05
         };
     }
 
-    function gdTrajectory(x0, y0, alpha, target, steps, k) {
-        let x = x0, y = y0;
-        const traj = []; let diverged = false;
-        for (let i = 0; i < steps; i++) {
-            traj.push([x, y]);
-            const gx = 2 * k * (x - target[0]), gy = 2 * k * (y - target[1]);
-            x -= alpha * gx; y -= alpha * gy;
-            if (Math.abs(x) > 1e5 || Math.abs(y) > 1e5) { diverged = true; break; }
-        }
-        return { traj: traj, diverged: diverged, xf: x, yf: y };
+    async function solveCurrentLP() {
+        const problem = readLPForm();
+        const fd = new FormData();
+        fd.append('c1', problem.c1); fd.append('c2', problem.c2);
+        problem.rows.forEach(function (r, i) {
+            fd.append('a1_' + (i + 1), r.a1); fd.append('a2_' + (i + 1), r.a2); fd.append('b_' + (i + 1), r.b);
+        });
+        const response = await fetch('/api/optimize/lp', { method: 'POST', body: fd });
+        const data = await response.json();
+        if (data.error || data.status !== 'optimal') throw new Error(data.error || data.note || 'Bài toán hiện tại chưa có nghiệm tối ưu.');
+        window.__lpCur = data;
+        plotLP(data, 0.6);
+        populateVertexTable(data);
+        document.getElementById('lpContent').classList.remove('hidden');
+        return { problem: problem, solution: data };
     }
 
-    const GD_K = 3.0;
+    function barrierEval(x, y, problem, mu) {
+        if (!(x > 1e-9 && y > 1e-9)) return null;
+        const slacks = [{ value: x, dx: 1, dy: 0 }, { value: y, dx: 0, dy: 1 }];
+        problem.rows.forEach(function (r) {
+            slacks.push({ value: r.b - r.a1 * x - r.a2 * y, dx: -r.a1, dy: -r.a2 });
+        });
+        if (slacks.some(s => !(s.value > 1e-9))) return null;
 
-    function gdSurface(target) {
-        const R = 110;
-        const n = 61;
-        const xs = [], ys = [], zs = [];
-        const xv = [], yv = [];
-        for (let i = 0; i < n; i++) { xv.push(-R + (2 * R * i) / (n - 1)); yv.push(-R + (2 * R * i) / (n - 1)); }
-        for (let i = 0; i < n; i++) {
-            const row = [];
-            for (let j = 0; j < n; j++) {
-                row.push(GD_K * (Math.pow(xv[i] - target[0], 2) + Math.pow(yv[j] - target[1], 2)));
+        let value = problem.c1 * x + problem.c2 * y;
+        let gx = problem.c1, gy = problem.c2;
+        let hxx = 0, hxy = 0, hyy = 0;
+        slacks.forEach(function (s) {
+            value += mu * Math.log(s.value);
+            gx += mu * s.dx / s.value;
+            gy += mu * s.dy / s.value;
+            const scale = mu / (s.value * s.value);
+            hxx -= scale * s.dx * s.dx;
+            hxy -= scale * s.dx * s.dy;
+            hyy -= scale * s.dy * s.dy;
+        });
+        return { value: value, z: problem.c1 * x + problem.c2 * y, gx: gx, gy: gy, hxx: hxx, hxy: hxy, hyy: hyy };
+    }
+
+    function barrierMus() {
+        return [100, 30, 9, 2.7, 0.81, 0.243, 0.0729, 0.02187, 0.006561, 0.0019683, 0.00059049];
+    }
+
+    function gdBarrierTrajectory(problem, start, alpha) {
+        let x = start[0], y = start[1];
+        const first = barrierEval(x, y, problem, barrierMus()[0]);
+        const traj = [{ iteration: 0, x: x, y: y, mu: barrierMus()[0], gx: -first.gx, gy: -first.gy, z: first.z }];
+        barrierMus().forEach(function (mu) {
+            for (let iter = 0; iter < 500; iter++) {
+                const current = barrierEval(x, y, problem, mu);
+                if (!current) break;
+                const norm2 = current.gx * current.gx + current.gy * current.gy;
+                if (norm2 < 1e-10) break;
+                let step = alpha;
+                let accepted = false;
+                for (let ls = 0; ls < 40; ls++) {
+                    const nx = x + step * current.gx, ny = y + step * current.gy;
+                    const next = barrierEval(nx, ny, problem, mu);
+                    if (next && next.value >= current.value + 1e-4 * step * norm2) {
+                        x = nx; y = ny; accepted = true;
+                        traj.push({ iteration: traj.length, x: x, y: y, mu: mu, gx: -next.gx, gy: -next.gy, z: next.z });
+                        break;
+                    }
+                    step *= 0.5;
+                }
+                if (!accepted) break;
             }
-            ys.push(row); xs.push(xv[i]);
-        }
-        return { x: xv, y: yv, z: ys };
+        });
+        return { traj: traj, xf: x, yf: y };
     }
 
-    function plotGDSurface(traj, nwp) {
-        const target = [40, 60];
-        const surf = gdSurface(target);
+    function newtonBarrierTrajectory(problem, start) {
+        let x = start[0], y = start[1];
+        const first = barrierEval(x, y, problem, barrierMus()[0]);
+        const traj = [{ iteration: 0, x: x, y: y, mu: barrierMus()[0], gx: -first.gx, gy: -first.gy, z: first.z }];
+        barrierMus().forEach(function (mu) {
+            for (let iter = 0; iter < 80; iter++) {
+                const current = barrierEval(x, y, problem, mu);
+                if (!current) break;
+                if (current.gx * current.gx + current.gy * current.gy < 1e-10) break;
+                const det = current.hxx * current.hyy - current.hxy * current.hxy;
+                if (!(det > 1e-20)) break;
+                const dx = (-current.hyy * current.gx + current.hxy * current.gy) / det;
+                const dy = (current.hxy * current.gx - current.hxx * current.gy) / det;
+                const ascent = current.gx * dx + current.gy * dy;
+                let step = 1, accepted = false;
+                for (let ls = 0; ls < 40; ls++) {
+                    const nx = x + step * dx, ny = y + step * dy;
+                    const next = barrierEval(nx, ny, problem, mu);
+                    if (next && next.value >= current.value + 1e-4 * step * ascent) {
+                        x = nx; y = ny; accepted = true;
+                        traj.push({ iteration: traj.length, x: x, y: y, mu: mu, gx: -next.gx, gy: -next.gy, z: next.z });
+                        break;
+                    }
+                    step *= 0.5;
+                }
+                if (!accepted) break;
+            }
+        });
+        return { traj: traj, xf: x, yf: y };
+    }
+
+    function interiorStart(form, problem) {
+        const isInside = function (x, y) {
+            return Boolean(barrierEval(x, y, problem, 1));
+        };
+        if (isInside(form.x0, form.y0)) return [form.x0, form.y0];
+        const vertices = window.__lpCur.vertices || [];
+        if (vertices.length) {
+            const center = vertices.reduce((sum, p) => [sum[0] + p[0] / vertices.length, sum[1] + p[1] / vertices.length], [0, 0]);
+            if (isInside(center[0], center[1])) return center;
+        }
+        throw new Error('Không tìm thấy điểm khởi tạo nằm nghiêm ngặt trong miền khả thi. Hãy dùng một miền có diện tích và kiểm tra lại các ràng buộc.');
+    }
+
+    function plotGDSurface(traj, nwp, lp) {
+        const xmax = Math.max(lp.xmax || 100, 1), ymax = Math.max(lp.ymax || 100, 1);
+        const n = 30;
+        const xs = Array.from({ length: n }, (_, i) => xmax * 1.05 * i / (n - 1));
+        const ys = Array.from({ length: n }, (_, i) => ymax * 1.05 * i / (n - 1));
+        const z = ys.map(y => xs.map(x => lp.obj[0] * x + lp.obj[1] * y));
         const traces = [{
-            type: 'surface', x: surf.x, y: surf.y, z: surf.z,
-            colorscale: 'Viridis', opacity: 0.86, showscale: false,
-            contours: { z: { show: true, usecolormap: true, highlightcolor: '#8a7a48', project: { z: true } } },
-            hoverinfo: 'skip'
+            type: 'surface', x: xs, y: ys, z: z, colorscale: 'Viridis', opacity: 0.72,
+            showscale: false, contours: { z: { show: true, usecolormap: true, project: { z: true } } },
+            hoverinfo: 'skip', name: 'Mặt phẳng lợi nhuận Z'
         }];
-        if (traj && traj.length) {
+        if (lp.vertices && lp.vertices.length) {
+            const boundary = lp.vertices.concat([lp.vertices[0]]);
             traces.push({
-                type: 'scatter3d', mode: 'lines', x: traj.map(p => p[0]),
-                y: traj.map(p => p[1]), z: traj.map(p => GD_K * (Math.pow(p[0] - 40, 2) + Math.pow(p[1] - 60, 2))),
-                line: { color: '#b85c38', width: 6 }, hoverinfo: 'skip', name: 'Hạ dốc'
+                type: 'scatter3d', mode: 'lines', x: boundary.map(p => p[0]), y: boundary.map(p => p[1]),
+                z: boundary.map(p => lp.obj[0] * p[0] + lp.obj[1] * p[1]),
+                line: { color: '#005f73', width: 4 }, name: 'Biên miền khả thi'
             });
         }
-        if (nwp) {
+        if (traj && traj.length) {
             traces.push({
-                type: 'scatter3d', mode: 'lines+markers',
-                x: [nwp.from[0], target[0]], y: [nwp.from[1], target[1]],
-                z: [GD_K * (Math.pow(nwp.from[0] - 40, 2) + Math.pow(nwp.from[1] - 60, 2)), 0],
-                line: { color: '#8a7a48', width: 7, dash: 'dot' }, marker: { size: 5, color: '#8a7a48' },
-                name: 'Newton (1 bước)', hoverinfo: 'skip'
+                type: 'scatter3d', mode: 'lines+markers', x: traj.map(p => p.x), y: traj.map(p => p.y), z: traj.map(p => p.z),
+                line: { color: nwp ? '#8a7a48' : '#b85c38', width: 6 }, marker: { size: 2 },
+                name: nwp ? 'Newton' : 'Hạ dốc'
             });
         }
         Plotly.newPlot('gdPlot', traces, {
             margin: { t: 10, b: 10, l: 10, r: 10 },
             scene: {
-                xaxis: { title: 'x' }, yaxis: { title: 'y' }, zaxis: { title: 'f(x,y)' },
-                camera: { eye: { x: 1.6, y: -1.6, z: 0.7 } }
-            },
-            paper_bgcolor: 'rgba(0,0,0,0)'
+                xaxis: { title: 'x₁ (ha)', range: [0, xmax * 1.05] },
+                yaxis: { title: 'x₂ (ha)', range: [0, ymax * 1.05] },
+                zaxis: { title: 'Z (triệu đồng)' }, camera: { eye: { x: 1.6, y: -1.6, z: 0.7 } }
+            }, paper_bgcolor: 'rgba(0,0,0,0)'
         }, CNF);
     }
 
-    async function gdRun() {
-        gdStop = false;
-        const f = getGDForm();
-        const target = [40, 60];
-        const res = gdTrajectory(f.x0, f.y0, f.alpha, target, 200, GD_K);
-        plotGDSurface([], null);
+    function drawGdConvergence(traj, lp) {
+        const traces = [{
+            x: traj.map(p => p.iteration), y: traj.map(p => p.z), type: 'scatter', mode: 'lines',
+            line: { color: '#0a9396', width: 3 }, name: 'Z tại điểm lặp'
+        }, {
+            x: [0, Math.max(1, traj[traj.length - 1].iteration)], y: [lp.z_star, lp.z_star], type: 'scatter', mode: 'lines',
+            line: { color: '#b85c38', dash: 'dash' }, name: 'Z* (Simplex/đồ thị)'
+        }];
+        Plotly.newPlot('gdConvChart', traces, {
+            margin: { t: 12, b: 40, l: 55, r: 15 }, xaxis: { title: 'Bước nhận' },
+            yaxis: { title: 'Lợi nhuận Z' }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            legend: { orientation: 'h', y: 1.12 }, showlegend: true
+        }, CNF);
+    }
+
+    function populateGDTable(traj) {
+        const tbody = document.querySelector('#gdTable tbody');
+        tbody.innerHTML = traj.map(function (p, i) {
+            return '<tr' + (i === traj.length - 1 ? ' class="active-row"' : '') + '><td>' + p.iteration + '</td>' +
+                '<td>' + fmt(p.x) + '</td><td>' + fmt(p.y) + '</td><td>' + fmt(p.mu) + '</td>' +
+                '<td>' + fmt(p.gx) + '</td><td>' + fmt(p.gy) + '</td><td><b>' + fmt(p.z) + '</b></td></tr>';
+        }).join('');
+    }
+
+    async function runBarrierMethod(method) {
+        const form = getGDForm();
         const st = document.getElementById('gdStatus');
         st.classList.remove('hidden');
-
-        // Animation: vẽ dần dần
-        const n = res.traj.length;
-        const chunk = Math.max(1, Math.floor(n / 40));
-        for (let i = 5; i <= n; i += chunk) {
-            if (gdStop) break;
-            const seen = res.traj.slice(0, i);
-            plotGDSurface(seen, null);
-            await SLEEP(60);
-        }
-        const warn = document.getElementById('gdWarn');
-        if (res.diverged) {
-            warn.textContent = '🚨 PHÂN KỲ! α = ' + fmt(f.alpha) + ' quá lớn — bóng nhảy văng ra khỏi "bát" (giá trị f tăng vô hạn). Thử α nhỏ hơn (ví dụ 0,05).';
-            warn.classList.remove('hidden');
-            st.innerHTML = '💥 Hội tụ thất bại tại bước ' + res.traj.length;
-        } else {
-            warn.classList.add('hidden');
-            st.innerHTML = '✅ Hội tụ về (' + fmt(res.xf) + ', ' + fmt(res.yf) + ') sau <b>' + res.traj.length + '</b> bước với α = ' + fmt(f.alpha);
-        }
-        document.getElementById('gdContent').classList.remove('hidden');
-        document.querySelectorAll('.gd-result').forEach(function (el) { el.classList.remove('hidden'); });
-        drawGdConvergence(res.traj, target);
-        populateGDTable(res.traj, 'gd');
-    }
-
-    function drawGdConvergence(traj, target) {
-        const fvals = traj.map(function (p) { return GD_K * (Math.pow(p[0] - target[0], 2) + Math.pow(p[1] - target[1], 2)); });
-        const trace = {
-            x: traj.map(function (_, i) { return i; }),
-            y: fvals,
-            type: 'scatter', mode: 'lines+markers',
-            line: { color: '#0a9396', width: 3 }, marker: { size: 5 },
-            name: 'f(x,y)'
-        };
-        Plotly.newPlot('gdConvChart', [trace], {
-            margin: { t: 12, b: 40, l: 55, r: 15 },
-            xaxis: { title: 'Bước lặp', zeroline: false },
-            yaxis: { title: 'f(x,y)' },
-            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-            legend: { orientation: 'h', y: 1.12 },
-            showlegend: true
-        }, CNF);
-    }
-
-    function gdNewton() {
-        const f = getGDForm();
-        let from;
-        const t = [40, 60];
-        if (window.__NEWTON) {
-            // dùng dữ liệu mặc định từ server; nếu user đổi x0,y0 thì tính lại
-            if (Math.abs(window.__NEWTON.from[0] - f.x0) > 1e-6 || Math.abs(window.__NEWTON.from[1] - f.y0) > 1e-6) {
-                const mx = f.x0 - (2 * GD_K * (f.x0 - t[0])) / (2 * GD_K), my = f.y0 - (2 * GD_K * (f.y0 - t[1])) / (2 * GD_K);
-                from = [f.x0, f.y0]; t[0] = mx; t[1] = my;
-            } else {
-                from = window.__NEWTON.from; t[0] = 40; t[1] = 60;
-            }
-        } else {
-            from = [f.x0, f.y0];
-        }
-        document.getElementById('gdContent').classList.remove('hidden');
-        document.querySelectorAll('.gd-result').forEach(function (el) { el.classList.add('hidden'); });
-        plotGDSurface([], { from: from, to: t });
-        document.getElementById('gdStatus').classList.remove('hidden');
-        document.getElementById('gdStatus').innerHTML =
-            'Newton dùng <b>xấp xỉ bậc 2 (Hessian)</b>: chỉ cần <b>1 bước</b> để về đáy ' +
-            '(' + fmt(from[0]) + ', ' + fmt(from[1]) + ') → (' + fmt(t[0]) + ', ' + fmt(t[1]) + '). Đây chính là "cái bát giả định" hoàn hảo vì f(x,y) là hàm toàn phương.';
-        document.getElementById('gdWarn').classList.add('hidden');
-        const fv = GD_K * (Math.pow(from[0] - 40, 2) + Math.pow(from[1] - 60, 2));
-        const st = document.getElementById('gdStatus');
-        st.innerHTML += '<br>📉 f(x₀,y₀) = ' + fmt(fv) + ' → f(x₁,y₁) = 0 sau đúng 1 bước Newton.';
-    }
-
-    function populateGDTable(traj, method) {
-        const tbody = document.querySelector('#gdTable tbody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        const k = 3.0;
-        const isNewton = (method === 'newton');
-        const last = traj.length - 1;
-        traj.forEach(function (p, i) {
-            const gx = 2 * k * (p[0] - 40);
-            const gy = 2 * k * (p[1] - 60);
-            const fv = k * (Math.pow(p[0] - 40, 2) + Math.pow(p[1] - 60, 2));
-            const tr = document.createElement('tr');
-            const methodLabel = isNewton
-                ? (i === 0 ? 'Newton: khởi tạo' : 'Newton: kết quả (f=0)')
-                : 'GD (α=' + document.getElementById('gdAlpha').value + ')';
-            tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + fmt(p[0]) + '</td><td>' + fmt(p[1]) + '</td>' +
-                '<td>' + fmt(gx) + '</td><td>' + fmt(gy) + '</td><td><b>' + fmt(fv) + '</b></td><td>' + methodLabel + '</td>';
-            tbody.appendChild(tr);
-        });
-        if (isNewton && traj.length >= 2) {
-            const tr = document.createElement('tr');
-            tr.className = 'active-row';
-            const p0 = traj[0], p1 = traj[last];
-            const dx = p1[0] - p0[0], dy = p1[1] - p0[1];
-            tr.innerHTML = '<td>Δ</td><td>' + fmt(dx) + '</td><td>' + fmt(dy) + '</td>' +
-                '<td>' + fmt(2 * k * (p1[0] - 40)) + '</td><td>' + fmt(2 * k * (p1[1] - 60)) + '</td>' +
-                '<td>0</td><td>Δx = −H⁻¹∇f</td>';
-            tbody.appendChild(tr);
+        st.textContent = 'Đang giải bài toán chung bằng ' + (method === 'gd' ? 'hạ dốc' : 'Newton') + '...';
+        try {
+            const solved = await solveCurrentLP();
+            const start = interiorStart(form, solved.problem);
+            const res = method === 'gd'
+                ? gdBarrierTrajectory(solved.problem, start, form.alpha)
+                : newtonBarrierTrajectory(solved.problem, start);
+            if (!res.traj.length) throw new Error('Phương pháp không tìm được bước đi khả thi.');
+            const stride = Math.max(1, Math.ceil(res.traj.length / 250));
+            const shown = res.traj.filter((_, i) => i % stride === 0);
+            if (shown[shown.length - 1] !== res.traj[res.traj.length - 1]) shown.push(res.traj[res.traj.length - 1]);
+            document.getElementById('gdWarn').classList.add('hidden');
+            document.getElementById('gdContent').classList.remove('hidden');
+            document.querySelectorAll('.gd-result').forEach(el => el.classList.remove('hidden'));
+            plotGDSurface(shown, method === 'newton' ? true : null, solved.solution);
+            drawGdConvergence(shown, solved.solution);
+            populateGDTable(shown);
+            const label = method === 'gd' ? 'Hạ dốc' : 'Newton';
+            st.innerHTML = '✅ ' + label + ' trên hàm rào cản tiến tới (' + fmt(res.xf) + ', ' + fmt(res.yf) + '), Z = ' +
+                fmt(solved.problem.c1 * res.xf + solved.problem.c2 * res.yf) + '. Nghiệm Simplex/đồ thị: (' +
+                fmt(solved.solution.optimal[0]) + ', ' + fmt(solved.solution.optimal[1]) + '), Z* = ' + fmt(solved.solution.z_star) + '.';
+        } catch (error) {
+            st.textContent = '⚠️ ' + error.message;
         }
     }
+
+    function gdRun() { gdStop = false; return runBarrierMethod('gd'); }
+    function gdNewton() { gdStop = false; return runBarrierMethod('newton'); }
 
     function gdInit() {
         document.getElementById('gdAlphaOut').textContent = parseFloat(document.getElementById('gdAlpha').value).toFixed(3).replace('0.', '0,');
         document.getElementById('gdAlpha').addEventListener('input', function () {
             document.getElementById('gdAlphaOut').textContent = parseFloat(this.value).toFixed(3).replace('0.', '0,');
         });
-        const f = getGDForm();
-        const res = gdTrajectory(f.x0, f.y0, f.alpha, [40, 60], 200, GD_K);
-        plotGDSurface(res.traj.slice(0, 12), null);
-        drawGdConvergence(res.traj, [40, 60]);
-        populateGDTable(res.traj, 'gd');
+        plotGDSurface([], null, window.__LP);
     }
 
     /* ============================= DP ============================= */
     function dpMonthLabel(m) { return 'T' + String(m).padStart(2, '0'); }
 
+    function dpTableInit() {
+        const d = window.__DP;
+        const tbody = document.querySelector('#dpTable tbody');
+        tbody.innerHTML = d.sample.map(function (row, m) {
+            const step = d.sample_steps[m];
+            return '<tr data-month="' + (m + 1) + '">' +
+                '<td>' + (m + 1) + '</td><td>' + fmt(row.inflow) + '</td>' +
+                '<td>' + fmt(row.storage) + '</td><td>' + fmt(step.state) + '</td>' +
+                '<td>' + fmt(row.hydro) + '</td><td>' + fmt(row.irrigation) + '</td>' +
+                '<td>' + fmt(row.domestic) + '</td><td>' + fmt(row.benefit) + '</td>' +
+                '<td>' + fmt(step.value) + '</td></tr>';
+        }).join('');
+    }
+
+    function showDPMonth(month) {
+        const d = window.__DP;
+        const step = d.sample_steps[month - 1];
+        if (!step) return;
+
+        document.querySelectorAll('#dpTimeline button').forEach(function (button) {
+            button.classList.toggle('active', Number(button.dataset.month) === month);
+        });
+        document.querySelectorAll('#dpTable tbody tr').forEach(function (tr) {
+            tr.classList.toggle('current', Number(tr.dataset.month) === month);
+        });
+
+        const nextMonth = step.next_month;
+        const equation = 'F<sub>' + month + '</sub>(' + fmt(step.state) + ') = max<sub>Hₜ,Aₜ,Dₜ khả thi</sub> ' +
+            '[B<sub>H</sub>(Hₜ) + B<sub>A</sub>(Aₜ) + B<sub>D</sub>(Dₜ) + F<sub>' + nextMonth + '</sub>(S<sub>' + nextMonth + '</sub>)]';
+        const options = step.options.map(function (option) {
+            return '<tr class="' + (option.optimal ? 'dp-best-option' : '') + '">' +
+                '<td>' + fmt(option.hydro) + (option.optimal ? ' ★' : '') + '</td>' +
+                '<td>' + fmt(option.irrigation) + '</td><td>' + fmt(option.domestic) + '</td>' +
+                '<td>' + fmt(option.s_next) + '</td><td>' + fmt(option.next_state) + '</td>' +
+                '<td>' + fmt(option.benefit_hydro) + '</td><td>' + fmt(option.benefit_irrigation) + '</td>' +
+                '<td>' + fmt(option.benefit_domestic) + '</td><td>' + fmt(option.future_value) + '</td>' +
+                '<td><b>' + fmt(option.total) + '</b></td></tr>';
+        }).join('');
+        const futureRule = month === 12
+            ? 'Tháng 12 dùng điều kiện cuối kỳ: F<sub>13</sub>(S<sub>13</sub>) = ' + fmt(d.w) + ' × S<sub>13</sub>.'
+            : 'F<sub>' + nextMonth + '</sub> là giá trị tối ưu đã tính ở bước trước khi truy hồi ngược.';
+        const detail = document.getElementById('dpMonthSolution');
+        detail.innerHTML = '<h3>Lời giải tháng ' + month + '</h3>' +
+            '<p>Trạng thái thực trên quỹ đạo là <b>' + fmt(step.actual_storage) + '</b>; mô hình DP dùng mức lưới gần nhất ' +
+            '<b>S<sub>' + month + '</sub> = ' + fmt(step.state) + '</b>. Dòng vào I<sub>' + month + '</sub> = <b>' + fmt(step.inflow) + '</b>.</p>' +
+            '<p class="dp-equation">' + equation + '</p>' +
+            '<p>Thay B<sub>H</sub> = 6H − 1,5H²; B<sub>A</sub> = 8A − 2,5A²; B<sub>D</sub> = 12D − 10D²; ' +
+            'S<sub>' + nextMonth + '</sub> = S<sub>' + month + '</sub> + I<sub>' + month + '</sub> − H<sub>' + month + '</sub> − A<sub>' + month + '</sub> − D<sub>' + month + '</sub>. ' + futureRule + '</p>' +
+            '<div class="table-responsive"><table class="dp-table dp-options-table"><thead><tr>' +
+            '<th>H thử</th><th>A thử</th><th>D thử</th><th>S kế tiếp</th><th>Lưới kế</th><th>Bₕ</th><th>Bₐ</th><th>Bᵈ</th><th>F tương lai</th><th>Tổng</th>' +
+            '</tr></thead><tbody>' + options + '</tbody></table></div>' +
+            '<p class="dp-answer">Đáp án tháng ' + month + ': H<sub>' + month + '</sub>* = <b>' + fmt(step.optimal_hydro) + '</b>, ' +
+            'A<sub>' + month + '</sub>* = <b>' + fmt(step.optimal_irrigation) + '</b>, D<sub>' + month + '</sub>* = <b>' + fmt(step.optimal_domestic) + '</b> tỷ m³; ' +
+            'tổng lợi ích tháng = <b>' + fmt(step.benefit_hydro + step.benefit_irrigation + step.benefit_domestic) + '</b>; ' +
+            'F<sub>' + month + '</sub>(' + fmt(step.state) + ') = <b>' + fmt(step.value) + '</b>. ' +
+            '★ đánh dấu phương án tối ưu.</p>';
+
+        document.getElementById('dpReadout').innerHTML =
+            '🔁 <b>Truy hồi ngược — tháng ' + month + ':</b> xét trạng thái lưới S<sub>' + month + '</sub> = ' + fmt(step.state) +
+            ', I<sub>' + month + '</sub> = ' + fmt(step.inflow) + '. Chọn bộ phân bổ (H*, A*, D*) có tổng lợi ích và giá trị tương lai lớn nhất.';
+    }
+
     async function playBackward() {
         if (!window.__DP) return;
         dpStop = false;
         const d = window.__DP;
-        const buttons = document.querySelectorAll('#dpTimeline button');
-        const tbody = document.querySelector('#dpTable tbody');
-        const readout = document.getElementById('dpReadout');
-        tbody.innerHTML = '';
-
-        // Điều kiện biên: tháng 12 (F_12)
-        await SLEEP(300);
-        // Tiến ngược 12 → 1
+        // Hiện từng phép tính theo thứ tự truy hồi: tháng 12 → tháng 1.
         for (let m = 11; m >= 0; m--) {
             if (dpStop) break;
-            buttons.forEach(b => b.classList.remove('active'));
-            buttons[m].classList.add('active');
-
-            const row = d.sample[m];
-            const Fsv = d.F[m][Math.min(Math.round(row.storage), d.states.length - 1)];
-            const Ropt = d.policy[m][Math.min(Math.round(row.storage), d.states.length - 1)];
-
-            readout.innerHTML =
-                '🔁 <b>Bước truy hồi:</b> Tháng ' + (m + 1) + ' — biết F<sub>' + (m + 2) + '</sub>(S) từ lần lặp trước.<br>' +
-                'Với mực nước S = <b>' + fmt(row.storage) + '</b>, dòng vào I = <b>' + fmt(row.inflow) + '</b>, ta chọn xả R* = <b>' + fmt(Ropt) + '</b> ' +
-                'để tối đa B(R) + F<sub>' + (m + 2) + '</sub>(S + I − R).<br>' +
-                '⇨ <b>F<sub>' + (m + 1) + '</sub>(S) = ' + fmt(Fsv) + '</b>';
-
-            // cập nhật bảng: chèn hàng ngược từ trên → hiện đúng thứ tự tháng
-            const tr = document.createElement('tr');
-            tr.className = 'current';
-            tr.innerHTML =
-                '<td>' + (m + 1) + '</td><td>' + fmt(row.inflow) + '</td><td>' + fmt(row.storage) + '</td>' +
-                '<td><b>' + fmt(row.release) + '</b></td><td>' + fmt(row.benefit) + '</td><td>' + fmt(Fsv) + '</td>';
-            tbody.insertBefore(tr, tbody.firstChild);
+            showDPMonth(m + 1);
             await SLEEP(720);
         }
-        if (!dpStop) {
-            buttons.forEach(b => b.classList.remove('active'));
-            readout.innerHTML += '<br>✅ Xong truy hồi ngược. Tối ưu ban đầu: <b>F₁(S=0) = ' + fmt(d.F[0][0]) + '</b>. Cuộn lên để xem bảng <b>State → Decision → Reward</b>.';
-        }
+        if (!dpStop) document.getElementById('dpReadout').innerHTML +=
+            '<br>✅ Hoàn tất. Giá trị tối ưu ban đầu: <b>F₁(S₁ = 0) = ' + fmt(d.F[0][0]) + '</b>.';
         drawDP();
     }
 
     function resetDP() {
         dpStop = true;
         document.querySelectorAll('#dpTimeline button').forEach(b => b.classList.remove('active'));
-        document.querySelector('#dpTable tbody').innerHTML = '';
+        document.querySelectorAll('#dpTable tbody tr').forEach(tr => tr.classList.remove('current'));
         document.getElementById('dpReadout').textContent = 'Sẵn sàng. Bấm “Chạy truy hồi ngược”.';
+        document.getElementById('dpMonthSolution').innerHTML =
+            '<h3>Lời giải theo tháng</h3><p>Chọn tháng 1–12 ở trên để hiện phép tính chi tiết.</p>';
         drawDP();
     }
 
@@ -656,8 +721,16 @@
         const months = d.months.map(dpMonthLabel);
         Plotly.newPlot('dpPlot', [
             {
-                x: months, y: d.sample.map(r => r.release), type: 'bar',
-                marker: { color: '#0a9396' }, name: 'Xả R (tỷ m³)', yaxis: 'y1'
+                x: months, y: d.sample.map(r => r.hydro), type: 'bar',
+                marker: { color: '#0a9396' }, name: 'Phát điện H', yaxis: 'y1'
+            },
+            {
+                x: months, y: d.sample.map(r => r.irrigation), type: 'bar',
+                marker: { color: '#94b447' }, name: 'Tưới A', yaxis: 'y1'
+            },
+            {
+                x: months, y: d.sample.map(r => r.domestic), type: 'bar',
+                marker: { color: '#e9a23b' }, name: 'Sinh hoạt D', yaxis: 'y1'
             },
             {
                 x: months, y: d.sample.map(r => r.inflow), type: 'scatter', mode: 'lines+markers',
@@ -666,16 +739,13 @@
             {
                 x: months, y: d.sample.map(r => r.storage), type: 'scatter', mode: 'lines+markers',
                 line: { color: '#005f73', width: 3, dash: 'dash' }, name: 'Mực nước S', yaxis: 'y2'
-            },
-            {
-                x: months, y: d.sample.map(r => r.benefit), type: 'scatter', mode: 'markers',
-                marker: { size: 11, color: '#b85c38' }, name: 'Lợi ích B(R)', yaxis: 'y2'
             }
         ], {
             margin: { t: 12, b: 50, l: 55, r: 55 },
             xaxis: { title: 'Tháng' },
-            yaxis: { title: 'Xả (tỷ m³)', gridcolor: 'rgba(0,0,0,0.06)' },
-            yaxis2: { title: 'I / S / B', overlaying: 'y', side: 'right' },
+            barmode: 'stack',
+            yaxis: { title: 'Phân bổ nước (tỷ m³)', gridcolor: 'rgba(0,0,0,0.06)' },
+            yaxis2: { title: 'Dòng vào / trữ lượng (tỷ m³)', overlaying: 'y', side: 'right' },
             paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
             legend: { orientation: 'h', y: 1.15 }
         }, CNF);
@@ -688,12 +758,13 @@
             const b = document.createElement('button');
             b.type = 'button'; b.textContent = dpMonthLabel(m);
             b.dataset.month = m;
-            b.addEventListener('click', function () { dpStop = true; resetDP(); });
+            b.addEventListener('click', function () { dpStop = true; showDPMonth(m); });
             tl.appendChild(b);
         });
+        dpTableInit();
         drawDP();
         document.getElementById('dpReadout').textContent =
-            '📋 Hồ chứa K = ' + d.K + ' tỷ m³, 12 tháng, giá trị nước cuối kỳ w = ' + d.w + ' tỷ đ/tỷ m³. Điều kiện biên F₁₂(S) = w·S.';
+            '📋 Hồ chứa K = ' + d.K + ' tỷ m³, 12 tháng, giá trị nước cuối kỳ w = ' + d.w + ' tỷ đ/tỷ m³. Điều kiện biên F₁₃(S₁₃) = w·S₁₃.';
     }
 
     /* ============================= BOOT ============================= */

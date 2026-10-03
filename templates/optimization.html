@@ -5,7 +5,7 @@
 
 <h1 class="page-title">Mô đun 3 · Trực quan hóa thuật toán tối ưu</h1>
 <p class="page-desc">
-    Ba thuật toán kinh điển: <b>Quy hoạch tuyến tính</b> (miền khả thi + Simplex), <b>Hạ dốc và Newton</b> (bề mặt 3D), <b>Quy hoạch động</b> (truy hồi ngược hồ chứa).
+    Cùng một bài toán phân bổ nước được giải bằng đồ thị, Simplex, điểm trong, hạ dốc và Newton; tiếp theo là quy hoạch động vận hành hồ chứa.
 </p>
 
 <div class="jumpbar">
@@ -16,10 +16,18 @@
 
 <!-- ============ 3.1 LP ============ -->
 <section class="card" id="lp">
-    <h2 class="card-title">3.1 Quy hoạch tuyến tính: phương pháp đồ thị</h2>
+    <h2 class="card-title">3.1 Bài toán chung: phân bổ diện tích gieo trồng</h2>
+    <div class="dp-problem">
+        <h3>Đề bài quy hoạch tuyến tính</h3>
+        <p>Hợp tác xã phân bổ tối đa <b>100 ha</b> cho lúa và rau màu. Lợi nhuận lần lượt là <b>50</b> và <b>30 triệu đồng/ha</b>. Một đơn vị nước bằng 100 m³: mỗi ha lúa cần 14.000 m³ (140 đơn vị), mỗi ha rau cần 6.000 m³ (60 đơn vị), còn nguồn nước có 1.000.000 m³ (10.000 đơn vị). Hãy tìm diện tích mỗi loại cây để tối đa lợi nhuận.</p>
+        <div class="formula">$$\max Z = 50x_1 + 30x_2 \quad (\text{triệu đồng})$$</div>
+        <p>với $x_1$ = diện tích lúa (ha), $x_2$ = diện tích rau màu (ha), và</p>
+        <div class="formula">$$140x_1 + 60x_2 \le 10.000,\quad x_1+x_2\le100,\quad x_1,x_2\ge0.$$</div>
+        <p class="note dp-model-note">Bộ số trong các ô bên dưới là dữ liệu chung: đồ thị, Simplex, điểm trong, hạ dốc và Newton đều giải bộ dữ liệu đang nhập. Nghiệm mặc định là $(50,50)$ ha, lợi nhuận $Z^*=4.000$ triệu đồng.</p>
+    </div>
     <p class="note">
-        Phân bổ nước tưới: tối đa lợi ích $Z = c_1 x_1 + c_2 x_2$ (triệu đồng) với $x_1$ (ha trồng <i>lúa</i>), $x_2$ (ha trồng <i>rau màu</i>), dưới các ràng buộc về nước, đất, lao động.
-        <span class="hint" data-tip="Nghiệm tối ưu của bài toán tuyến tính luôn nằm ở một đỉnh (vertex) của đa diện lồi.">Đỉnh tối ưu?<sup>ⓘ</sup></span>
+        Bấm <b>Giải và vẽ</b> để cập nhật bài toán chung. Các phương pháp còn lại dùng đúng hệ số mục tiêu và ràng buộc đang hiển thị.
+        <span class="hint" data-tip="Với bài toán tuyến tính có miền khả thi bị chặn, ít nhất một nghiệm tối ưu nằm tại một đỉnh của miền đó.">Đỉnh tối ưu?<sup>ⓘ</sup></span>
     </p>
 
     <div class="psplit">
@@ -33,7 +41,8 @@
                 </div>
             </div>
             <div class="form-group">
-                <div class="group-label">Ràng buộc: a₁·x₁ + a₂·x₂ ≤ b; x₁, x₂ ≥ 0</div>
+                <div class="group-label">Nguồn lực: a₁·x₁ + a₂·x₂ ≤ b; x₁, x₂ ≥ 0</div>
+                <div class="form-row small cons-head"><span>Hệ số lúa a₁</span><span>Hệ số rau a₂</span><span>Giới hạn b</span></div>
                 {% for r in lp.rows %}
                 <div class="form-row small cons-row">
                     <input type="number" step="any" class="con_a1" value="{{ r.a1 }}">
@@ -46,7 +55,7 @@
                     <input type="number" step="any" class="con_a2" placeholder="a₂">
                     <input type="number" step="any" class="con_b" placeholder="b">
                 </div>
-                <p class="note" style="font-size:0.8em">Mỗi hàng = 1 ràng buộc. Hàng trống sẽ bị bỏ qua.</p>
+                <p class="note" style="font-size:0.8em">Mỗi hàng là một giới hạn nguồn lực. Bộ mặc định: nước $140x_1+60x_2\le10.000$; đất $x_1+x_2\le100$.</p>
             </div>
             <div class="btn-row">
                 <button type="button" class="btn primary" id="lpRun">Giải và vẽ</button>
@@ -69,12 +78,12 @@
     <!-- Kết quả đồ giải + Simplex: hiện khi bấm "Giải & Vẽ" -->
     <div id="lpContent" class="chart-grid hidden" style="margin-top:18px">
         <div class="chart-card full">
-            <h3>Cách giải: phương pháp đồ thị và Simplex (tối đa Z = 50x₁ + 30x₂)</h3>
+            <h3>Cách giải bằng đồ thị: liệt kê đỉnh khả thi và so sánh cùng hàm mục tiêu</h3>
             <div class="steps">
                 <p><b>① Vẽ miền khả thi:</b> giao của các nửa mặt phẳng ràng buộc (các đường đỏ chấm trên đồ thị).</p>
                 <p><b>② Xác định đỉnh (corner points):</b> giao điểm từng cặp đường biên, giữ lại điểm nằm trong miền khả thi.</p>
-                <p><b>③ Đánh giá Z tại mỗi đỉnh:</b> thay tọa độ vào $Z = 50x_1 + 30x_2$ — đỉnh cho Z lớn nhất là tối ưu (bảng bên dưới).</p>
-                <p><b>④ Ý nghĩa hình học:</b> kéo dần đường đồng mức Z (các đường xám đứt) theo chiều $+\nabla Z$; điểm khả thi cuối cùng đường còn chạm là nghiệm tối ưu $(50, 50)$ với $Z^* = 4.000$.</p>
+                <p><b>③ Đánh giá Z tại mỗi đỉnh:</b> dùng đúng các hệ số trong hàm mục tiêu phía trên — đỉnh cho Z lớn nhất là tối ưu (bảng bên dưới).</p>
+                <p><b>④ Ý nghĩa hình học:</b> tịnh tiến đường đồng mức Z theo hướng lợi nhuận tăng; điểm khả thi cuối cùng đường còn chạm là nghiệm tối ưu của cùng bài toán.</p>
                 <p><b>⑤ Simplex tương ứng:</b> từ đỉnh $(0,0)$, đi dọc cạnh tới đỉnh kề làm Z tăng — cách Simplex chọn cạnh & ý nghĩa biến bù $s_1, s_2$ được trình bày trong mục "Chạy Simplex" bên dưới.</p>
             </div>
         </div>
@@ -84,7 +93,7 @@
             <div class="table-responsive" style="max-height:340px; overflow:auto">
                 <table id="lpVertexTable" class="dp-table" style="font-size:0.80em; min-width:460px">
                     <thead>
-                        <tr><th>#</th><th>x₁</th><th>x₂</th><th>Z = 50x₁ + 30x₂</th><th>Ghi chú</th></tr>
+                        <tr><th>#</th><th>x₁ (ha)</th><th>x₂ (ha)</th><th>Z = c₁x₁ + c₂x₂</th><th>Ghi chú</th></tr>
                     </thead>
                     <tbody></tbody>
                 </table>
@@ -97,6 +106,7 @@
     <div id="lpSimplexContent" class="chart-grid hidden" style="margin-top:18px">
         <div class="chart-card full">
             <h3>Bảng Simplex: từ hệ bất phương trình sang hệ phương trình (s₁, s₂, vế phải)</h3>
+            <p class="note">Các phép tính số bên dưới minh họa bộ mặc định. Bảng lặp và đường đi được tính lại theo dữ liệu hiện có trong biểu mẫu.</p>
             <div class="steps">
                 <p><b>① Simplex giải hệ <u>phương trình</u> (dạng ma trận), không phải hệ bất phương trình:</b> hệ $Ax \le b$ không có "nghiệm cơ bản" để khởi tạo vòng lặp. Simplex chỉ thao tác trên đẳng thức $Ax = b$ với ma trận hệ số &mdash; nên bước đầu tiên bắt buộc phải chuyển bất đẳng thức thành đẳng thức.</p>
                 <p><b>② Chuyển đổi bằng biến bù (slack):</b> $140x_1 + 60x_2 \le 10.000 \Rightarrow 140x_1 + 60x_2 + s_1 = 10.000$; &nbsp;$x_1 + x_2 \le 100 \Rightarrow x_1 + x_2 + s_2 = 100$, với điều kiện $s_1, s_2 \ge 0$. Chính điều kiện $s \ge 0$ giữ cho hệ đẳng thức <i>tương đương</i> với bất đẳng thức gốc.</p>
@@ -163,21 +173,21 @@
     <!-- Kết quả phương pháp điểm trong: hiện khi bấm nút -->
     <div id="ipmContent" class="chart-grid hidden" style="margin-top:18px">
         <div class="chart-card full">
-            <h3>Lý thuyết điểm trong (hàm rào cản): ví dụ tối đa Z = 50x₁ + 30x₂</h3>
+            <h3>Phương pháp điểm trong trên bài toán chung</h3>
             <div class="steps">
-                <p><b>① Bài toán:</b> Max $Z = 50x_1 + 30x_2$ với $140x_1 + 60x_2 \le 10.000$, $x_1 + x_2 \le 100$, $x_1, x_2 \ge 0$. Nghiệm tối ưu: $x_1^* = 50$, $x_2^* = 50$, $Z^* = 4.000$.</p>
-                <p><b>② Hàm rào cản (Barrier Function):</b> $Z_\mu = 50x_1 + 30x_2 + \mu\big[\ln x_1 + \ln x_2 + \ln(100 - x_1 - x_2) + \ln(10.000 - 140x_1 - 60x_2)\big]$. Khi điểm chạm biên: $\ln\to -\infty$ → «bức tường vô hình» chặn đường ra ngoài miền khả thi.</p>
-                <p><b>③ Đường trung tâm (Central Path):</b> Tập điểm tối ưu $x(\mu)$ khi $\mu$ giảm dần — đi từ tâm miền khả thi cắt vào đỉnh tối ưu $(50, 50)$.</p>
-                <p><b>④ Gradient (cho mỗi μ):</b> $\nabla Z_\mu = \begin{bmatrix}50\\30\end{bmatrix} + \mu\Big[\frac{A^\top}{s} + \frac{1}{x}\Big]$ với $s = [s_1, s_2, s_3, s_4] = [10000 - 140x_1 - 60x_2,\ 100 - x_1 - x_2,\ x_1,\ x_2]$.</p>
-                <p><b>⑤ Ma trận Hessian:</b> $H = \mu\, A^\top \mathrm{diag}\big(\tfrac{1}{s^2}\big) A + \mu\, \mathrm{diag}\big(\tfrac{1}{x^2}\big)$ — độ cong của mặt rào cản.</p>
-                <p><b>⑥ Bước Newton:</b> $H \cdot \Delta x = -\nabla Z_\mu$, cập nhật $x_{k+1} = x_k + \Delta x$ (line search giữ $x_k > 0$, $s > 0$). Chuỗi $\mu$: $2000 \to 600 \to 180 \to 54 \to 16{,}2 \to \ldots \to 0$.</p>
+                <p><b>① Bài toán chung:</b> dùng $Z=c^Tx$, các biến không âm và mọi giới hạn $a_i^Tx\le b_i$ đang nhập ở mục 3.1.</p>
+                <p><b>② Hàm rào cản:</b> $\phi_\mu(x)=c^Tx+\mu\left[\ln x_1+\ln x_2+\sum_i\ln(b_i-a_i^Tx)\right]$. Khi một biến hoặc độ dư tiến sát 0, logarit đẩy điểm trở lại miền trong.</p>
+                <p><b>③ Đường trung tâm:</b> giảm dần $\mu$ và tối ưu $\phi_\mu$ ở mỗi mức; nghiệm đi từ bên trong miền khả thi về gần đỉnh tối ưu của bài toán tuyến tính.</p>
+                <p><b>④ Gradient:</b> $\nabla\phi_\mu=c+\mu\left[\begin{smallmatrix}1/x_1\\1/x_2\end{smallmatrix}-A^T(1/s)\right]$, với $s_i=b_i-a_i^Tx$.</p>
+                <p><b>⑤ Hessian:</b> $H_\mu=-\mu\,\mathrm{diag}(1/x^2)-\mu A^T\mathrm{diag}(1/s^2)A$.</p>
+                <p><b>⑥ Bước Newton:</b> giải $H_\mu\Delta x=-\nabla\phi_\mu$; tìm độ dài bước giữ $x_1,x_2,s_i&gt;0$. Tất cả hệ số $c,A,b$ lấy từ biểu mẫu chung.</p>
             </div>
         </div>
 
         <div class="chart-card">
-            <h3>Đồ thị hội tụ Z theo bước rào cản (Z* = 4.000)</h3>
+            <h3>Đồ thị hội tụ Z theo bước rào cản</h3>
             <div id="ipmConvChart" class="plot small"></div>
-            <p class="note" style="font-size:0.82em">Z(μ) tăng dần và tiến sát đường Z* đứt nét khi μ → 0. Điểm cuối chuỗi hội tụ về (50, 50).</p>
+            <p class="note" style="font-size:0.82em">Z(μ) tiến sát giá trị tối ưu của cùng bài toán khi μ → 0.</p>
         </div>
 
         <div class="chart-card">
@@ -198,17 +208,16 @@
 
 <!-- ============ 3.2 GD / Newton ============ -->
 <section class="card" id="gd">
-    <h2 class="card-title">3.2 Hạ dốc và Newton: tối ưu phi tuyến</h2>
+    <h2 class="card-title">3.2 Hạ dốc và Newton trên bài toán chung</h2>
     <p class="note">
-        Hàm chi phí $f(x,y) = 3\big[(x-40)^2 + (y-60)^2\big]$ — đáy bát tại <b>(40, 60)</b>.
-        Quả bóng lăn theo hướng ngược gradient với bước nhảy $\alpha$. <span class="hint" data-tip="Với hệ số f = 3×(...)², hội tụ khi α ≤ 0,33; ngược lại (vd α = 0,5) quả bóng nhảy văng ra ngoài 'bát' và phân kỳ.">α quá lớn?<sup>ⓘ</sup></span>
+        Hai phương pháp dùng hàm rào cản trơn của cùng bài toán quy hoạch tuyến tính: tối đa $\phi_\mu=Z+\mu\sum_j\ln(s_j)$, trong đó $s_j$ gồm $x_1$, $x_2$ và độ dư của từng ràng buộc. Giảm $\mu$ dần để nghiệm đi về nghiệm tối ưu của bài toán gốc. Hạ dốc cập nhật theo gradient; Newton dùng gradient và Hessian.
     </p>
 
     <div class="psplit">
         <div>
             <div class="form-row small">
-                <div><label>Điểm khởi tạo x₀</label><input type="number" step="any" id="gd_x0" value="{{ gd.traj[0][0] }}"></div>
-                <div><label>Điểm khởi tạo y₀</label><input type="number" step="any" id="gd_y0" value="{{ gd.traj[0][1] }}"></div>
+                <div><label>Điểm khả thi ban đầu x₁</label><input type="number" step="any" id="gd_x0" value="10"></div>
+                <div><label>Điểm khả thi ban đầu x₂</label><input type="number" step="any" id="gd_y0" value="85"></div>
             </div>
             <div class="sim-controls">
                 <label>Learning rate α = <b id="gdAlphaOut">0,05</b>
@@ -218,7 +227,7 @@
             <div id="gdWarn" class="alert warning hidden"></div>
             <div class="btn-row">
                 <button type="button" class="btn primary" id="gdRun">▶ Chạy hạ dốc</button>
-                <button type="button" class="btn ghost" id="gdNewton">▶ Chạy Newton: một bước</button>
+                <button type="button" class="btn ghost" id="gdNewton">▶ Chạy Newton</button>
             </div>
             <div id="gdStatus" class="sim-readout hidden"></div>
         </div>
@@ -230,21 +239,20 @@
     <!-- Kết quả hạ dốc / Newton: hiện khi bấm nút -->
     <div id="gdContent" class="chart-grid hidden" style="margin-top:18px">
         <div class="chart-card full">
-            <h3>Ma trận Hessian và bước Newton: ví dụ f(x,y) = 3[(x−40)² + (y−60)²]</h3>
+            <h3>Hạ dốc và Newton trên hàm rào cản của bài toán chung</h3>
             <div id="gdTheory" class="steps">
-                <p><b>① Hàm mục tiêu:</b> $f(x,y) = 3\big[(x-40)^2 + (y-60)^2\big]$ — đáy bát tại $(40, 60)$.</p>
-                <p><b>② Gradient (độ dốc bậc 1):</b> $\nabla f = \begin{bmatrix}\partial f/\partial x\\ \partial f/\partial y\end{bmatrix} = \begin{bmatrix}6(x-40)\\ 6(y-60)\end{bmatrix}$ — cho biết hướng dốc nhất.</p>
-                <p><b>③ Hessian (độ cong bậc 2):</b> $H = \begin{bmatrix}\partial^2 f/\partial x^2 & \partial^2 f/\partial x\partial y\\ \partial^2 f/\partial y\partial x & \partial^2 f/\partial y^2\end{bmatrix} = \begin{bmatrix}6 & 0\\ 0 & 6\end{bmatrix} = 6I$ — đạo hàm của Gradient chính là Hessian.</p>
-                <p><b>④ Phương trình Newton:</b> Từ khai triển Taylor bậc 1 của $\nabla f$: $\nabla f(x+\Delta x) \approx \nabla f(x) + H\Delta x = 0$ ⟹ <b>$H \cdot \Delta x = -\nabla f$</b>.</p>
-                <p><b>⑤ Cập nhật 1 bước:</b> $\Delta x = -H^{-1}\nabla f = -\frac{1}{6}\nabla f$ ⇒ $x_{new} = x_{old} - \frac{1}{6}\nabla f$. Hàm toàn phương ⇒ Newton hội tụ <b>đúng 1 bước</b> từ mọi điểm khởi tạo.</p>
-                <p><b>⑥ Ví dụ cụ thể:</b> Tại $(10, 85)$: $\nabla f = [6(10-40),\, 6(85-60)] = [-180,\, 150]$; $\Delta x = -H^{-1}\nabla f = [30,\, -25]$; $(x,y): (10,85) \to (40,60)$; $f$: $16.950 \to 0$.</p>
+                <p><b>① Dùng chung miền khả thi:</b> $x_1,x_2&gt;0$ và $s_i=b_i-a_{i1}x_1-a_{i2}x_2&gt;0$. Điểm khởi tạo phải nằm bên trong miền này.</p>
+                <p><b>② Hàm rào cản:</b> $\phi_\mu(x)=c^Tx+\mu\left[\ln x_1+\ln x_2+\sum_i\ln(b_i-a_i^Tx)\right]$. Các hệ số $c_i,a_i,b_i$ lấy từ bài toán ở mục 3.1.</p>
+                <p><b>③ Hạ dốc:</b> tối thiểu hóa $-\phi_\mu$ theo gradient; mỗi bước được giảm độ dài nếu cần để luôn ở trong miền khả thi. Lặp với $\mu$ nhỏ dần.</p>
+                <p><b>④ Newton:</b> giải $H_\mu\Delta x=-\nabla(-\phi_\mu)$ bằng Hessian của hàm rào cản rồi tìm bước đi còn nằm trong miền khả thi.</p>
+                <p><b>⑤ Đọc kết quả:</b> bảng và đồ thị theo dõi $(x_1,x_2)$ cùng lợi nhuận gốc $Z=c_1x_1+c_2x_2$; khi $\mu\to0$, hai phương pháp tiến gần nghiệm mà đồ thị, Simplex và điểm trong tìm được.</p>
             </div>
         </div>
 
         <div class="chart-card gd-result">
-            <h3>Đồ thị hội tụ f(x,y) theo bước lặp</h3>
+            <h3>Lợi nhuận Z theo bước lặp</h3>
             <div id="gdConvChart" class="plot small"></div>
-            <p class="note" style="font-size:0.82em">Hạ dốc giảm f dần; Newton đi thẳng về 0 sau đúng 1 bước trong ví dụ hàm toàn phương.</p>
+            <p class="note" style="font-size:0.82em">Đường đi của cả hai phương pháp nằm trong miền khả thi; lợi nhuận được tính theo hàm mục tiêu chung ở mục 3.1.</p>
         </div>
 
         <div class="chart-card gd-result">
@@ -252,7 +260,7 @@
             <div class="table-responsive" style="max-height:340px; overflow:auto">
                 <table id="gdTable" class="dp-table" style="font-size:0.80em; min-width:520px">
                     <thead>
-                        <tr><th>Bước</th><th>x</th><th>y</th><th>∇f_x</th><th>∇f_y</th><th>f(x,y)</th><th>Phương pháp</th></tr>
+                        <tr><th>Bước</th><th>x₁</th><th>x₂</th><th>μ</th><th>∇fμ,x₁</th><th>∇fμ,x₂</th><th>Z</th></tr>
                     </thead>
                     <tbody></tbody>
                 </table>
@@ -264,11 +272,39 @@
 <!-- ============ 3.3 DP ============ -->
 <section class="card" id="dp">
     <h2 class="card-title">3.3 Quy hoạch động: vận hành hồ chứa bằng truy hồi ngược</h2>
-    <p class="note">
-        Quyết định <b>xả bao nhiêu nước mỗi tháng</b> để tối đa tổng lợi ích - năng lượng/tưới 12 tháng.
-        <span class="hint" data-tip="Giải từ tháng 12 về tháng 1: mỗi bước nhớ 'giá trị tốt nhất từ tháng t đến hết kỳ' (hàm Bellman).">Truy hồi ngược?<sup>ⓘ</sup></span>
-    </p>
-    <div class="formula">$$F_t(S_t) = \max_{R_t \in [0,\ S_t + I_t]} \Big[ B(R_t) + F_{t+1}\big(\underbrace{S_t + I_t - R_t}_{\text{mực nước kế}}\big) \Big]$$</div>
+    <div class="dp-problem">
+        <h3>Đề bài</h3>
+        <p>
+            Hồ chứa có dung tích tối đa <b>K = {{ dp.K }} tỷ m³</b>, đầu tháng 1 có <b>S₁ = 0 tỷ m³</b>.
+            Mỗi tháng, người vận hành phân bổ nước cho ba mục đích: phát điện Hₜ, tưới Aₜ và sinh hoạt Dₜ.
+            Lợi ích của mỗi mục đích khác nhau:
+        </p>
+        <div class="dp-benefit-functions">
+            <div><b>Phát điện</b><span>B<sub>H</sub>(Hₜ) = 6Hₜ − 1,5Hₜ²</span></div>
+            <div><b>Tưới</b><span>B<sub>A</sub>(Aₜ) = 8Aₜ − 2,5Aₜ²</span></div>
+            <div><b>Sinh hoạt</b><span>B<sub>D</sub>(Dₜ) = 12Dₜ − 10Dₜ²</span></div>
+        </div>
+        <p>Giới hạn mỗi tháng: Hₜ ≤ {{ dp.hydro_cap }} tỷ m³; Aₜ không vượt nhu cầu tưới theo mùa trong bảng; Dₜ ≤ {{ dp.domestic_demand }} tỷ m³. Tổng phân bổ không vượt lượng nước sẵn có: Hₜ + Aₜ + Dₜ ≤ Sₜ + Iₜ; đồng thời 0 ≤ Sₜ₊₁ ≤ K. Nước còn lại sau tháng 12 có giá trị {{ dp.w }}S₁₃.</p>
+        <h4>Dòng vào Iₜ và nhu cầu tưới tối đa Aₜ,max (tỷ m³)</h4>
+        <div class="dp-inflows" aria-label="Dòng nước đến hồ và nhu cầu tưới theo tháng">
+            {% for inflow in dp.inflows %}
+            <div><span>T{{ '%02d' % loop.index }}</span><b>I={{ '%.1f'|format(inflow) }}</b><small>Amax={{ '%.1f'|format(dp.irrigation_demand[loop.index0]) }}</small></div>
+            {% endfor %}
+        </div>
+        <p class="note dp-model-note">
+            Mục tiêu: tối đa tổng lợi ích 12 tháng của phát điện, tưới và sinh hoạt cộng giá trị nước cuối kỳ. Đơn vị nước: tỷ m³; lợi ích: tỷ đồng quy đổi. Mô hình rời rạc dùng S ∈ {0, 1, 2, 3, 4}; các phân bổ H, A, D chọn theo bước {{ dp.step }} tỷ m³. Trạng thái kế tiếp được làm tròn về mức nguyên gần nhất.
+        </p>
+        <h3>Yêu cầu</h3>
+        <ol>
+            <li>Lập hàm Bellman và điều kiện cuối kỳ, giải ngược từ tháng 12 về tháng 1.</li>
+            <li>Tìm Hₜ*, Aₜ*, Dₜ* để tối đa tổng lợi ích tháng và giá trị tối ưu Fₜ(Sₜ), với Sₜ₊₁ = Sₜ + Iₜ − Hₜ − Aₜ − Dₜ.</li>
+            <li>Giải ngược từ tháng 12 về tháng 1, sau đó lần theo chính sách tối ưu từ S₁ = 0.</li>
+        </ol>
+    </div>
+    <div class="formula">
+        $$F_t(S_t) = \max_{H_t,A_t,D_t} \left[B_H(H_t)+B_A(A_t)+B_D(D_t)+F_{t+1}(S_{t+1})\right],\quad
+        S_{t+1}=S_t+I_t-H_t-A_t-D_t,\quad F_{13}(S_{13})={{ dp.w }}S_{13}$$
+    </div>
 
     <div class="psplit">
         <div>
@@ -276,13 +312,18 @@
                 <button type="button" class="btn primary" id="dpPlay">▶ Chạy truy hồi ngược</button>
                 <button type="button" class="btn ghost" id="dpReset">↺ Làm lại</button>
             </div>
+            <p class="note">Chọn một tháng để xem các phương án phân bổ phát điện, tưới, sinh hoạt và đáp án tối ưu.</p>
             <div class="dp-timeline" id="dpTimeline"></div>
             <div id="dpReadout" class="sim-readout"></div>
+            <div id="dpMonthSolution" class="dp-solution" aria-live="polite">
+                <h3>Lời giải theo tháng</h3>
+                <p>Chọn tháng 1–12 ở trên để hiện phép tính chi tiết.</p>
+            </div>
             <div class="card">
-                <h3>Bảng Trạng thái → Quyết định → Lợi ích</h3>
+                <h3>Quỹ đạo vận hành tối ưu từ S₁ = 0</h3>
                 <div class="table-responsive">
                     <table id="dpTable" class="dp-table">
-                        <thead><tr><th>Tháng</th><th>Dòng vào Iₜ</th><th>Mực nước Sₜ</th><th>Xả R*ₜ</th><th>Lợi ích B(R)</th><th>Fₜ(Sₜ)</th></tr></thead>
+                        <thead><tr><th>Tháng</th><th>Iₜ</th><th>Sₜ thực</th><th>Sₜ lưới DP</th><th>Phát điện Hₜ*</th><th>Tưới Aₜ*</th><th>Sinh hoạt Dₜ*</th><th>Tổng lợi ích</th><th>Fₜ(Sₜ)</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -300,9 +341,7 @@
 {% block scripts %}
 <script>
     window.__LP = {{ lp | tojson }};
-    window.__GD = {{ gd | tojson }};
-    window.__NEWTON = {{ newton | tojson }};
     window.__DP = {{ dp | tojson }};
 </script>
-<script src="{{ url_for('static', filename='js/plotly_app.js') }}?v=10"></script>
+<script src="{{ url_for('static', filename='js/plotly_app.js') }}?v=12"></script>
 {% endblock %}

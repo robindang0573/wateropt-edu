@@ -308,11 +308,15 @@ Quy hoạch động vận hành hồ chứa (12 tháng, truy hồi ngược). D�
 | `months`   | array | `[1..12]`                                    |
 | `states`   | array | Mực nước rời rạc `0..K` (K = 4)              |
 | `inflows`  | array | Dòng chảy 12 tháng                           |
-| `K`, `w`, `b1`, `b2` | float | Hằng số mô hình                    |
-| `F`        | array | Ma trận giá trị tối ưu `F[tháng][mực nước]`  |
-| `policy`   | array | Chính sách xả `policy[tháng][mực nước]`      |
-| `F_last`   | array | Giá trị cuối kỳ (nước còn lại)               |
-| `sample`   | array | Đường vận hành mẫu `[{month, inflow, storage, release, benefit, s_next}]` |
+| `K`, `w`, `step` | float | Dung tích, giá trị nước cuối kỳ và bước phân bổ |
+| `irrigation_demand` | array | Nhu cầu tưới tối đa theo tháng |
+| `benefit_coefficients` | object | Hệ số hàm lợi ích của ba mục đích |
+| `F`        | array | Ma trận giá trị tối ưu `F[tháng][mực nước]` |
+| `policy`   | array | Tổng phân bổ nước tối ưu theo tháng và trạng thái |
+| `sector_policy` | array | Phân bổ tối ưu H/A/D theo tháng và trạng thái |
+| `F_last`   | array | Giá trị cuối kỳ `w·S₁₃` theo trạng thái |
+| `sample`   | array | Quỹ đạo mẫu gồm H, A, D, tổng lợi ích và trữ lượng |
+| `sample_steps` | array | Các phương án khả thi và phép tính Bellman theo từng tháng |
 
 ```bash
 curl https://dautieng.kttnn.online/api/optimize/dp
